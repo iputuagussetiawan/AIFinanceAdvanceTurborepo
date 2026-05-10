@@ -1,15 +1,14 @@
 // services/user-service.ts
 
 import { api } from '@/lib/api-factory'
+import type { ExperienceDTO } from '../types/experience-type'
 
-import type { ExperienceDTO, IExperienceResponse } from '../types/experience-type'
 
 export const experienceService = {
-    create: (data: ExperienceDTO) =>
-        api.API<IExperienceResponse>('/api/experience/create', {
-            method: 'POST',
+    updateAll: (data: ExperienceDTO[]) =>
+        api.API<any>('/api/user/experiences/bulk', {
+            method: 'PUT',
             body: JSON.stringify(data),
-            // We usually don't cache registration attempts
             cache: 'no-store',
         }),
 }

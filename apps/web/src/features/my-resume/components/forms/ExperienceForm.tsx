@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/button'
 import { UiFormInput } from '@/components/ui/UiFormInput'
 import useAuth from '@/hooks/use-auth'
 
-import { SortableExperienceCard } from '../SortableExperienceCard'
+import { SortableExperienceCard } from '../../../experience/components/SortableExperienceCard'
 
 // ─── Static Types ─────────────────────────────────────────────────────────────
 

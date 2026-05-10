@@ -31,6 +31,7 @@ import BioForm from './forms/BioForm'
 import EducationForm from './forms/EducationForm'
 import PersonalInfoForm from './forms/PersonalInfoForm'
 import PhotoProfileForm from './forms/PhotoProfileForm'
+import ExperienceForm from '@/features/experience/components/ExperienceForm'
 
 type MyResumeToolbarProps = {
     onPreview: () => void
@@ -261,8 +262,7 @@ export default function MyResumeToolbar({
                 onOpenChange={setIsOpenExperienceDrawer}
             >
                 <div className="grid gap-4">
-                    <h3>Experiences</h3>
-                    {/* <EducationForm /> */}
+                    <ExperienceForm />
                 </div>
             </ResumeDrawer>
         </>
