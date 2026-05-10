@@ -40,6 +40,7 @@ import {
     type IExperience,
 } from '../types/experience-type'
 import { experienceService } from '../services/experience-service'
+import { CompanyAutoSuggest } from '@/features/company/components/CompanyAutoSuggest'
 
 const EMPLOYMENT_TYPES = [
     'Full-time',
@@ -200,11 +201,19 @@ export default function ExperienceForm() {
 
                                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                     {/* Company Name */}
-                                    <UiFormInput
-                                        label="Company Name"
-                                        placeholder="e.g. Acme Corp"
-                                        {...register(`experiences.${index}.companyName`)}
+                                    <CompanyAutoSuggest
+                                        value={watch(`experiences.${index}.companyName`)}
                                         error={errors.experiences?.[index]?.companyName}
+                                        onValueChange={(val) => {
+                                            setValue(`experiences.${index}.companyName`, val, {
+                                                shouldValidate: true,
+                                            })
+                                        }}
+                                        onSelect={(val) => {
+                                            setValue(`experiences.${index}.companyName`, val.name, {
+                                                shouldValidate: true,
+                                            })
+                                        }}
                                     />
                                     
 
@@ -264,16 +273,15 @@ export default function ExperienceForm() {
                                         <UiFormDatePicker
                                             label="Start Date"
                                             name={`experiences.${index}.startDate`}
-                                            control={control}
+                                            control={control as any}
                                             displayFormat={DateFormat.FULL_DISPLAY}
                                             error={errors.experiences?.[index]?.startDate}
                                         />
                                         <UiFormDatePicker
                                             label="End Date (Optional)"
                                             name={`experiences.${index}.endDate`}
-                                            control={control}
+                                            control={control as any}
                                             displayFormat={DateFormat.FULL_DISPLAY}
-                                            disabled={watch(`experiences.${index}.isCurrent`)}
                                             error={errors.experiences?.[index]?.endDate}
                                         />
                                     </div>
@@ -292,7 +300,7 @@ export default function ExperienceForm() {
                                                 if (checked) {
                                                     setValue(
                                                         `experiences.${index}.endDate`,
-                                                        undefined,
+                                                        '',
                                                         { shouldValidate: true },
                                                     )
                                                 }
