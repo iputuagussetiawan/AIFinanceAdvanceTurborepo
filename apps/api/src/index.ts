@@ -26,6 +26,7 @@ import languageRoutes from './modules/language/language.route'
 // import memberRoutes from './modules/member/member.route'
 import sessionRoutes from './modules/session/session.route'
 import userRoutes from './modules/user/user.route'
+import skillRoutes from './modules/skill/skill.route'
 
 const app = express()
 app.use(cookieParser())
@@ -71,6 +72,7 @@ app.use(`${BASE_PATH}/experience`, passportAuthenticateJWT, experienceRoutes)
 app.use(`${BASE_PATH}/jobseeker`, passportAuthenticateJWT, jobseekerRoutes)
 app.use(`${BASE_PATH}/language`, passportAuthenticateJWT, languageRoutes)
 app.use(`${BASE_PATH}/institution`, passportAuthenticateJWT, institutionRoutes)
+app.use(`${BASE_PATH}/skill`, passportAuthenticateJWT, skillRoutes)
 
 app.use(errorHandler)
 
