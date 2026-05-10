@@ -61,7 +61,14 @@ const companySchema = new Schema<CompanyDocument>(
         // Otomatis membuat field createdAt dan updatedAt
         timestamps: true,
         // Memastikan saat data dikirim ke JSON, _id dan __v ditangani dengan baik
-        toJSON: { virtuals: true },
+        toJSON: {
+            virtuals: true,
+            transform: (doc, ret) => {
+                delete (ret as any)._id // Hapus _id asli agar lebih rapi
+                delete (ret as any).__v
+                return ret
+            },
+        },
         toObject: { virtuals: true },
     },
 )

@@ -95,9 +95,9 @@ export const getCompanyBySlugService = async (slug: string): Promise<CompanyDocu
  */
 export const getCompaniesService = async (query: any = {}) => {
     const { page = 1, limit = 10, search = '' } = query
-    const skip = (page - 1) * limit
+    const skip = (Number(page) - 1) * Number(limit)
 
-    const filter: any = {}
+    const filter: any = { isActive: true }
     if (search) {
         filter.$or = [
             { name: { $regex: search, $options: 'i' } },
@@ -106,16 +106,31 @@ export const getCompaniesService = async (query: any = {}) => {
     }
 
     const [data, total] = await Promise.all([
-        CompanyModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+        CompanyModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)),
         CompanyModel.countDocuments(filter),
     ])
 
     return {
-        data,
+        data: data.map((doc) => doc.toJSON()),
         meta: {
             total,
-            page,
-            lastPage: Math.ceil(total / limit),
+            page: Number(page),
+            limit: Number(limit),
+            lastPage: Math.ceil(total / Number(limit)),
         },
     }
+}
+
+export const searchCompaniesService = async (search: string = '') => {
+    const filter: any = { isActive: true }
+    if (search) {
+        filter.$or = [
+            { name: { $regex: search, $options: 'i' } },
+            { industry: { $regex: search, $options: 'i' } },
+        ]
+    }
+
+    const data = await CompanyModel.find(filter).sort({ name: 1 }).limit(20)
+
+    return data.map((doc) => doc.toJSON())
 }
