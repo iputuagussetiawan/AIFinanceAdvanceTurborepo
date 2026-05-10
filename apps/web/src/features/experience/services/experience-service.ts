@@ -8,7 +8,7 @@ export const experienceService = {
     updateAll: (data: ExperienceDTO[]) =>
         api.API<any>('/api/user/experiences/bulk', {
             method: 'PUT',
-            body: JSON.stringify(data),
+            body: JSON.stringify({ experiences: data }),
             cache: 'no-store',
         }),
 }

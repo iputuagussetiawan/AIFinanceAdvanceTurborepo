@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { DateFormat } from '@/types/date'
 import {
     closestCenter,
     DndContext,
@@ -146,7 +147,7 @@ export default function ExperienceForm() {
                             companyName: '',
                             location: '',
                             title: '',
-                            employmentType: '',
+                            employmentType: 'Full-time',
                             startDate: '',
                             endDate: '',
                             isCurrent: false,
@@ -183,6 +184,8 @@ export default function ExperienceForm() {
                                     type="hidden"
                                     {...register(`experiences.${index}.orderPosition`)}
                                 />
+
+                                {/* Row 1: Company Name + Job Title */}
                                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                     <InstitutionAutoSuggest
                                         value={watch(`experiences.${index}.companyName`)}
@@ -193,19 +196,112 @@ export default function ExperienceForm() {
                                             })
                                         }}
                                         onSelect={(val) => {
-                                            setValue(
-                                                `experiences.${index}.companyName`,
-                                                val.name,
-                                                {
-                                                    shouldValidate: true,
-                                                },
-                                            )
+                                            setValue(`experiences.${index}.companyName`, val.name, {
+                                                shouldValidate: true,
+                                            })
                                         }}
                                     />
                                     <UiFormInput
-                                        label="Description"
+                                        label="Job Title"
+                                        placeholder="e.g. Software Engineer"
+                                        {...register(`experiences.${index}.title`)}
+                                        error={errors.experiences?.[index]?.title}
+                                    />
+                                </div>
+
+                                {/* Row 2: Employment Type + Location */}
+                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-sm font-medium">Employment Type</label>
+                                        <select
+                                            {...register(`experiences.${index}.employmentType`)}
+                                            className="border-input bg-background rounded-md border px-3 py-2 text-sm"
+                                        >
+                                            <option value="Full-time">Full-time</option>
+                                            <option value="Part-time">Part-time</option>
+                                            <option value="Contract">Contract</option>
+                                            <option value="Freelance">Freelance</option>
+                                            <option value="Internship">Internship</option>
+                                            <option value="Volunteer">Volunteer</option>
+                                        </select>
+                                        {errors.experiences?.[index]?.employmentType && (
+                                            <p className="text-destructive text-xs">
+                                                {errors.experiences[index].employmentType?.message}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <UiFormInput
+                                        label="Location"
+                                        placeholder="e.g. New York, NY"
+                                        {...register(`experiences.${index}.location`)}
+                                        error={errors.experiences?.[index]?.location}
+                                    />
+                                </div>
+
+                                {/* Row 3: Start Date + End Date + Is Current */}
+                                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                                    <UiFormInput
+                                        label="Start Date"
+                                        type="date"
+                                        {...register(`experiences.${index}.startDate`)}
+                                        error={errors.experiences?.[index]?.startDate}
+                                    />
+                                    <UiFormInput
+                                        label="End Date"
+                                        type="date"
+                                        disabled={watch(`experiences.${index}.isCurrent`)}
+                                        {...register(`experiences.${index}.endDate`)}
+                                        error={errors.experiences?.[index]?.endDate}
+                                    />
+                                    <div className="flex items-center gap-2 pt-6">
+                                        <input
+                                            id={`isCurrent-${index}`}
+                                            type="checkbox"
+                                            {...register(`experiences.${index}.isCurrent`)}
+                                            className="h-4 w-4 rounded border"
+                                        />
+                                        <label
+                                            htmlFor={`isCurrent-${index}`}
+                                            className="text-sm font-medium"
+                                        >
+                                            I currently work here
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {/* Row 4: Description */}
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium">Description</label>
+                                    <textarea
+                                        rows={3}
+                                        placeholder="Describe your responsibilities and achievements..."
                                         {...register(`experiences.${index}.description`)}
-                                        error={errors.experiences?.[index]?.description}
+                                        className="border-input bg-background rounded-md border px-3 py-2 text-sm"
+                                    />
+                                    {errors.experiences?.[index]?.description && (
+                                        <p className="text-destructive text-xs">
+                                            {errors.experiences[index].description?.message}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Row 5: Skills */}
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium">Skills</label>
+                                    <UiFormInput
+                                        placeholder="e.g. React, TypeScript, Node.js (comma separated)"
+                                        value={watch(`experiences.${index}.skills`)?.join(', ') ?? ''}
+                                        onChange={(e) => {
+                                            const raw = e.target.value
+                                            const arr = raw
+                                                .split(',')
+                                                .map((s) => s.trim())
+                                                .filter(Boolean)
+                                            setValue(`experiences.${index}.skills`, arr, {
+                                                shouldValidate: true,
+                                            })
+                                        }}
+                                        error={errors.experiences?.[index]?.skills as any}
                                     />
                                 </div>
                             </SortableExperienceCard>
