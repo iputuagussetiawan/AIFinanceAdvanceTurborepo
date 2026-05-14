@@ -1,7 +1,4 @@
 import * as z from 'zod'
-
-import type { IInstitution } from '@/features/institution/types/institution-type'
-
 export const educationValidation = z
     .object({
         institution: z.string().optional().or(z.literal('')),

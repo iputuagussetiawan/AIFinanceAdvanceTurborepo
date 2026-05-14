@@ -93,6 +93,10 @@ export default function ExperienceForm() {
             const formatted = [...response]
                 .sort((a, b) => (a.orderPosition ?? 0) - (b.orderPosition ?? 0))
                 .map((exp: IExperience) => ({
+                    company:
+                        typeof exp.company === 'object'
+                            ? (exp.company?._id ?? exp.company?.id ?? '')
+                            : (exp.company ?? ''),
                     companyName: exp.companyName,
                     location: exp.location,
                     title: exp.title,
@@ -139,6 +143,7 @@ export default function ExperienceForm() {
         const orderedData = data.experiences.map((exp, index) => ({
             ...exp,
             orderPosition: index,
+            company: exp.company || undefined,
         }))
         mutate(orderedData)
     }
@@ -206,6 +211,11 @@ export default function ExperienceForm() {
                                         {...register(`experiences.${index}.orderPosition`)}
                                     />
 
+                                    <input
+                                        type="hidden"
+                                        {...register(`experiences.${index}.company`)}
+                                    />
+
                                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                         {/* Company Name */}
                                         <CompanyAutoSuggest
@@ -215,9 +225,15 @@ export default function ExperienceForm() {
                                                 setValue(`experiences.${index}.companyName`, val, {
                                                     shouldValidate: true,
                                                 })
+                                                setValue(`experiences.${index}.company`, '', {
+                                                    shouldValidate: true,
+                                                })
                                             }}
                                             onSelect={(val) => {
                                                 setValue(`experiences.${index}.companyName`, val.name, {
+                                                    shouldValidate: true,
+                                                })
+                                                setValue(`experiences.${index}.company`, val.id, {
                                                     shouldValidate: true,
                                                 })
                                             }}
