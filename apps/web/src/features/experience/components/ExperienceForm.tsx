@@ -19,7 +19,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, Plus, Save } from 'lucide-react'
-import { useFieldArray, useForm, FormProvider } from 'react-hook-form' // ← added FormProvider
+import { useFieldArray, useForm, FormProvider, Controller } from 'react-hook-form' // ← added FormProvider
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -42,6 +42,7 @@ import {
 import { experienceService } from '../services/experience-service'
 import { CompanyAutoSuggest } from '@/features/company/components/CompanyAutoSuggest'
 import SkillAutoSuggest from '@/features/skill/components/SkillAutoSuggest' // ← uncommented
+import { RichTextEditor } from '@/components/editor'
 
 const EMPLOYMENT_TYPES = [
     'Full-time',
@@ -104,7 +105,7 @@ export default function ExperienceForm() {
                     startDate: exp.startDate,
                     endDate: exp.endDate ?? undefined,
                     isCurrent: exp.isCurrent,
-                    description: exp.description,
+                    description: exp.description || '',
                     skills: exp.skills,
                     orderPosition: exp.orderPosition,
                 }))
@@ -336,12 +337,34 @@ export default function ExperienceForm() {
 
                                         {/* Description — spans full width */}
                                         <div className="md:col-span-2">
-                                            <UiFormInput
+                                            {/* <UiFormInput
                                                 label="Description"
                                                 placeholder="Describe your responsibilities and achievements..."
                                                 {...register(`experiences.${index}.description`)}
                                                 error={errors.experiences?.[index]?.description}
-                                            />
+                                            /> */}
+
+                                            
+                                            <div className="md:col-span-2 space-y-2">
+                                                <label className="text-muted-foreground block text-xs font-semibold uppercase tracking-wider">
+                                                    Job Description
+                                                </label>
+                                                <Controller
+                                                    name={`experiences.${index}.description`} // Path harus sesuai dengan array
+                                                    control={control}
+                                                    render={({ field }) => (
+                                                        <RichTextEditor
+                                                            initialContent={field.value}
+                                                            onChange={field.onChange}
+                                                            error={!!errors.experiences?.[index]?.description}
+                                                        />
+                                                    )}
+                                                />
+                                                {errors.experiences?.[index]?.description && (
+                                                    <p className="text-destructive text-xs">{errors.experiences[index].description?.message}</p>
+                                                )}
+                                            </div>
+                                                       
                                         </div>
 
                                         {/* ── Skills — replaced plain input with SkillAutoSuggest ── */}
