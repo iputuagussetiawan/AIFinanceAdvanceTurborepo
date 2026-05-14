@@ -15,6 +15,26 @@ import {
 } from '@/features/user/types/user-type'
 import { RichTextEditor } from '@/components/editor' // Using your new editor
 import { Button } from '@/components/ui/button'
+import { z } from 'zod'
+
+const bioFormSchema = z.object({
+    bio: z
+        .string()
+        .refine((val) => {
+            // Membersihkan tag HTML untuk mengecek apakah konten benar-benar ada
+            // Ini mencegah user hanya memasukkan spasi atau tag kosong <p></p>
+            const strippedContent = val.replace(/<[^>]*>/g, '').trim()
+            return strippedContent.length > 0
+        }, {
+            message: "Bio cannot be empty",
+        })
+        .refine((val) => val.length <= 2000, {
+            message: "Bio is too long (maximum 2000 characters)",
+        }),
+})
+
+// Infer type dari schema
+type BioFormValues = z.infer<typeof bioFormSchema>
 
 export default function BioForm() {
     const { user } = useAuthContext()
@@ -26,8 +46,8 @@ export default function BioForm() {
         setError,
         control, // Needed for the Controller
         formState: { errors },
-    } = useForm<UpdateUserProfileDTO>({
-        resolver: zodResolver(updateUserProfileValidation),
+    } = useForm<BioFormValues>({
+        resolver: zodResolver(bioFormSchema as any),
         defaultValues: {
             bio: user?.bio || '',
         },
