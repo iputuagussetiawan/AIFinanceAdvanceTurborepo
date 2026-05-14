@@ -19,7 +19,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, Plus, Save } from 'lucide-react'
-import { useFieldArray, useForm } from 'react-hook-form'
+import { useFieldArray, useForm, FormProvider } from 'react-hook-form' // ← added FormProvider
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -41,6 +41,7 @@ import {
 } from '../types/experience-type'
 import { experienceService } from '../services/experience-service'
 import { CompanyAutoSuggest } from '@/features/company/components/CompanyAutoSuggest'
+import SkillAutoSuggest from '@/features/skill/components/SkillAutoSuggest' // ← uncommented
 
 const EMPLOYMENT_TYPES = [
     'Full-time',
@@ -66,6 +67,12 @@ export default function ExperienceForm() {
     const { data, isLoading } = useAuth()
     const response: IExperience[] = data?.user.experiences || []
 
+    // ── useForm — same as before, just also passed to FormProvider below ──
+    const methods = useForm<{ experiences: ExperienceDTO[] }>({
+        resolver: zodResolver(updateExperienceListValidation as any),
+        defaultValues: { experiences: [] },
+    })
+
     const {
         watch,
         register,
@@ -73,11 +80,8 @@ export default function ExperienceForm() {
         handleSubmit,
         setValue,
         reset,
-        formState: { errors },
-    } = useForm<{ experiences: ExperienceDTO[] }>({
-        resolver: zodResolver(updateExperienceListValidation as any),
-        defaultValues: { experiences: [] },
-    })
+        formState: { errors, isSubmitting },
+    } = methods
 
     const { fields, prepend, remove, move } = useFieldArray({
         control,
@@ -147,222 +151,210 @@ export default function ExperienceForm() {
         )
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            {/* Header */}
-            <div className="bg-background sticky top-0 z-20 flex items-center justify-between border-b pt-2 pb-4">
-                <div>
-                    <h2 className="text-2xl font-bold">Experience</h2>
-                    <p className="text-muted-foreground text-sm">Manage your work history</p>
+        // ── Wrap the whole form with FormProvider so SkillAutoSuggest
+        //    can access the form context via useFormContext() internally ──
+        <FormProvider {...methods}>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+                {/* Header */}
+                <div className="bg-background sticky top-0 z-20 flex items-center justify-between border-b pt-2 pb-4">
+                    <div>
+                        <h2 className="text-2xl font-bold">Experience</h2>
+                        <p className="text-muted-foreground text-sm">Manage your work history</p>
+                    </div>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() =>
+                            prepend({
+                                companyName: '',
+                                location: '',
+                                title: '',
+                                employmentType: 'Full-time',
+                                startDate: '',
+                                endDate: '',
+                                isCurrent: false,
+                                description: '',
+                                skills: [],   // ← must be [] not ''
+                                orderPosition: 0,
+                            })
+                        }
+                    >
+                        <Plus className="mr-2 h-4 w-4" /> Add Experience
+                    </Button>
                 </div>
-                <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() =>
-                        prepend({
-                            companyName: '',
-                            location: '',
-                            title: '',
-                            employmentType: 'Full-time',
-                            startDate: '',
-                            endDate: '',
-                            isCurrent: false,
-                            description: '',
-                            skills: [],
-                            orderPosition: 0,
-                        })
-                    }
+
+                {/* Sortable list */}
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
                 >
-                    <Plus className="mr-2 h-4 w-4" /> Add Experience
-                </Button>
-            </div>
-
-            {/* Sortable list */}
-            <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-            >
-                <SortableContext
-                    items={fields.map((f) => f.id)}
-                    strategy={verticalListSortingStrategy}
-                >
-                    <div className="space-y-6">
-                        {fields.map((field, index) => (
-                            <SortableExperienceCard
-                                key={field.id}
-                                id={field.id}
-                                index={index}
-                                onRemove={() => remove(index)}
-                            >
-                                <input
-                                    type="hidden"
-                                    {...register(`experiences.${index}.orderPosition`)}
-                                />
-
-                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                    {/* Company Name */}
-                                    <CompanyAutoSuggest
-                                        value={watch(`experiences.${index}.companyName`)}
-                                        error={errors.experiences?.[index]?.companyName}
-                                        onValueChange={(val) => {
-                                            setValue(`experiences.${index}.companyName`, val, {
-                                                shouldValidate: true,
-                                            })
-                                        }}
-                                        onSelect={(val) => {
-                                            setValue(`experiences.${index}.companyName`, val.name, {
-                                                shouldValidate: true,
-                                            })
-                                        }}
-                                    />
-                                    
-
-                                    
-
-                                    {/* Job Title */}
-                                    <UiFormInput
-                                        label="Job Title"
-                                        placeholder="e.g. Software Engineer"
-                                        {...register(`experiences.${index}.title`)}
-                                        error={errors.experiences?.[index]?.title}
+                    <SortableContext
+                        items={fields.map((f) => f.id)}
+                        strategy={verticalListSortingStrategy}
+                    >
+                        <div className="space-y-6">
+                            {fields.map((field, index) => (
+                                <SortableExperienceCard
+                                    key={field.id}
+                                    id={field.id}
+                                    index={index}
+                                    onRemove={() => remove(index)}
+                                >
+                                    <input
+                                        type="hidden"
+                                        {...register(`experiences.${index}.orderPosition`)}
                                     />
 
-                                    {/* Employment Type */}
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-sm font-medium">
-                                            Employment Type
-                                        </label>
-                                        <Select
-                                            value={watch(`experiences.${index}.employmentType`)}
-                                            onValueChange={(val) =>
-                                                setValue(
-                                                    `experiences.${index}.employmentType`,
-                                                    val,
-                                                    { shouldValidate: true },
-                                                )
-                                            }
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select type" />
-                                            </SelectTrigger>
-                                            <SelectContent  className="z-[9999]">
-                                                {EMPLOYMENT_TYPES.map((type) => (
-                                                    <SelectItem key={type} value={type}>
-                                                        {type}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        {errors.experiences?.[index]?.employmentType && (
-                                            <p className="text-destructive text-xs">
-                                                {errors.experiences[index].employmentType?.message}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {/* Location */}
-                                    <UiFormInput
-                                        label="Location"
-                                        placeholder="e.g. New York, NY"
-                                        {...register(`experiences.${index}.location`)}
-                                        error={errors.experiences?.[index]?.location}
-                                    />
-
-                                    {/* Start Date + End Date */}
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <UiFormDatePicker
-                                            label="Start Date"
-                                            name={`experiences.${index}.startDate`}
-                                            control={control as any}
-                                            displayFormat={DateFormat.FULL_DISPLAY}
-                                            error={errors.experiences?.[index]?.startDate}
-                                        />
-                                        <UiFormDatePicker
-                                            label="End Date (Optional)"
-                                            name={`experiences.${index}.endDate`}
-                                            control={control as any}
-                                            displayFormat={DateFormat.FULL_DISPLAY}
-                                            error={errors.experiences?.[index]?.endDate}
-                                        />
-                                    </div>
-
-                                    {/* Is Current — spans full width */}
-                                    <div className="flex items-center gap-2 md:col-span-2">
-                                        <Checkbox
-                                            id={`isCurrent-${index}`}
-                                            checked={watch(`experiences.${index}.isCurrent`) ?? false}
-                                            onCheckedChange={(checked) => {
-                                                setValue(
-                                                    `experiences.${index}.isCurrent`,
-                                                    !!checked,
-                                                    { shouldValidate: true },
-                                                )
-                                                if (checked) {
-                                                    setValue(
-                                                        `experiences.${index}.endDate`,
-                                                        '',
-                                                        { shouldValidate: true },
-                                                    )
-                                                }
-                                            }}
-                                        />
-                                        <label
-                                            htmlFor={`isCurrent-${index}`}
-                                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                        >
-                                            I currently work here
-                                        </label>
-                                    </div>
-
-                                    {/* Description — spans full width */}
-                                    <div className="md:col-span-2">
-                                        <UiFormInput
-                                            label="Description"
-                                            placeholder="Describe your responsibilities and achievements..."
-                                            {...register(`experiences.${index}.description`)}
-                                            error={errors.experiences?.[index]?.description}
-                                        />
-                                    </div>
-
-                                    {/* Skills — spans full width */}
-                                    <div className="md:col-span-2">
-                                        <UiFormInput
-                                            label="Skills"
-                                            placeholder="e.g. React, TypeScript, Node.js (comma separated)"
-                                            value={
-                                                watch(`experiences.${index}.skills`)?.join(', ') ??
-                                                ''
-                                            }
-                                            onChange={(e) => {
-                                                const arr = e.target.value
-                                                    .split(',')
-                                                    .map((s) => s.trim())
-                                                    .filter(Boolean)
-                                                setValue(`experiences.${index}.skills`, arr, {
+                                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                        {/* Company Name */}
+                                        <CompanyAutoSuggest
+                                            value={watch(`experiences.${index}.companyName`)}
+                                            error={errors.experiences?.[index]?.companyName}
+                                            onValueChange={(val) => {
+                                                setValue(`experiences.${index}.companyName`, val, {
                                                     shouldValidate: true,
                                                 })
                                             }}
-                                            error={errors.experiences?.[index]?.skills as any}
+                                            onSelect={(val) => {
+                                                setValue(`experiences.${index}.companyName`, val.name, {
+                                                    shouldValidate: true,
+                                                })
+                                            }}
                                         />
-                                    </div>
-                                </div>
-                            </SortableExperienceCard>
-                        ))}
-                    </div>
-                </SortableContext>
-            </DndContext>
 
-            {/* Footer */}
-            <div className="bg-background sticky bottom-0 z-20 mt-auto flex justify-end border-t pt-4 pb-2">
-                <Button type="submit" disabled={isPending} className="w-full px-8 md:w-auto">
-                    {isPending ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                        <Save className="mr-2 h-4 w-4" />
-                    )}
-                    Save Changes
-                </Button>
-            </div>
-        </form>
+                                        {/* Job Title */}
+                                        <UiFormInput
+                                            label="Job Title"
+                                            placeholder="e.g. Software Engineer"
+                                            {...register(`experiences.${index}.title`)}
+                                            error={errors.experiences?.[index]?.title}
+                                        />
+
+                                        {/* Employment Type */}
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-sm font-medium">
+                                                Employment Type
+                                            </label>
+                                            <Select
+                                                value={watch(`experiences.${index}.employmentType`)}
+                                                onValueChange={(val) =>
+                                                    setValue(
+                                                        `experiences.${index}.employmentType`,
+                                                        val,
+                                                        { shouldValidate: true },
+                                                    )
+                                                }
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select type" />
+                                                </SelectTrigger>
+                                                <SelectContent className="z-[9999]">
+                                                    {EMPLOYMENT_TYPES.map((type) => (
+                                                        <SelectItem key={type} value={type}>
+                                                            {type}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            {errors.experiences?.[index]?.employmentType && (
+                                                <p className="text-destructive text-xs">
+                                                    {errors.experiences[index].employmentType?.message}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* Location */}
+                                        <UiFormInput
+                                            label="Location"
+                                            placeholder="e.g. New York, NY"
+                                            {...register(`experiences.${index}.location`)}
+                                            error={errors.experiences?.[index]?.location}
+                                        />
+
+                                        {/* Start Date + End Date */}
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <UiFormDatePicker
+                                                label="Start Date"
+                                                name={`experiences.${index}.startDate`}
+                                                control={control as any}
+                                                displayFormat={DateFormat.FULL_DISPLAY}
+                                                error={errors.experiences?.[index]?.startDate}
+                                            />
+                                            <UiFormDatePicker
+                                                label="End Date (Optional)"
+                                                name={`experiences.${index}.endDate`}
+                                                control={control as any}
+                                                displayFormat={DateFormat.FULL_DISPLAY}
+                                                error={errors.experiences?.[index]?.endDate}
+                                            />
+                                        </div>
+
+                                        {/* Is Current — spans full width */}
+                                        <div className="flex items-center gap-2 md:col-span-2">
+                                            <Checkbox
+                                                id={`isCurrent-${index}`}
+                                                checked={watch(`experiences.${index}.isCurrent`) ?? false}
+                                                onCheckedChange={(checked) => {
+                                                    setValue(
+                                                        `experiences.${index}.isCurrent`,
+                                                        !!checked,
+                                                        { shouldValidate: true },
+                                                    )
+                                                    if (checked) {
+                                                        setValue(
+                                                            `experiences.${index}.endDate`,
+                                                            '',
+                                                            { shouldValidate: true },
+                                                        )
+                                                    }
+                                                }}
+                                            />
+                                            <label
+                                                htmlFor={`isCurrent-${index}`}
+                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                            >
+                                                I currently work here
+                                            </label>
+                                        </div>
+
+                                        {/* Description — spans full width */}
+                                        <div className="md:col-span-2">
+                                            <UiFormInput
+                                                label="Description"
+                                                placeholder="Describe your responsibilities and achievements..."
+                                                {...register(`experiences.${index}.description`)}
+                                                error={errors.experiences?.[index]?.description}
+                                            />
+                                        </div>
+
+                                        {/* ── Skills — replaced plain input with SkillAutoSuggest ── */}
+                                        <div className="md:col-span-2">
+                                            <SkillAutoSuggest
+                                                name={`experiences.${index}.skills`}
+                                                label="Skills"
+                                                isSubmitting={isSubmitting}
+                                            />
+                                        </div>
+                                    </div>
+                                </SortableExperienceCard>
+                            ))}
+                        </div>
+                    </SortableContext>
+                </DndContext>
+
+                {/* Footer */}
+                <div className="bg-background sticky bottom-0 z-20 mt-auto flex justify-end border-t pt-4 pb-2">
+                    <Button type="submit" disabled={isPending} className="w-full px-8 md:w-auto">
+                        {isPending ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <Save className="mr-2 h-4 w-4" />
+                        )}
+                        Save Changes
+                    </Button>
+                </div>
+            </form>
+        </FormProvider>
     )
 }

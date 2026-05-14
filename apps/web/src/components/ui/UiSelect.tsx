@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Check, ChevronsUpDown, X } from 'lucide-react'
+import { Check, ChevronsUpDown, X, Loader2, AlertCircle } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils'
 export interface UiSelectItem {
     id: string
     label: string
+    disabled?: boolean
 }
 
 interface UiSelectBaseProps<T extends UiSelectItem> {
@@ -32,105 +33,92 @@ interface UiSelectBaseProps<T extends UiSelectItem> {
     emptyMessage?: string
     isLoading?: boolean
     isError?: boolean
+    disabled?: boolean
     className?: string
     unselectedLabel?: string
-    /**
-     * Custom render for each row in the dropdown list.
-     * Has access to all fields in your data — not just id/label.
-     * The checkmark is always appended automatically.
-     *
-     * @example
-     * renderItem={(person) => (
-     *   <div className="flex items-center gap-2">
-     *     <img src={person.image} className="h-6 w-6 rounded-full" />
-     *     <div>
-     *       <p className="text-sm">{person.label}</p>
-     *       <p className="text-xs text-muted-foreground">{person.role}</p>
-     *     </div>
-     *   </div>
-     * )}
-     */
-    renderItem?: (item: T) => React.ReactNode
-    /**
-     * Custom render for each badge chip (multi-select only).
-     * Falls back to item.label if not provided.
-     *
-     * @example
-     * renderBadge={(person) => (
-     *   <div className="flex items-center gap-1">
-     *     <img src={person.image} className="h-4 w-4 rounded-full" />
-     *     <span>{person.label}</span>
-     *   </div>
-     * )}
-     */
+    onSearchChange?: (value: string) => void
+    renderItem?: (item: T, isSelected: boolean) => React.ReactNode
     renderBadge?: (item: T) => React.ReactNode
-    /**
-     * Custom render for the trigger button label.
-     * Receives the array of currently selected items.
-     * Falls back to "N selected" / item.label if not provided.
-     *
-     * @example
-     * renderButtonLabel={(selected) =>
-     *   selected.length === 0 ? 'Pick a member' : `${selected.length} members`
-     * }
-     */
     renderButtonLabel?: (selectedItems: T[]) => React.ReactNode
 }
 
-// Single-select
 interface UiSelectSingleProps<T extends UiSelectItem> extends UiSelectBaseProps<T> {
     multiple?: false
     value?: string
     onChange?: (value: string) => void
 }
 
-// Multi-select
 interface UiSelectMultiProps<T extends UiSelectItem> extends UiSelectBaseProps<T> {
     multiple: true
     value?: string[]
     onChange?: (value: string[]) => void
 }
 
-type UiSelectProps<T extends UiSelectItem> = UiSelectSingleProps<T> | UiSelectMultiProps<T>
+export type UiSelectProps<T extends UiSelectItem> =
+    | UiSelectSingleProps<T>
+    | UiSelectMultiProps<T>
 
 // ─────────────────────────────────────────────
-// Component
+// Internal component (generic-safe)
 // ─────────────────────────────────────────────
 
-export function UiSelect<T extends UiSelectItem>({
-    multiple = false,
-    items = [],
-    value,
-    onChange,
-    placeholder = 'Select...',
-    searchPlaceholder = 'Search...',
-    emptyMessage = 'No results found.',
-    isLoading = false,
-    isError = false,
-    className,
-    unselectedLabel,
-    renderItem,
-    renderBadge,
-    renderButtonLabel,
-}: UiSelectProps<T>) {
+function UiSelectInner<T extends UiSelectItem>(
+    props: UiSelectProps<T> & { forwardedRef?: React.Ref<HTMLButtonElement> }
+) {
+    const {
+        multiple = false,
+        items = [],
+        value,
+        onChange,
+        onSearchChange,
+        placeholder = 'Select...',
+        searchPlaceholder = 'Search...',
+        emptyMessage = 'No results found.',
+        isLoading = false,
+        isError = false,
+        disabled = false,
+        className,
+        unselectedLabel,
+        renderItem,
+        renderBadge,
+        renderButtonLabel,
+        forwardedRef,
+    } = props
+
     const [open, setOpen] = React.useState(false)
-    const [internalValue, setInternalValue] = React.useState<string | string[]>(multiple ? [] : '')
 
-    const activeValue = value !== undefined ? value : internalValue
+    // ── Internal state (uncontrolled fallback) ──
+    const [internalValue, setInternalValue] = React.useState<string | string[]>(
+        multiple ? [] : ''
+    )
 
-    // ── Derived helpers ──────────────────────────────────────────
+    // Reset internal state when `multiple` changes
+    React.useEffect(() => {
+        setInternalValue(multiple ? [] : '')
+    }, [multiple])
 
-    const selectedIds: string[] = multiple
-        ? Array.isArray(activeValue)
-            ? activeValue
-            : []
-        : activeValue
-          ? [activeValue as string]
-          : []
+    // ── Derived values ──
+    const isControlled = value !== undefined
+    const activeValue = isControlled ? value : internalValue
 
-    const isSelected = (id: string) => selectedIds.includes(id)
-    const selectedItems = items.filter((item) => selectedIds.includes(item.id))
+    const selectedIds: string[] = React.useMemo(() => {
+        if (multiple) {
+            return Array.isArray(activeValue) ? activeValue : []
+        }
+        return activeValue && typeof activeValue === 'string' ? [activeValue] : []
+    }, [multiple, activeValue])
 
+    const selectedItems = React.useMemo(
+        () => items.filter((item) => selectedIds.includes(item.id)),
+        [items, selectedIds]
+    )
+
+    const isSelected = React.useCallback(
+        (id: string) => selectedIds.includes(id),
+        [selectedIds]
+    )
+
+    // ── Button label ──
     const buttonLabel = React.useMemo(() => {
         if (renderButtonLabel) return renderButtonLabel(selectedItems)
         if (multiple) {
@@ -138,132 +126,190 @@ export function UiSelect<T extends UiSelectItem>({
                 ? `${selectedIds.length} selected`
                 : (unselectedLabel ?? placeholder)
         }
-        const found = items.find((item) => item.id === (activeValue as string))
+        const found = items.find((item) => item.id === activeValue)
         return found ? found.label : (unselectedLabel ?? placeholder)
-    }, [
-        renderButtonLabel,
-        multiple,
-        selectedIds,
-        activeValue,
-        items,
-        placeholder,
-        unselectedLabel,
-        selectedItems,
-    ])
+    }, [renderButtonLabel, multiple, selectedIds.length, activeValue, items, placeholder, unselectedLabel, selectedItems])
 
-    // ── Handlers ─────────────────────────────────────────────────
+    // ── Commit changes ──
+    const commit = React.useCallback(
+        (next: string | string[]) => {
+            if (multiple) {
+                if (!isControlled) setInternalValue(next as string[])
+                ;(onChange as ((v: string[]) => void) | undefined)?.(next as string[])
+            } else {
+                if (!isControlled) setInternalValue(next as string)
+                ;(onChange as ((v: string) => void) | undefined)?.(next as string)
+            }
+        },
+        [multiple, isControlled, onChange]
+    )
 
-    const commit = (next: string | string[]) => {
-        if (onChange) {
-            ;(onChange as (v: any) => void)(next)
-        } else {
-            setInternalValue(next)
-        }
-    }
+    // ── Handlers ──
+    const handleSelect = React.useCallback(
+        (id: string) => {
+            if (multiple) {
+                const next = isSelected(id)
+                    ? selectedIds.filter((i) => i !== id)
+                    : [...selectedIds, id]
+                commit(next)
+            } else {
+                commit(id === activeValue ? '' : id)
+                setOpen(false)
+            }
+        },
+        [multiple, isSelected, selectedIds, commit, activeValue]
+    )
 
-    const handleSelect = (id: string) => {
-        if (multiple) {
-            commit(isSelected(id) ? selectedIds.filter((i) => i !== id) : [...selectedIds, id])
-        } else {
-            commit(id === (activeValue as string) ? '' : id)
-            setOpen(false)
-        }
-    }
+    const handleRemove = React.useCallback(
+        (id: string, e: React.MouseEvent) => {
+            e.preventDefault()
+            e.stopPropagation()
+            // Guard: only valid in multiple mode
+            if (!multiple) return
+            commit(selectedIds.filter((i) => i !== id))
+        },
+        [multiple, selectedIds, commit]
+    )
 
-    const handleRemove = (id: string, e: React.MouseEvent) => {
-        e.preventDefault()
-        e.stopPropagation()
-        commit(selectedIds.filter((i) => i !== id))
-    }
-
-    // ── Early returns ─────────────────────────────────────────────
-
-    if (isLoading) {
-        return <div className="text-muted-foreground animate-pulse p-2 text-sm">Loading...</div>
-    }
-    if (isError) {
-        return <div className="text-destructive p-2 text-sm">Failed to load data.</div>
-    }
-
-    // ── Render ────────────────────────────────────────────────────
+    const handleClearAll = React.useCallback(
+        (e: React.MouseEvent) => {
+            e.preventDefault()
+            e.stopPropagation()
+            if (!multiple) return
+            commit([])
+        },
+        [multiple, commit]
+    )
 
     return (
         <div className={cn('flex flex-col gap-2', className)}>
             <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
                     <Button
+                        ref={forwardedRef}
                         variant="outline"
                         role="combobox"
                         aria-expanded={open}
+                        aria-haspopup="listbox"
+                        disabled={disabled}
                         className="w-full justify-between font-normal"
                     >
                         <span className="truncate">{buttonLabel}</span>
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        <div className="ml-2 flex shrink-0 items-center gap-1">
+                            {/* Clear all button for multi-select */}
+                            {multiple && selectedIds.length > 0 && !disabled && (
+                                <span
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label="Clear all selections"
+                                    onClick={handleClearAll}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault()
+                                            commit([])
+                                        }
+                                    }}
+                                    className="rounded-full p-0.5 opacity-50 hover:opacity-100 hover:bg-muted transition-opacity"
+                                >
+                                    <X className="h-3.5 w-3.5" />
+                                </span>
+                            )}
+                            <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                        </div>
                     </Button>
                 </PopoverTrigger>
 
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                    <Command>
-                        <CommandInput placeholder={searchPlaceholder} />
+                <PopoverContent
+                    className="w-[var(--radix-popover-trigger-width)] p-0"
+                    align="start"
+                >
+                    {/*
+                     * Fix: use item.label as cmdk `value` for correct text-based filtering,
+                     * and handle selection separately via onSelect → handleSelect(item.id).
+                     * When `onSearchChange` is provided, disable internal filtering (shouldFilter=false).
+                     */}
+                    <Command shouldFilter={!onSearchChange}>
+                        <CommandInput
+                            placeholder={searchPlaceholder}
+                            onValueChange={onSearchChange}
+                        />
                         <CommandList>
-                            <CommandEmpty>{emptyMessage}</CommandEmpty>
-                            <CommandGroup>
-                                {items.map((item) => (
-                                    <CommandItem
-                                        key={item.id}
-                                        value={item.label}
-                                        onSelect={() => handleSelect(item.id)}
-                                        className="cursor-pointer"
-                                    >
-                                        <div className="flex w-full items-center justify-between gap-2">
-                                            {/* Custom or default row */}
-                                            <div className="flex flex-1 items-center gap-2 overflow-hidden">
-                                                {renderItem ? (
-                                                    renderItem(item)
-                                                ) : (
-                                                    <span className="truncate">{item.label}</span>
-                                                )}
-                                            </div>
-                                            {/* Checkmark always on the right */}
-                                            <Check
-                                                className={cn(
-                                                    'h-4 w-4 shrink-0',
-                                                    isSelected(item.id)
-                                                        ? 'opacity-100'
-                                                        : 'opacity-0',
-                                                )}
-                                            />
-                                        </div>
-                                    </CommandItem>
-                                ))}
-                            </CommandGroup>
+                            {isLoading ? (
+                                <div className="flex items-center justify-center gap-2 p-4 text-sm text-muted-foreground">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Loading...
+                                </div>
+                            ) : isError ? (
+                                <div className="flex items-center justify-center gap-2 p-4 text-sm text-destructive">
+                                    <AlertCircle className="h-4 w-4" />
+                                    Failed to load data.
+                                </div>
+                            ) : (
+                                <>
+                                    <CommandEmpty>{emptyMessage}</CommandEmpty>
+                                    <CommandGroup>
+                                        {items.map((item) => {
+                                            const selected = isSelected(item.id)
+                                            return (
+                                                <CommandItem
+                                                    key={item.id}
+                                                    // ✅ Use label as value so cmdk filters by readable text
+                                                    value={item.label}
+                                                    disabled={item.disabled}
+                                                    onSelect={() => !item.disabled && handleSelect(item.id)}
+                                                    className={cn(
+                                                        'cursor-pointer',
+                                                        item.disabled && 'cursor-not-allowed opacity-50'
+                                                    )}
+                                                    aria-selected={selected}
+                                                >
+                                                    <div className="flex w-full items-center justify-between gap-2">
+                                                        <div className="flex flex-1 items-center gap-2 overflow-hidden">
+                                                            {renderItem
+                                                                ? renderItem(item, selected)
+                                                                : <span className="truncate">{item.label}</span>
+                                                            }
+                                                        </div>
+                                                        <Check
+                                                            className={cn(
+                                                                'h-4 w-4 shrink-0 transition-opacity',
+                                                                selected ? 'opacity-100' : 'opacity-0'
+                                                            )}
+                                                        />
+                                                    </div>
+                                                </CommandItem>
+                                            )
+                                        })}
+                                    </CommandGroup>
+                                </>
+                            )}
                         </CommandList>
                     </Command>
                 </PopoverContent>
             </Popover>
 
-            {/* Badges — multi-select only */}
+            {/* Selected badges (multi-select only) */}
             {multiple && selectedItems.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-1.5" role="list" aria-label="Selected items">
                     {selectedItems.map((item) => (
                         <Badge
                             key={item.id}
                             variant="secondary"
                             className="flex items-center gap-1 px-2 py-1"
+                            role="listitem"
                         >
-                            {/* Custom or default badge */}
-                            {renderBadge ? (
-                                renderBadge(item)
-                            ) : (
-                                <span className="text-xs">{item.label}</span>
-                            )}
+                            {renderBadge
+                                ? renderBadge(item)
+                                : <span className="text-xs">{item.label}</span>
+                            }
                             <button
                                 type="button"
                                 onClick={(e) => handleRemove(item.id, e)}
-                                className="hover:bg-muted ml-1 rounded-full p-0.5 transition-colors outline-none hover:cursor-pointer"
+                                disabled={disabled}
+                                className="hover:bg-muted ml-1 rounded-full p-0.5 transition-colors outline-none hover:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                                aria-label={`Remove ${item.label}`}
                             >
                                 <X className="text-muted-foreground hover:text-foreground h-3 w-3" />
-                                <span className="sr-only">Remove {item.label}</span>
                             </button>
                         </Badge>
                     ))}
@@ -272,3 +318,18 @@ export function UiSelect<T extends UiSelectItem>({
         </div>
     )
 }
+
+// ─────────────────────────────────────────────
+// forwardRef wrapper — preserves generic T
+// ─────────────────────────────────────────────
+
+type UiSelectComponent = <T extends UiSelectItem>(
+    props: UiSelectProps<T> & { ref?: React.Ref<HTMLButtonElement> }
+) => React.ReactElement | null
+
+export const UiSelect = React.forwardRef(function UiSelect<T extends UiSelectItem>(
+    props: UiSelectProps<T>,
+    ref: React.Ref<HTMLButtonElement>
+) {
+    return <UiSelectInner {...props} forwardedRef={ref} />
+}) as UiSelectComponent
