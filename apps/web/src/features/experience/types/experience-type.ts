@@ -2,12 +2,13 @@ import * as z from 'zod';
 
 export const experienceValidation = z
   .object({
+    company: z.string().optional().or(z.literal('')),
     companyName: z.string().min(2, 'Company name is required'),
     title: z.string().min(2, 'Job title is required'),
     employmentType: z.string().min(2, 'employmentType is required'),
     location: z.string().min(2, 'Location is required'),
     startDate: z.string(),
-    endDate: z.string(),
+    endDate: z.string().optional(),
     isCurrent: z.boolean().default(false),
     description: z.string().max(2000, 'Description is too long').optional().or(z.literal('')),
     skills: z.array(z.string()).default([]),
@@ -44,6 +45,7 @@ export type ExperienceDTO = z.infer<typeof experienceValidation>
 
 export interface IExperience {
     id: string;
+    company: any;
     companyName: string;
     location: string;
     title: string;
