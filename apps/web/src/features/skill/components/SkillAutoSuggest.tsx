@@ -5,6 +5,8 @@ import { Controller, useFormContext } from 'react-hook-form'
 
 import { UiFormSelect, type UiSelectItem } from '@/components/ui/UiFormSelect'
 import { useDebounce } from '@/hooks/use-debounce'
+import { useSkill } from '../hooks/use-skill'
+
 
 // ─────────────────────────────────────────────
 // Types
@@ -25,121 +27,8 @@ interface SkillAutoSuggestProps {
 }
 
 // ─────────────────────────────────────────────
-// Dummy data
+// Constants
 // ─────────────────────────────────────────────
-
-const DUMMY_SKILLS: SkillSelectItem[] = [
-    {
-        id: 'react',
-        label: 'React',
-        icon: 'https://cdn.simpleicons.org/react',
-        category: 'Frontend',
-    },
-    {
-        id: 'nextjs',
-        label: 'Next.js',
-        icon: 'https://cdn.simpleicons.org/nextdotjs',
-        category: 'Frontend',
-    },
-    {
-        id: 'typescript',
-        label: 'TypeScript',
-        icon: 'https://cdn.simpleicons.org/typescript',
-        category: 'Language',
-    },
-    {
-        id: 'javascript',
-        label: 'JavaScript',
-        icon: 'https://cdn.simpleicons.org/javascript',
-        category: 'Language',
-    },
-    {
-        id: 'tailwind',
-        label: 'Tailwind CSS',
-        icon: 'https://cdn.simpleicons.org/tailwindcss',
-        category: 'Frontend',
-    },
-    {
-        id: 'nodejs',
-        label: 'Node.js',
-        icon: 'https://cdn.simpleicons.org/nodedotjs',
-        category: 'Backend',
-    },
-    {
-        id: 'express',
-        label: 'Express',
-        icon: 'https://cdn.simpleicons.org/express',
-        category: 'Backend',
-    },
-    {
-        id: 'nestjs',
-        label: 'NestJS',
-        icon: 'https://cdn.simpleicons.org/nestjs',
-        category: 'Backend',
-    },
-    {
-        id: 'postgresql',
-        label: 'PostgreSQL',
-        icon: 'https://cdn.simpleicons.org/postgresql',
-        category: 'Database',
-    },
-    {
-        id: 'mongodb',
-        label: 'MongoDB',
-        icon: 'https://cdn.simpleicons.org/mongodb',
-        category: 'Database',
-    },
-    {
-        id: 'redis',
-        label: 'Redis',
-        icon: 'https://cdn.simpleicons.org/redis',
-        category: 'Database',
-    },
-    {
-        id: 'docker',
-        label: 'Docker',
-        icon: 'https://cdn.simpleicons.org/docker',
-        category: 'DevOps',
-    },
-    {
-        id: 'aws',
-        label: 'AWS',
-        icon: 'https://cdn.simpleicons.org/amazonwebservices',
-        category: 'DevOps',
-    },
-    {
-        id: 'github',
-        label: 'GitHub Actions',
-        icon: 'https://cdn.simpleicons.org/githubactions',
-        category: 'DevOps',
-    },
-    { id: 'figma', label: 'Figma', icon: 'https://cdn.simpleicons.org/figma', category: 'Design' },
-    {
-        id: 'graphql',
-        label: 'GraphQL',
-        icon: 'https://cdn.simpleicons.org/graphql',
-        category: 'Backend',
-    },
-    {
-        id: 'prisma',
-        label: 'Prisma',
-        icon: 'https://cdn.simpleicons.org/prisma',
-        category: 'Backend',
-    },
-    {
-        id: 'vue',
-        label: 'Vue.js',
-        icon: 'https://cdn.simpleicons.org/vuedotjs',
-        category: 'Frontend',
-    },
-    {
-        id: 'python',
-        label: 'Python',
-        icon: 'https://cdn.simpleicons.org/python',
-        category: 'Language',
-    },
-    { id: 'go', label: 'Go', icon: 'https://cdn.simpleicons.org/go', category: 'Language' },
-]
 
 const FALLBACK_ICON = '/placeholder-skill.png'
 
@@ -159,18 +48,6 @@ const SkillIcon = ({ src, alt, className }: { src: string; alt: string; classNam
 )
 
 // ─────────────────────────────────────────────
-// Filter dummy data by search term
-// ─────────────────────────────────────────────
-
-function filterSkills(skills: SkillSelectItem[], query: string): SkillSelectItem[] {
-    if (!query.trim()) return skills
-    const q = query.toLowerCase()
-    return skills.filter(
-        (s) => s.label.toLowerCase().includes(q) || s.category.toLowerCase().includes(q),
-    )
-}
-
-// ─────────────────────────────────────────────
 // Component
 // ─────────────────────────────────────────────
 
@@ -185,10 +62,11 @@ const SkillAutoSuggest = ({
     const { control } = useFormContext()
     const [searchTerm, setSearchTerm] = useState('')
 
-    // Debounce search — replace filterSkills with your API hook when ready
+    // Debounce search before hitting the API
     const debouncedSearch = useDebounce(searchTerm, 300)
-    const isLoading = false // swap with real isLoading from your hook
-    const filteredSkills = filterSkills(DUMMY_SKILLS, debouncedSearch)
+
+    // Real API data — keepPreviousData inside the hook prevents flicker between searches
+    const { skills, isLoading, isFetching } = useSkill(debouncedSearch)
 
     return (
         <Controller
@@ -199,15 +77,20 @@ const SkillAutoSuggest = ({
                 const selectedValues: string[] = Array.isArray(field.value) ? field.value : []
                 const isAtLimit = maxItems !== undefined && selectedValues.length >= maxItems
 
-                // Disable unselected items when limit is reached
-                const items: SkillSelectItem[] = filteredSkills.map((skill) => ({
-                    ...skill,
-                    disabled: isAtLimit && !selectedValues.includes(skill.id),
-                }))
+                // Map ISkill → SkillSelectItem, disable unselected items when limit is reached
+                const items: SkillSelectItem[] = skills
+                    .filter((skill) => skill.isActive) // only show active skills
+                    .map((skill) => ({
+                        id: skill.id,
+                        label: skill.name,
+                        icon: skill.icon,
+                        category: skill.category,
+                        disabled: isAtLimit && !selectedValues.includes(skill.id),
+                    }))
 
                 return (
                     <UiFormSelect<SkillSelectItem>
-                        // ── RHF wiring (explicit — no spread so types are tight) ──
+                        // ── RHF wiring ──
                         id={name}
                         ref={field.ref}
                         name={field.name}
@@ -221,7 +104,8 @@ const SkillAutoSuggest = ({
                         // ── Select config ──
                         multiple={isMultiple}
                         items={items}
-                        isLoading={isLoading}
+                        // isFetching covers search transitions, isLoading covers initial load
+                        isLoading={isLoading || isFetching}
                         onSearchChange={setSearchTerm}
                         placeholder={placeholder}
                         searchPlaceholder="Cari skill (misal: React, AWS...)"
