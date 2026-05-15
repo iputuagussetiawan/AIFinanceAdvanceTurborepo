@@ -145,7 +145,7 @@ export default function UserSkillForm() {
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Level" />
                                                 </SelectTrigger>
-                                                <SelectContent>
+                                                <SelectContent className='z-99999'>
                                                     {['Beginner', 'Intermediate', 'Advanced', 'Expert'].map(l => (
                                                         <SelectItem key={l} value={l}>{l}</SelectItem>
                                                     ))}
