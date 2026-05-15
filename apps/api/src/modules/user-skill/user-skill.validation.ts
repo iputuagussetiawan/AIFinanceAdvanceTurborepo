@@ -1,9 +1,11 @@
+import { Types } from 'mongoose';
 import { z } from 'zod'
 
 export const userSkillValidation = z.object({
-    skill: z.string().optional(),
-    skillName: z.string().min(1, 'Skill name is required'),
-    // Nilai progress bar (0 - 100)
+    skill: z.string({ required_error: "Skill ID is required" })
+        .refine((val) => Types.ObjectId.isValid(val), {
+            message: "Invalid Skill ID format",
+        }),
     percentage: z
         .number()
         .min(0, 'Percentage must be at least 0')
@@ -16,4 +18,4 @@ export const userSkillValidation = z.object({
 
 // Jika Anda ingin memvalidasi kumpulan skill sekaligus (Array)
 export const userSkillsArrayValidation = z.array(userSkillValidation)
-export type IUserSkill = z.infer<typeof userSkillValidation>
+export type IUserSkill = z.infer<typeof userSkillValidation>;

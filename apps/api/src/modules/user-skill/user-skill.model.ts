@@ -5,15 +5,10 @@ import type { IUserSkill } from './user-skill.validation'
 export const UserSkillSchema = new Schema<IUserSkill>(
     {
         skill: {
-            type: Schema.Types.ObjectId,
+            type: 'ObjectId' as any,
             ref: 'Skill',
-            required: false,
-            default: undefined,
-        },
-        skillName: {
-            type: String,
-            required: [true, 'Skill name is required'],
-            trim: true,
+            required: [true, 'Skill ID is required'],
+            index: true, // Speeds up queries when fetching by user
         },
         // Nilai Progress (0-100)
         percentage: {

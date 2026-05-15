@@ -4,99 +4,96 @@ import { z } from 'zod'
 import { HTTPSTATUS } from '../../config/http.config'
 import { asyncHandler } from '../../middlewares/asyncHandler.middleware'
 import { BadRequestException } from '../../utils/appError'
-import {
-    bulkRemoveUserLanguagesService,
-    bulkUpdateUserLanguagesService,
-    removeUserLanguageService,
-    updateUserLanguageService,
-} from './user-skill.service'
-import { userLanguageValidation } from './user-skill.validation'
+import * as UserSkillService from './user-skill.service'
+import { userSkillValidation, userSkillsArrayValidation } from './user-skill.validation'
 
-/**
- * Handles Add or Update of a single language proficiency
- * PUT /api/users/languages
- */
-export const upsertUserLanguage = asyncHandler(async (req: Request, res: Response) => {
-    // 1. Validate userId
-    const userId = req.user?._id as string
-    if (!userId) throw new BadRequestException('User authentication required')
+export const UserSkillController = {
+    /**
+     * Update atau Tambah skill tunggal
+     * PUT /api/users/skills
+     */
+    upsertSkill: asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.user?._id as string
+        if (!userId) throw new BadRequestException('User authentication required')
 
-    // 2. Validate body with Zod
-    const body = userLanguageValidation.parse(req.body)
+        // Validasi body dengan Zod (Single Skill)
+        const body = userSkillValidation.parse(req.body)
 
-    // 3. Call service
-    const updatedLanguages = await updateUserLanguageService(userId, body)
+        const data = await UserSkillService.updateUserSkillService(userId, body)
 
-    return res.status(HTTPSTATUS.OK).json({
-        success: true,
-        message: 'Language proficiency updated successfully',
-        data: updatedLanguages,
-    })
-})
+        return res.status(HTTPSTATUS.OK).json({
+            success: true,
+            message: 'Skill updated successfully',
+            data,
+        })
+    }),
 
-/**
- * Handles Bulk Add or Update of language proficiencies
- * PUT /api/users/languages/bulk
- */
-export const bulkUpsertUserLanguages = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user?._id as string
-    if (!userId) throw new BadRequestException('User authentication required')
+    /**
+     * Sinkronisasi Massal Skill (Sync/Reorder)
+     * PUT /api/users/skills/bulk
+     */
+    bulkUpsertSkills: asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.user?._id as string
+        if (!userId) throw new BadRequestException('User authentication required')
 
-    // 1. Extract and Validate that it is an array using Zod
-    const { languages } = req.body
-    const validatedLanguages = z.array(userLanguageValidation).parse(languages)
+        // Ambil dan validasi array menggunakan skema array
+        const { skills } = req.body
+        const validatedSkills = userSkillsArrayValidation.parse(skills)
 
-    // 2. Call the bulk service
-    const updatedLanguages = await bulkUpdateUserLanguagesService(userId, validatedLanguages)
+        const data = await UserSkillService.bulkUpdateUserSkillsService(
+            userId,
+            validatedSkills,
+        )
 
-    return res.status(HTTPSTATUS.OK).json({
-        success: true,
-        message: `${validatedLanguages.length} languages processed successfully`,
-        data: updatedLanguages,
-    })
-})
+        return res.status(HTTPSTATUS.OK).json({
+            success: true,
+            message: 'Skill history synced successfully',
+            data,
+        })
+    }),
 
-/**
- * Removes a specific language from the user's profile
- * DELETE /api/users/languages/:languageId
- */
-export const removeUserLanguage = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user?._id as string
-    if (!userId) throw new BadRequestException('User authentication required')
+    /**
+     * Hapus satu entri skill
+     * DELETE /api/users/skills/:entryId
+     */
+    removeSkill: asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.user?._id as string
+        if (!userId) throw new BadRequestException('User authentication required')
 
-    const { languageId } = req.params
-    if (!languageId) throw new BadRequestException('Language ID is required')
+        const { entryId } = req.params
+        if (!entryId) throw new BadRequestException('Skill entry ID is required')
 
-    const remainingLanguages = await removeUserLanguageService(userId, languageId.toString())
+        const data = await UserSkillService.removeUserSkillService(
+            userId,
+            entryId.toString(),
+        )
 
-    return res.status(HTTPSTATUS.OK).json({
-        success: true,
-        message: 'Language removed from profile successfully',
-        data: remainingLanguages,
-    })
-})
+        return res.status(HTTPSTATUS.OK).json({
+            success: true,
+            message: 'Skill entry removed from profile',
+            data,
+        })
+    }),
 
-/**
- * Handles Bulk Removal of languages
- * DELETE /api/users/languages/bulk
- */
-export const bulkRemoveUserLanguages = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user?._id as string
-    if (!userId) throw new BadRequestException('User authentication required')
+    /**
+     * Hapus banyak entri skill sekaligus (Opsional jika dibutuhkan)
+     * DELETE /api/users/skills/bulk
+     */
+    bulkRemoveSkills: asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.user?._id as string
+        if (!userId) throw new BadRequestException('User authentication required')
 
-    // 1. Validate that languageIds is an array of strings
-    const { languageIds } = req.body
-    const validatedIds = z.array(z.string()).parse(languageIds)
+        const { skillIds } = req.body
+        const validatedIds = z.array(z.string()).parse(skillIds)
 
-    if (validatedIds.length === 0) {
-        throw new BadRequestException('Please provide at least one language ID to remove')
-    }
+        // Asumsi Anda sudah mengimplementasikan bulkRemove di service
+        // Jika belum, fungsi ini bisa ditambahkan nanti sesuai kebutuhan
+        const data = await UserSkillService.bulkRemoveUserSkillsService(userId, validatedIds)
 
-    const remainingLanguages = await bulkRemoveUserLanguagesService(userId, validatedIds)
-
-    return res.status(HTTPSTATUS.OK).json({
-        success: true,
-        message: `${validatedIds.length} languages removed successfully`,
-        data: remainingLanguages,
-    })
-})
+        return res.status(HTTPSTATUS.OK).json({
+            success: true,
+            message: 'Selected skill entries removed',
+            data,
+        })
+    }),
+}
