@@ -1,8 +1,8 @@
 // services/user-service.ts
 
 import { api } from '@/lib/api-factory'
-import type { ExperienceDTO } from '../types/experience-type'
 
+import type { ExperienceDTO } from '../types/experience-type'
 
 export const experienceService = {
     updateAll: (data: ExperienceDTO[]) =>

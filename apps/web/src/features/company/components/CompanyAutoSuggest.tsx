@@ -6,6 +6,7 @@ import type { FieldError } from 'react-hook-form'
 
 import { useCompany } from '@/features/company/hooks/use-company'
 import { UiFormAutoSuggest } from '@/components/ui/UiFormAutoSuggest'
+
 import type { ICompany } from '../types/company-type'
 
 interface CompanyAutoSuggestProps {

@@ -19,7 +19,17 @@ const skillSchema = new Schema<SkillDocument>(
             type: String,
             required: [true, 'Category is required'],
             trim: true,
-            enum: ['Frontend', 'Backend', 'Mobile', 'Database', 'DevOps', 'Data & AI', 'UI/UX', 'Security', 'Tools'],
+            enum: [
+                'Frontend',
+                'Backend',
+                'Mobile',
+                'Database',
+                'DevOps',
+                'Data & AI',
+                'UI/UX',
+                'Security',
+                'Tools',
+            ],
         },
         icon: {
             type: String,

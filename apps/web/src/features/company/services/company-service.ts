@@ -1,4 +1,5 @@
 import { api } from '@/lib/api-factory'
+
 import type { ICompaniesResponse } from '../types/company-type'
 
 export const companyService = {

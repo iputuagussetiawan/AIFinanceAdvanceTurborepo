@@ -12,7 +12,7 @@ export const SKILL_CATEGORIES = [
     'Tools',
 ] as const
 
-export type SkillCategory = typeof SKILL_CATEGORIES[number]
+export type SkillCategory = (typeof SKILL_CATEGORIES)[number]
 
 export const createSkillSchema = z.object({
     name: z.string().min(1, 'Skill name is required').max(100),

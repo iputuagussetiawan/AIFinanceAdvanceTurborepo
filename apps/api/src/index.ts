@@ -25,8 +25,8 @@ import jobseekerRoutes from './modules/jobseeker/jobseeker.route'
 import languageRoutes from './modules/language/language.route'
 // import memberRoutes from './modules/member/member.route'
 import sessionRoutes from './modules/session/session.route'
-import userRoutes from './modules/user/user.route'
 import skillRoutes from './modules/skill/skill.route'
+import userRoutes from './modules/user/user.route'
 
 const app = express()
 app.use(cookieParser())

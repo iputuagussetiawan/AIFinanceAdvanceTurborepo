@@ -19,8 +19,7 @@ export const updateUserSkillService = async (userId: string, skillData: IUserSki
     // 1. Cari index berdasarkan ID (jika ada) atau skillName
     const skillIndex = user.skills.findIndex(
         (skill: any) =>
-            skill.skillName === skillData.skillName ||
-            skill._id?.toString() === skillDataId,
+            skill.skillName === skillData.skillName || skill._id?.toString() === skillDataId,
     )
 
     if (skillIndex > -1) {
@@ -44,10 +43,7 @@ export const updateUserSkillService = async (userId: string, skillData: IUserSki
  * Bulk Update: Sinkronisasi seluruh daftar skill
  * Berguna untuk fitur drag-and-drop reorder atau form besar
  */
-export const bulkUpdateUserSkillsService = async (
-    userId: string,
-    skillsArray: IUserSkill[],
-) => {
+export const bulkUpdateUserSkillsService = async (userId: string, skillsArray: IUserSkill[]) => {
     const user = await UserModel.findById(userId)
     if (!user) throw new NotFoundException('User not found')
 

@@ -1,4 +1,5 @@
 import * as z from 'zod'
+
 export const educationValidation = z
     .object({
         institution: z.string().optional().or(z.literal('')),

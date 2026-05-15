@@ -4,13 +4,13 @@ import { z } from 'zod'
 import { HTTPSTATUS } from '../../config/http.config'
 import { asyncHandler } from '../../middlewares/asyncHandler.middleware'
 import { BadRequestException } from '../../utils/appError'
-import { userLanguageValidation } from './user-skill.validation'
 import {
     bulkRemoveUserLanguagesService,
     bulkUpdateUserLanguagesService,
     removeUserLanguageService,
     updateUserLanguageService,
 } from './user-skill.service'
+import { userLanguageValidation } from './user-skill.validation'
 
 /**
  * Handles Add or Update of a single language proficiency

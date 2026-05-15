@@ -1,13 +1,13 @@
 import mongoose, { Document, Schema, type Types } from 'mongoose'
 
 import { compareValue, hashValue } from '../../utils/bcrypt'
+import { UserSkillSchema } from '../user-skill/user-skill.model'
 import { userEducationSchema } from '../userEducation/user-education.model'
 import type { IUserEducation } from '../userEducation/user-education.validation'
 import { userExperienceSchema } from '../userExperiences/user-experience.model'
 import type { IUserExperience } from '../userExperiences/user-experience.validation'
 import { userLanguageSchema } from '../userlanguage/user-language.model'
 import type { IUserLanguage } from '../userlanguage/user-language.validation'
-import { UserSkillSchema } from '../user-skill/user-skill.model'
 
 // _id: false prevents Mongoose from creating a unique ID for every array item
 
