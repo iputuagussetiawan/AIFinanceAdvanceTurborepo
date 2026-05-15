@@ -37,7 +37,7 @@ const ResumeExpOne = () => {
                                 </span>
                             </div>
                             {/* Progress Bar Container */}
-                            <div className="h-[6px] w-full" style={{ backgroundColor: '#e5e7eb' }}>
+                            <div className="h-1.5 w-full" style={{ backgroundColor: '#e5e7eb' }}>
                                 <div
                                     className="h-full"
                                     style={{
@@ -59,7 +59,7 @@ const ResumeExpOne = () => {
                         Language
                     </h2>
                     <div
-                        className="mb-4 h-[1px] w-full"
+                        className="mb-4 h-px w-full"
                         style={{ backgroundColor: '#d1d5db' }}
                     ></div>
                     <ul className="space-y-1">
