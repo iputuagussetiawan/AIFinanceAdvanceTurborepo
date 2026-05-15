@@ -2,10 +2,9 @@
 
 import * as React from 'react'
 import { forwardRef } from 'react'
+import { AlertCircle, Check, ChevronsUpDown, Loader2, X } from 'lucide-react'
 import { type FieldError } from 'react-hook-form'
-import { Check, ChevronsUpDown, X, Loader2, AlertCircle } from 'lucide-react'
 
-import { Field, FieldLabel } from '@/components/ui/field'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,6 +15,7 @@ import {
     CommandItem,
     CommandList,
 } from '@/components/ui/command'
+import { Field, FieldLabel } from '@/components/ui/field'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 
@@ -82,7 +82,7 @@ export type UiFormSelectProps<T extends UiSelectItem> =
 // ─────────────────────────────────────────────
 
 function UiFormSelectInner<T extends UiSelectItem>(
-    props: UiFormSelectProps<T> & { forwardedRef?: React.Ref<HTMLButtonElement> }
+    props: UiFormSelectProps<T> & { forwardedRef?: React.Ref<HTMLButtonElement> },
 ) {
     const {
         // Field meta
@@ -123,9 +123,7 @@ function UiFormSelectInner<T extends UiSelectItem>(
     const [open, setOpen] = React.useState(false)
 
     // ── Internal state (uncontrolled fallback) ──
-    const [internalValue, setInternalValue] = React.useState<string | string[]>(
-        multiple ? [] : ''
-    )
+    const [internalValue, setInternalValue] = React.useState<string | string[]>(multiple ? [] : '')
 
     // Reset when `multiple` changes
     React.useEffect(() => {
@@ -143,12 +141,12 @@ function UiFormSelectInner<T extends UiSelectItem>(
 
     const selectedItems = React.useMemo(
         () => items.filter((item) => selectedIds.includes(item.id)),
-        [items, selectedIds]
+        [items, selectedIds],
     )
 
     const isSelected = React.useCallback(
         (itemId: string) => selectedIds.includes(itemId),
-        [selectedIds]
+        [selectedIds],
     )
 
     // ── Button label ──
@@ -183,7 +181,7 @@ function UiFormSelectInner<T extends UiSelectItem>(
                 ;(onChange as ((v: string) => void) | undefined)?.(next as string)
             }
         },
-        [multiple, isControlled, onChange]
+        [multiple, isControlled, onChange],
     )
 
     // ── Handlers ──
@@ -199,7 +197,7 @@ function UiFormSelectInner<T extends UiSelectItem>(
                 setOpen(false)
             }
         },
-        [multiple, isSelected, selectedIds, commit, activeValue]
+        [multiple, isSelected, selectedIds, commit, activeValue],
     )
 
     const handleRemove = React.useCallback(
@@ -209,7 +207,7 @@ function UiFormSelectInner<T extends UiSelectItem>(
             if (!multiple) return
             commit(selectedIds.filter((i) => i !== itemId))
         },
-        [multiple, selectedIds, commit]
+        [multiple, selectedIds, commit],
     )
 
     const handleClearAll = React.useCallback(
@@ -219,7 +217,7 @@ function UiFormSelectInner<T extends UiSelectItem>(
             if (!multiple) return
             commit([])
         },
-        [multiple, commit]
+        [multiple, commit],
     )
 
     // Close popover → trigger RHF onBlur so field is marked as touched
@@ -228,7 +226,7 @@ function UiFormSelectInner<T extends UiSelectItem>(
             setOpen(next)
             if (!next) onBlur?.()
         },
-        [onBlur]
+        [onBlur],
     )
 
     return (
@@ -252,7 +250,7 @@ function UiFormSelectInner<T extends UiSelectItem>(
                             disabled={isDisabled}
                             className={cn(
                                 'w-full justify-between font-normal',
-                                isInvalid && 'border-destructive focus-visible:ring-destructive'
+                                isInvalid && 'border-destructive focus-visible:ring-destructive',
                             )}
                         >
                             <span className="truncate">{buttonLabel}</span>
@@ -269,7 +267,7 @@ function UiFormSelectInner<T extends UiSelectItem>(
                                                 commit([])
                                             }
                                         }}
-                                        className="rounded-full p-0.5 opacity-50 transition-opacity hover:opacity-100 hover:bg-muted"
+                                        className="hover:bg-muted rounded-full p-0.5 opacity-50 transition-opacity hover:opacity-100"
                                     >
                                         <X className="h-3.5 w-3.5" />
                                     </span>
@@ -280,7 +278,7 @@ function UiFormSelectInner<T extends UiSelectItem>(
                     </PopoverTrigger>
 
                     <PopoverContent
-                        className="w-[var(--radix-popover-trigger-width)] p-0  z-[9999]"
+                        className="z-[9999] w-[var(--radix-popover-trigger-width)] p-0"
                         align="start"
                     >
                         <Command shouldFilter={!onSearchChange}>
@@ -290,12 +288,12 @@ function UiFormSelectInner<T extends UiSelectItem>(
                             />
                             <CommandList>
                                 {isLoading ? (
-                                    <div className="flex items-center justify-center gap-2 p-4 text-sm text-muted-foreground">
+                                    <div className="text-muted-foreground flex items-center justify-center gap-2 p-4 text-sm">
                                         <Loader2 className="h-4 w-4 animate-spin" />
                                         Loading...
                                     </div>
                                 ) : isError ? (
-                                    <div className="flex items-center justify-center gap-2 p-4 text-sm text-destructive">
+                                    <div className="text-destructive flex items-center justify-center gap-2 p-4 text-sm">
                                         <AlertCircle className="h-4 w-4" />
                                         Failed to load data.
                                     </div>
@@ -315,21 +313,27 @@ function UiFormSelectInner<T extends UiSelectItem>(
                                                         }
                                                         className={cn(
                                                             'cursor-pointer',
-                                                            item.disabled && 'cursor-not-allowed opacity-50'
+                                                            item.disabled &&
+                                                                'cursor-not-allowed opacity-50',
                                                         )}
                                                         aria-selected={selected}
                                                     >
                                                         <div className="flex w-full items-center justify-between gap-2">
                                                             <div className="flex flex-1 items-center gap-2 overflow-hidden">
-                                                                {renderItem
-                                                                    ? renderItem(item, selected)
-                                                                    : <span className="truncate">{item.label}</span>
-                                                                }
+                                                                {renderItem ? (
+                                                                    renderItem(item, selected)
+                                                                ) : (
+                                                                    <span className="truncate">
+                                                                        {item.label}
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                             <Check
                                                                 className={cn(
                                                                     'h-4 w-4 shrink-0 transition-opacity',
-                                                                    selected ? 'opacity-100' : 'opacity-0'
+                                                                    selected
+                                                                        ? 'opacity-100'
+                                                                        : 'opacity-0',
                                                                 )}
                                                             />
                                                         </div>
@@ -346,11 +350,7 @@ function UiFormSelectInner<T extends UiSelectItem>(
 
                 {/* ── Multi-select badges ── */}
                 {multiple && selectedItems.length > 0 && (
-                    <div
-                        className="flex flex-wrap gap-1.5"
-                        role="list"
-                        aria-label="Selected items"
-                    >
+                    <div className="flex flex-wrap gap-1.5" role="list" aria-label="Selected items">
                         {selectedItems.map((item) => (
                             <Badge
                                 key={item.id}
@@ -358,15 +358,16 @@ function UiFormSelectInner<T extends UiSelectItem>(
                                 className="flex items-center gap-1 px-2 py-1"
                                 role="listitem"
                             >
-                                {renderBadge
-                                    ? renderBadge(item)
-                                    : <span className="text-xs">{item.label}</span>
-                                }
+                                {renderBadge ? (
+                                    renderBadge(item)
+                                ) : (
+                                    <span className="text-xs">{item.label}</span>
+                                )}
                                 <button
                                     type="button"
                                     onClick={(e) => handleRemove(item.id, e)}
                                     disabled={isDisabled}
-                                    className="ml-1 rounded-full p-0.5 outline-none transition-colors hover:cursor-pointer hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="hover:bg-muted ml-1 rounded-full p-0.5 transition-colors outline-none hover:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                                     aria-label={`Remove ${item.label}`}
                                 >
                                     <X className="text-muted-foreground hover:text-foreground h-3 w-3" />
@@ -378,9 +379,7 @@ function UiFormSelectInner<T extends UiSelectItem>(
             </div>
 
             {/* ── Error message ── */}
-            {error && (
-                <span className="text-destructive mt-1 text-xs">{error.message}</span>
-            )}
+            {error && <span className="text-destructive mt-1 text-xs">{error.message}</span>}
         </Field>
     )
 }
@@ -390,12 +389,12 @@ function UiFormSelectInner<T extends UiSelectItem>(
 // ─────────────────────────────────────────────
 
 type UiFormSelectComponent = <T extends UiSelectItem>(
-    props: UiFormSelectProps<T> & { ref?: React.Ref<HTMLButtonElement> }
+    props: UiFormSelectProps<T> & { ref?: React.Ref<HTMLButtonElement> },
 ) => React.ReactElement | null
 
 export const UiFormSelect = forwardRef(function UiFormSelect<T extends UiSelectItem>(
     props: UiFormSelectProps<T>,
-    ref: React.Ref<HTMLButtonElement>
+    ref: React.Ref<HTMLButtonElement>,
 ) {
     return <UiFormSelectInner {...props} forwardedRef={ref} />
 }) as UiFormSelectComponent

@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, Save } from 'lucide-react'
 import { Controller, useForm } from 'react-hook-form' // Added Controller
 import { toast } from 'sonner'
+import { z } from 'zod'
 
 import { userService } from '@/features/user/services/user-service'
 import {
@@ -15,21 +16,23 @@ import {
 } from '@/features/user/types/user-type'
 import { RichTextEditor } from '@/components/editor' // Using your new editor
 import { Button } from '@/components/ui/button'
-import { z } from 'zod'
 
 const bioFormSchema = z.object({
     bio: z
         .string()
-        .refine((val) => {
-            // Membersihkan tag HTML untuk mengecek apakah konten benar-benar ada
-            // Ini mencegah user hanya memasukkan spasi atau tag kosong <p></p>
-            const strippedContent = val.replace(/<[^>]*>/g, '').trim()
-            return strippedContent.length > 0
-        }, {
-            message: "Bio cannot be empty",
-        })
+        .refine(
+            (val) => {
+                // Membersihkan tag HTML untuk mengecek apakah konten benar-benar ada
+                // Ini mencegah user hanya memasukkan spasi atau tag kosong <p></p>
+                const strippedContent = val.replace(/<[^>]*>/g, '').trim()
+                return strippedContent.length > 0
+            },
+            {
+                message: 'Bio cannot be empty',
+            },
+        )
         .refine((val) => val.length <= 2000, {
-            message: "Bio is too long (maximum 2000 characters)",
+            message: 'Bio is too long (maximum 2000 characters)',
         }),
 })
 

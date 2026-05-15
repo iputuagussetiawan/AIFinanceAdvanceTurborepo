@@ -1,8 +1,9 @@
 import type { IEducation } from '@/features/education/types/education-type'
 import useAuth from '@/hooks/use-auth'
-import EducationSkeleton from './EducationSkeleton'
+
 import ResumeSectionTitle from '../ResumeSectionTitle'
 import EducationItem from './EducationItem'
+import EducationSkeleton from './EducationSkeleton'
 
 const EducationListing = () => {
     const { data, isLoading } = useAuth()
@@ -13,9 +14,7 @@ const EducationListing = () => {
             {isLoading ? (
                 <EducationSkeleton />
             ) : educationList.length > 0 ? (
-                educationList.map((edu: IEducation) => (
-                    <EducationItem key={edu.id} edu={edu} />
-                ))
+                educationList.map((edu: IEducation) => <EducationItem key={edu.id} edu={edu} />)
             ) : (
                 <p className="text-[9px] text-gray-400 italic">No education history added.</p>
             )}

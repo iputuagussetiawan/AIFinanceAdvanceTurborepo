@@ -15,7 +15,7 @@ export function useDebounce<T>(value: T, delay: number = 500): T {
             setDebouncedValue(value)
         }, delay)
 
-        // Cleanup function: Akan membatalkan timeout jika nilai 'value' berubah 
+        // Cleanup function: Akan membatalkan timeout jika nilai 'value' berubah
         // sebelum waktu tunda berakhir (user masih mengetik)
         return () => {
             clearTimeout(handler)

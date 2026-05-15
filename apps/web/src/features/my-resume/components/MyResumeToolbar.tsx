@@ -12,6 +12,7 @@ import {
     Wrench,
 } from 'lucide-react'
 
+import ExperienceForm from '@/features/experience/components/ExperienceForm'
 import { Button } from '@/components/ui/button'
 import {
     DropdownMenu,
@@ -31,7 +32,6 @@ import BioForm from './forms/BioForm'
 import EducationForm from './forms/EducationForm'
 import PersonalInfoForm from './forms/PersonalInfoForm'
 import PhotoProfileForm from './forms/PhotoProfileForm'
-import ExperienceForm from '@/features/experience/components/ExperienceForm'
 
 type MyResumeToolbarProps = {
     onPreview: () => void

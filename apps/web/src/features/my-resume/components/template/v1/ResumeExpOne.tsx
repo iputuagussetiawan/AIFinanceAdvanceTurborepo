@@ -58,10 +58,7 @@ const ResumeExpOne = () => {
                     >
                         Language
                     </h2>
-                    <div
-                        className="mb-4 h-px w-full"
-                        style={{ backgroundColor: '#d1d5db' }}
-                    ></div>
+                    <div className="mb-4 h-px w-full" style={{ backgroundColor: '#d1d5db' }}></div>
                     <ul className="space-y-1">
                         <li
                             className="flex items-center gap-2 text-[9px]"

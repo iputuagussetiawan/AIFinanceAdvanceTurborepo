@@ -19,12 +19,14 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, Plus, Save } from 'lucide-react'
-import { useFieldArray, useForm, FormProvider, Controller } from 'react-hook-form' // ← added FormProvider
+import { Controller, FormProvider, useFieldArray, useForm } from 'react-hook-form' // ← added FormProvider
 import { toast } from 'sonner'
+
+import { CompanyAutoSuggest } from '@/features/company/components/CompanyAutoSuggest'
+import SkillAutoSuggest from '@/features/skill/components/SkillAutoSuggest' // ← uncommented
+import { RichTextEditor } from '@/components/editor'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { UiFormDatePicker } from '@/components/ui/UiFormDatePicker'
-import { UiFormInput } from '@/components/ui/UiFormInput'
 import {
     Select,
     SelectContent,
@@ -32,17 +34,17 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
+import { UiFormDatePicker } from '@/components/ui/UiFormDatePicker'
+import { UiFormInput } from '@/components/ui/UiFormInput'
 import useAuth from '@/hooks/use-auth'
-import { SortableExperienceCard } from './SortableExperienceCard'
+
+import { experienceService } from '../services/experience-service'
 import {
     updateExperienceListValidation,
     type ExperienceDTO,
     type IExperience,
 } from '../types/experience-type'
-import { experienceService } from '../services/experience-service'
-import { CompanyAutoSuggest } from '@/features/company/components/CompanyAutoSuggest'
-import SkillAutoSuggest from '@/features/skill/components/SkillAutoSuggest' // ← uncommented
-import { RichTextEditor } from '@/components/editor'
+import { SortableExperienceCard } from './SortableExperienceCard'
 
 const EMPLOYMENT_TYPES = [
     'Full-time',
@@ -180,7 +182,7 @@ export default function ExperienceForm() {
                                 endDate: '',
                                 isCurrent: false,
                                 description: '',
-                                skills: [],   // ← must be [] not ''
+                                skills: [], // ← must be [] not ''
                                 orderPosition: 0,
                             })
                         }
@@ -231,9 +233,13 @@ export default function ExperienceForm() {
                                                 })
                                             }}
                                             onSelect={(val) => {
-                                                setValue(`experiences.${index}.companyName`, val.name, {
-                                                    shouldValidate: true,
-                                                })
+                                                setValue(
+                                                    `experiences.${index}.companyName`,
+                                                    val.name,
+                                                    {
+                                                        shouldValidate: true,
+                                                    },
+                                                )
                                                 setValue(`experiences.${index}.company`, val.id, {
                                                     shouldValidate: true,
                                                 })
@@ -276,7 +282,10 @@ export default function ExperienceForm() {
                                             </Select>
                                             {errors.experiences?.[index]?.employmentType && (
                                                 <p className="text-destructive text-xs">
-                                                    {errors.experiences[index].employmentType?.message}
+                                                    {
+                                                        errors.experiences[index].employmentType
+                                                            ?.message
+                                                    }
                                                 </p>
                                             )}
                                         </div>
@@ -311,7 +320,9 @@ export default function ExperienceForm() {
                                         <div className="flex items-center gap-2 md:col-span-2">
                                             <Checkbox
                                                 id={`isCurrent-${index}`}
-                                                checked={watch(`experiences.${index}.isCurrent`) ?? false}
+                                                checked={
+                                                    watch(`experiences.${index}.isCurrent`) ?? false
+                                                }
                                                 onCheckedChange={(checked) => {
                                                     setValue(
                                                         `experiences.${index}.isCurrent`,
@@ -329,7 +340,7 @@ export default function ExperienceForm() {
                                             />
                                             <label
                                                 htmlFor={`isCurrent-${index}`}
-                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                                             >
                                                 I currently work here
                                             </label>
@@ -344,9 +355,8 @@ export default function ExperienceForm() {
                                                 error={errors.experiences?.[index]?.description}
                                             /> */}
 
-                                            
-                                            <div className="md:col-span-2 space-y-2">
-                                                <label className="text-muted-foreground block text-xs font-semibold uppercase tracking-wider">
+                                            <div className="space-y-2 md:col-span-2">
+                                                <label className="text-muted-foreground block text-xs font-semibold tracking-wider uppercase">
                                                     Job Description
                                                 </label>
                                                 <Controller
@@ -356,15 +366,22 @@ export default function ExperienceForm() {
                                                         <RichTextEditor
                                                             initialContent={field.value}
                                                             onChange={field.onChange}
-                                                            error={!!errors.experiences?.[index]?.description}
+                                                            error={
+                                                                !!errors.experiences?.[index]
+                                                                    ?.description
+                                                            }
                                                         />
                                                     )}
                                                 />
                                                 {errors.experiences?.[index]?.description && (
-                                                    <p className="text-destructive text-xs">{errors.experiences[index].description?.message}</p>
+                                                    <p className="text-destructive text-xs">
+                                                        {
+                                                            errors.experiences[index].description
+                                                                ?.message
+                                                        }
+                                                    </p>
                                                 )}
                                             </div>
-                                                       
                                         </div>
 
                                         {/* ── Skills — replaced plain input with SkillAutoSuggest ── */}

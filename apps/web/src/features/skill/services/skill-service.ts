@@ -1,6 +1,6 @@
 import { api } from '@/lib/api-factory'
-import type { ISkillsResponse } from '../types/skill-type'
 
+import type { ISkillsResponse } from '../types/skill-type'
 
 export const skillService = {
     findAll: (search: string = '') =>

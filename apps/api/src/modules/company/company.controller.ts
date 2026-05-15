@@ -5,7 +5,6 @@ import { asyncHandler } from '../../middlewares/asyncHandler.middleware'
 import * as CompanyService from './company.service'
 import { createCompanySchema, updateCompanySchema } from './company.validation'
 
-
 export const searchCompaniesController = asyncHandler(async (req: Request, res: Response) => {
     const search = req.query.search as string | undefined
     const data = await CompanyService.searchCompaniesService(search)

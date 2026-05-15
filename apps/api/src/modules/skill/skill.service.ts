@@ -29,7 +29,9 @@ export const bulkCreateSkillService = async (skills: ISkillInput[]) => {
         return result as unknown as SkillDocument[]
     } catch (error: any) {
         if (error.code === 11000) {
-            throw new BadRequestException('Bulk insert failed: One or more skill names are duplicated')
+            throw new BadRequestException(
+                'Bulk insert failed: One or more skill names are duplicated',
+            )
         }
         throw error
     }
