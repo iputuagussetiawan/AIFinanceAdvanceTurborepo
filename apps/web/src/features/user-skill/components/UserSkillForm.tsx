@@ -163,19 +163,6 @@ export default function UserSkillForm() {
                                                 placeholder="0-100"
                                             />
                                         </div>
-
-                                        {/* Delete Button */}
-                                        <div className="md:col-span-1 flex justify-end">
-                                            <Button 
-                                                type="button" 
-                                                variant="ghost" 
-                                                size="icon" 
-                                                className="text-destructive"
-                                                onClick={() => remove(index)}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
                                     </div>
                                 </SortableUserSkillCard>
                             ))}
