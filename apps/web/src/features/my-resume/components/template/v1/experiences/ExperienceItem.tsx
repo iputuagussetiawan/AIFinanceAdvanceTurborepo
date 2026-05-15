@@ -1,8 +1,6 @@
 'use client'
 
 import { format, parseISO } from 'date-fns' // Import date-fns
-import { id } from 'date-fns/locale' // Opsional: jika ingin format Indonesia
-
 import type { IExperience } from '@/features/experience/types/experience-type'
 import { cn } from '@/lib/utils'
 
@@ -12,12 +10,10 @@ interface ExperienceItemProps {
 }
 
 const ExperienceItem = ({ experience, className }: ExperienceItemProps) => {
-    // Helper function untuk memformat tanggal
     const formatDate = (dateString: string | undefined | null) => {
         if (!dateString) return ''
         try {
             const date = parseISO(dateString)
-            // "MMM yyyy" menghasilkan: Jan 2024
             return format(date, 'MMM yyyy')
         } catch (error) {
             return dateString // Fallback jika format date salah
