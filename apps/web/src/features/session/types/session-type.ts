@@ -1,5 +1,6 @@
 import type { IEducation } from '@/features/education/types/education-type'
 import type { IExperience } from '@/features/experience/types/experience-type'
+import type { IUserSkill } from '@/features/user-skill/types/userskill-type'
 
 export interface ISession {
     _id: string
@@ -52,6 +53,7 @@ export interface IUser {
     role: IRole
     educations: IEducation[]
     experiences: IExperience[]
+    skills: IUserSkill[] // Assuming you have a IUserSkill type defined somewhere   
 }
 
 // This matches the response structure from your session/me service
