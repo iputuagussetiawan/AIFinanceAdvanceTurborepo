@@ -30,7 +30,7 @@ interface SkillAutoSuggestProps {
 // Constants
 // ─────────────────────────────────────────────
 
-const FALLBACK_ICON = '/placeholder-skill.png'
+const FALLBACK_ICON = '/images/icon/microsoft-copilot.svg'
 
 // ─────────────────────────────────────────────
 // SkillIcon — isolated so onError doesn't bubble
