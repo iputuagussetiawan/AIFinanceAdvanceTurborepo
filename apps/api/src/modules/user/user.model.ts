@@ -7,6 +7,7 @@ import { userExperienceSchema } from '../userExperiences/user-experience.model'
 import type { IUserExperience } from '../userExperiences/user-experience.validation'
 import { userLanguageSchema } from '../userlanguage/user-language.model'
 import type { IUserLanguage } from '../userlanguage/user-language.validation'
+import { UserSkillSchema } from '../user-skill/user-skill.model'
 
 // _id: false prevents Mongoose from creating a unique ID for every array item
 
@@ -33,6 +34,7 @@ export interface UserDocument extends Document {
     languages?: IUserLanguage[]
     educations?: IUserEducation[]
     experiences?: IUserExperience[]
+    skills?: Types.ObjectId[] // Assuming you will store references to UserSkill documents
 }
 
 const userSchema = new Schema<UserDocument>(
@@ -106,6 +108,10 @@ const userSchema = new Schema<UserDocument>(
         },
         experiences: {
             type: [userExperienceSchema],
+            default: [],
+        },
+        skills: {
+            type: [UserSkillSchema],
             default: [],
         },
     },

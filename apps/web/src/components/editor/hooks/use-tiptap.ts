@@ -1,4 +1,5 @@
 import Placeholder from '@tiptap/extension-placeholder'
+import TextAlign from '@tiptap/extension-text-align'
 import { useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 
@@ -6,6 +7,7 @@ export const useTiptap = (content: string, onUpdate: (html: string) => void) => 
     return useEditor({
         extensions: [
             StarterKit,
+            TextAlign,
             Placeholder.configure({
                 placeholder: 'Write something amazing...',
                 emptyEditorClass: 'is-editor-empty',
