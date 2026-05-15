@@ -21,6 +21,7 @@ interface SkillAutoSuggestProps {
     placeholder?: string
     maxItems?: number
     isSubmitting?: boolean
+    isMultiple?: boolean
 }
 
 // ─────────────────────────────────────────────
@@ -179,6 +180,7 @@ const SkillAutoSuggest = ({
     placeholder = 'Pilih keahlian...',
     maxItems,
     isSubmitting,
+    isMultiple = true,
 }: SkillAutoSuggestProps) => {
     const { control } = useFormContext()
     const [searchTerm, setSearchTerm] = useState('')
@@ -217,7 +219,7 @@ const SkillAutoSuggest = ({
                         error={fieldState.error}
                         isSubmitting={isSubmitting}
                         // ── Select config ──
-                        multiple
+                        multiple={isMultiple}
                         items={items}
                         isLoading={isLoading}
                         onSearchChange={setSearchTerm}

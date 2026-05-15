@@ -4,7 +4,7 @@ export const userSkillService = {
     updateAll: (data: IBulkUserSkills) =>
         api.API<IUserSkillsApiResponse>('/api/user/skills/bulk', {
             method: 'PUT',
-            body: JSON.stringify({ data }),
+            body: JSON.stringify({ skills: data.skills }),
             cache: 'no-store',
         }),
 }

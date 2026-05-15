@@ -130,6 +130,7 @@ export default function UserSkillForm() {
                                         {/* Skill Selection */}
                                         <div className="md:col-span-5">
                                             <SkillAutoSuggest 
+                                                isMultiple={false}
                                                 name={`skills.${index}.skill`} 
                                                 label="Select Skill"
                                             />
