@@ -11,9 +11,25 @@ import {
     getAllLanguagesService,
     getLanguageByIdService,
     getLanguagesPaginatedService,
+    searchLanguagesService,
     updateLanguageService,
 } from './language.service'
 import { languageValidation, updateLanguageValidation } from './language.validation'
+
+
+export const searchLanguagesController = asyncHandler(async (req: Request, res: Response) => {
+    const search = (req.query.search as string) ?? ''
+    const priority = req.query.priority !== undefined ? Number(req.query.priority) : undefined
+
+    const data = await searchLanguagesService(search, priority)
+
+    return res.status(HTTPSTATUS.OK).json({
+        success: true,
+        message: 'Languages fetched successfully',
+        data,
+    })
+})
+
 
 export const getAllLanguagesController = asyncHandler(async (req: Request, res: Response) => {
     // Mengambil filter isActive dari query jika ada (misal: ?isActive=true)

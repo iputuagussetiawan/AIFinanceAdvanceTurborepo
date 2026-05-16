@@ -2,10 +2,12 @@ import mongoose, { Document, Model, Schema } from 'mongoose'
 
 // 1. Define the Interface
 export interface LanguageDocument extends Document {
-    name: string // e.g., "English", "Bahasa Indonesia", "Japanese"
-    description?: string // e.g., "International Standard English"
+    name: string
+    description?: string
+    imageUrl?: string
+    priority: number
     orderPosition: number
-    isActive: boolean // To enable/disable languages in your app without deleting them
+    isActive: boolean
     createdAt: Date
     updatedAt: Date
 }
@@ -24,9 +26,20 @@ const languageSchema = new Schema<LanguageDocument>(
             default: '',
             trim: true,
         },
+        imageUrl: {
+            type: String,
+            default: '',
+            trim: true,
+        },
+        priority: {
+            type: Number,
+            default: 0,
+            min: [0, 'Priority cannot be negative'],
+            index: true, // Index for faster sorting queries
+        },
         orderPosition: {
             type: Number,
-            default: 0, // Used to sort how they appear in dropdowns
+            default: 100, // Used to sort how they appear in dropdowns
         },
         isActive: {
             type: Boolean,
