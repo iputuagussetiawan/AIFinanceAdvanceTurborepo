@@ -9,21 +9,20 @@ interface SkillItemProps {
 
 const SkillItem = ({ skill, className }: SkillItemProps) => {
     return (
-          <div className={cn('mb-2', className)}>
+        <div className={cn('mb-2', className)}>
             <div className="mb-1 flex items-center justify-between">
-                <span className="text-[9px]" style={{ color: '#4b5563' }}>
+                <span className="text-[9px] text-gray-600">
                     {skill.skill.name}
                 </span>
+                <span className="text-[9px] text-gray-400">
+                    {skill.level}
+                </span>
             </div>
-            {/* Progress Bar Container */}
-            <div className="h-1.5 w-full" style={{ backgroundColor: '#e5e7eb' }}>
+            <div className="h-1.5 w-full bg-gray-200">
                 <div
-                    className="h-full"
-                    style={{
-                        width: `${skill.percentage}%`,
-                        backgroundColor: '#374151',
-                    }}
-                ></div>
+                    className="h-full bg-gray-700"
+                    style={{ width: `${skill.percentage}%` }}
+                />
             </div>
         </div>
     )
