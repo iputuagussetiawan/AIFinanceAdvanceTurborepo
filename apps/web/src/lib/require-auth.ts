@@ -1,8 +1,10 @@
 // lib/require-auth.ts
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
-import { decodeJwt } from 'jose'
+import { jwtVerify } from 'jose'
 import { AUTH_COOKIE_NAME } from '@/lib/constants'
+
+const secret = new TextEncoder().encode(process.env.JWT_SECRET)
 
 export async function requireAuth() {
     const cookieStore = await cookies()
@@ -11,8 +13,7 @@ export async function requireAuth() {
     if (!token) redirect('/signin')
 
     try {
-        const payload = decodeJwt(token)
-        if (Date.now() >= (payload.exp || 0) * 1000) redirect('/signin')
+        await jwtVerify(token, secret)
     } catch {
         redirect('/signin')
     }

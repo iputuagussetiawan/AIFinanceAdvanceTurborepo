@@ -4,6 +4,7 @@ import { decodeJwt, jwtVerify } from 'jose' // Optional: install 'jose' for edge
 import { AUTH_COOKIE_NAME } from './lib/constants'
 
 // const protectedRoutes = ['/dashboard', '/onboarding', '/cv']
+const secret = new TextEncoder().encode(process.env.JWT_SECRET)
 const authRoutes = ['/signin', '/signup', '/register', '/forgot-password', '/reset-password']
 
 export default async function middleware(request: NextRequest) {
@@ -14,15 +15,7 @@ export default async function middleware(request: NextRequest) {
     // --- 1. TOKEN EXPIRY CHECK (Client-Side Logic in Middleware) ---
     if (token) {
         try {
-            const payload = decodeJwt(token) // Decodes without verifying signature
-            const isExpired = Date.now() >= (payload.exp || 0) * 1000
-
-            if (isExpired) {
-                const response = NextResponse.redirect(new URL('/signin', request.url))
-                // 🗑️ REMOVE EXPIRED TOKEN FROM BROWSER
-                response.cookies.delete(AUTH_COOKIE_NAME)
-                return response
-            }
+            await jwtVerify(token, secret)
         } catch (e) {
             // If token is malformed, clear it
             const response = NextResponse.redirect(new URL('/signin', request.url))
