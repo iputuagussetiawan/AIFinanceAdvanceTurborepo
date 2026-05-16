@@ -16,5 +16,17 @@ export const userLanguageSchema = new Schema<IUserLanguage>(
             jlptLevel: { type: String, enum: ['N1', 'N2', 'N3', 'N4', 'N5'] },
         },
     },
-    { _id: false },
+    {
+        _id: true,
+        timestamps: true,
+        toJSON: {
+            virtuals: true,
+            transform: (doc, ret) => {
+                delete (ret as any)._id // Hapus _id asli agar lebih rapi
+                delete (ret as any).__v
+                return ret
+            },
+        },
+        toObject: { virtuals: true },
+    },
 )
