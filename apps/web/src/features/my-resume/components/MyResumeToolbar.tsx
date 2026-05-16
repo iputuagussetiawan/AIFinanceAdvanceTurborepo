@@ -32,6 +32,7 @@ import BioForm from './forms/BioForm'
 import EducationForm from './forms/EducationForm'
 import PersonalInfoForm from './forms/PersonalInfoForm'
 import PhotoProfileForm from './forms/PhotoProfileForm'
+import UserSkillForm from '@/features/user-skill/components/UserSkillForm'
 
 type MyResumeToolbarProps = {
     onPreview: () => void
@@ -57,6 +58,7 @@ export default function MyResumeToolbar({
     const [isOpenAboutDrawer, SetIsOpenAboutDrawer] = useState(false)
     const [isOpenEducationDrawer, setIsOpenEducationDrawer] = useState(false)
     const [isOpenExperienceDrawer, setIsOpenExperienceDrawer] = useState(false)
+    const [isOpenSkillsDrawer, setIsOpenSkillsDrawer] = useState(false)
 
     return (
         <>
@@ -165,7 +167,12 @@ export default function MyResumeToolbar({
                                             <Briefcase className="mr-2 h-4 w-4" />
                                             <span>Professional Experience</span>
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem className="hover:cursor-pointer">
+                                        <DropdownMenuItem
+                                            onSelect={() => {
+                                                setIsOpenSkillsDrawer(true)
+                                            }}
+                                            className="hover:cursor-pointer"
+                                        >
                                             <Wrench className="mr-2 h-4 w-4" />
                                             <span>Core Skills</span>
                                         </DropdownMenuItem>
@@ -264,6 +271,15 @@ export default function MyResumeToolbar({
                 <div className="grid gap-4">
                     <ExperienceForm />
                 </div>
+            </ResumeDrawer>
+            <ResumeDrawer
+                className="sm:min-w-[800px]"
+                direction="right"
+                title="Skills"
+                open={isOpenSkillsDrawer}
+                onOpenChange={setIsOpenSkillsDrawer}
+            >
+                <UserSkillForm />
             </ResumeDrawer>
         </>
     )
