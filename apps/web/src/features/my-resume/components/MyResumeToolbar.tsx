@@ -33,6 +33,7 @@ import EducationForm from './forms/EducationForm'
 import PersonalInfoForm from './forms/PersonalInfoForm'
 import PhotoProfileForm from './forms/PhotoProfileForm'
 import UserSkillForm from '@/features/user-skill/components/UserSkillForm'
+import UserLanguageForm from '@/features/user-language/components/UserLanguageForm'
 
 type MyResumeToolbarProps = {
     onPreview: () => void
@@ -59,6 +60,7 @@ export default function MyResumeToolbar({
     const [isOpenEducationDrawer, setIsOpenEducationDrawer] = useState(false)
     const [isOpenExperienceDrawer, setIsOpenExperienceDrawer] = useState(false)
     const [isOpenSkillsDrawer, setIsOpenSkillsDrawer] = useState(false)
+    const [isOpenLanguagesDrawer, setIsOpenLanguagesDrawer] = useState(false)
 
     return (
         <>
@@ -182,7 +184,12 @@ export default function MyResumeToolbar({
 
                                     {/* Additional Section */}
                                     <DropdownMenuGroup>
-                                        <DropdownMenuItem className="hover:cursor-pointer">
+                                        <DropdownMenuItem 
+                                            onSelect={() => {
+                                                setIsOpenLanguagesDrawer(true)
+                                            }}
+                                            className="hover:cursor-pointer"
+                                        >
                                             <Languages className="mr-2 h-4 w-4" />
                                             <span>Languages</span>
                                         </DropdownMenuItem>
@@ -280,6 +287,16 @@ export default function MyResumeToolbar({
                 onOpenChange={setIsOpenSkillsDrawer}
             >
                 <UserSkillForm />
+            </ResumeDrawer>
+
+            <ResumeDrawer
+                className="sm:min-w-[800px]"
+                direction="right"
+                title="Languages"
+                open={isOpenLanguagesDrawer}
+                onOpenChange={setIsOpenLanguagesDrawer}
+            >
+                <UserLanguageForm />
             </ResumeDrawer>
         </>
     )

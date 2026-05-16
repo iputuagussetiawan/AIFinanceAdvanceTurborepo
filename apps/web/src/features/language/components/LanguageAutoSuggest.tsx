@@ -100,7 +100,7 @@ const LanguageAutoSuggest = ({
                         isLoading={isLoading || isFetching}
                         onSearchChange={setSearchTerm}
                         placeholder={placeholder}
-                        searchPlaceholder="Search language (e.g. English, Japanese...)"
+                        searchPlaceholder="Search language"
                         emptyMessage={
                             debouncedSearch
                                 ? `Language "${debouncedSearch}" not found.`
@@ -120,9 +120,7 @@ const LanguageAutoSuggest = ({
                                     ].join(' ')}
                                 />
                                 <span className="text-sm font-medium">{lang.label}</span>
-                                {isSelected && (
-                                    <span className="text-primary ml-auto text-xs">✓</span>
-                                )}
+                               
                             </div>
                         )}
                         // ── Selected chip ──
