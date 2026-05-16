@@ -67,7 +67,7 @@ export const searchSkillsService = async (search: string = '', category: string 
     if (search) filter.name = { $regex: search, $options: 'i' }
     if (category) filter.category = category
 
-    const data = await SkillModel.find(filter).sort({ name: 1 }).limit(20)
+    const data = await SkillModel.find(filter).sort({ name: 1 })
     return data.map((doc) => doc.toJSON())
 }
 

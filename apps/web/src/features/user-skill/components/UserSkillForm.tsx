@@ -66,7 +66,7 @@ export default function UserSkillForm() {
             const formatted = [...authData.user.skills]
                 .sort((a, b) => (a.orderPosition ?? 0) - (b.orderPosition ?? 0))
                 .map((s) => ({
-                    skill: s.skill || s.skill, // Ambil ID-nya saja untuk form
+                    skill: s.skill?.id || s.skill.id, // Ambil ID-nya saja untuk form
                     percentage: s.percentage,
                     level: s.level,
                     orderPosition: s.orderPosition,
