@@ -26,4 +26,10 @@ export const languageService = {
                 limit: limit.toString(),
             },
         }),
+     findAll: (search: string = '') =>
+        api.API<ILanguageResponse>('/api/language/search', {
+            method: 'GET',
+            cache: 'no-store',
+            params: { search },
+        }),
 }

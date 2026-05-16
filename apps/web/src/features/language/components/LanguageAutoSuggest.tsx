@@ -5,23 +5,20 @@ import { Controller, useFormContext } from 'react-hook-form'
 
 import { UiFormSelect, type UiSelectItem } from '@/components/ui/UiFormSelect'
 import { useDebounce } from '@/hooks/use-debounce'
-import { useSkill } from '../hooks/use-skill'
-
+import { useLanguageSearch } from '../hooks/use-language'
 
 // ─────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────
 
-interface SkillSelectItem extends UiSelectItem {
-    icon: string
-    category: string
+interface LanguageSelectItem extends UiSelectItem {
+    imageUrl: string
 }
 
-interface SkillAutoSuggestProps {
+interface LanguageAutoSuggestProps {
     name: string
     label?: string
     placeholder?: string
-    maxItems?: number
     isSubmitting?: boolean
     isMultiple?: boolean
 }
@@ -30,19 +27,19 @@ interface SkillAutoSuggestProps {
 // Constants
 // ─────────────────────────────────────────────
 
-const FALLBACK_ICON = '/images/icon/microsoft-copilot.svg'
+const FALLBACK_FLAG = '/images/flags/unknown.svg'
 
 // ─────────────────────────────────────────────
-// SkillIcon — isolated so onError doesn't bubble
+// LanguageFlag — isolated so onError doesn't bubble
 // ─────────────────────────────────────────────
 
-const SkillIcon = ({ src, alt, className }: { src: string; alt: string; className?: string }) => (
+const LanguageFlag = ({ src, alt, className }: { src: string; alt: string; className?: string }) => (
     <img
-        src={src}
+        src={src || FALLBACK_FLAG}
         alt={alt}
         className={className}
         onError={(e) => {
-            e.currentTarget.src = FALLBACK_ICON
+            e.currentTarget.src = FALLBACK_FLAG
         }}
     />
 )
@@ -53,43 +50,39 @@ const SkillIcon = ({ src, alt, className }: { src: string; alt: string; classNam
 
 const LanguageAutoSuggest = ({
     name,
-    label = 'Keahlian / Skills',
-    placeholder = 'Pilih keahlian...',
-    maxItems,
+    label = 'Language',
+    placeholder = 'Select a language...',
     isSubmitting,
-    isMultiple = true,
-}: SkillAutoSuggestProps) => {
+    isMultiple = false,
+}: LanguageAutoSuggestProps) => {
     const { control } = useFormContext()
     const [searchTerm, setSearchTerm] = useState('')
 
-    // Debounce search before hitting the API
     const debouncedSearch = useDebounce(searchTerm, 300)
-
-    // Real API data — keepPreviousData inside the hook prevents flicker between searches
-    const { skills, isLoading, isFetching } = useSkill(debouncedSearch)
+    const { languages, isLoading, isFetching } = useLanguageSearch(debouncedSearch)
 
     return (
         <Controller
             name={name}
             control={control}
-            defaultValue={[]}
+            defaultValue={isMultiple ? [] : ''}
             render={({ field, fieldState }) => {
-                const selectedValues: string[] = Array.isArray(field.value) ? field.value : []
-                const isAtLimit = maxItems !== undefined && selectedValues.length >= maxItems
+                const selectedValues: string[] = Array.isArray(field.value)
+                    ? field.value
+                    : field.value
+                    ? [field.value]
+                    : []
 
-                // Map ISkill → SkillSelectItem, disable unselected items when limit is reached
-                const items: SkillSelectItem[] = skills
-                    .filter((skill) => skill.isActive) // only show active skills
-                    .map((skill) => ({
-                        id: skill.id,
-                        label: skill.name,
-                        icon: skill.icon,
-                        category: skill.category,
-                        disabled: isAtLimit && !selectedValues.includes(skill.id),
+                const items: LanguageSelectItem[] = languages
+                    .filter((lang) => lang.isActive)
+                    .map((lang) => ({
+                        id: lang.id,
+                        label: lang.name,
+                        imageUrl: lang.imageUrl ?? '',
                     }))
 
                 return (
-                    <UiFormSelect<SkillSelectItem>
+                    <UiFormSelect<LanguageSelectItem>
                         // ── RHF wiring ──
                         id={name}
                         ref={field.ref}
@@ -104,70 +97,71 @@ const LanguageAutoSuggest = ({
                         // ── Select config ──
                         multiple={isMultiple}
                         items={items}
-                        // isFetching covers search transitions, isLoading covers initial load
                         isLoading={isLoading || isFetching}
                         onSearchChange={setSearchTerm}
                         placeholder={placeholder}
-                        searchPlaceholder="Cari skill (misal: React, AWS...)"
+                        searchPlaceholder="Search language (e.g. English, Japanese...)"
                         emptyMessage={
                             debouncedSearch
-                                ? `Skill "${debouncedSearch}" tidak ditemukan.`
-                                : 'Skill tidak ditemukan.'
+                                ? `Language "${debouncedSearch}" not found.`
+                                : 'No languages found.'
                         }
                         // ── Dropdown row ──
-                        renderItem={(skill, isSelected) => (
+                        renderItem={(lang, isSelected) => (
                             <div className="flex items-center gap-2">
-                                <SkillIcon
-                                    src={skill.icon}
-                                    alt={skill.label}
+                                <LanguageFlag
+                                    src={lang.imageUrl}
+                                    alt={lang.label}
                                     className={[
-                                        'h-5 w-5 object-contain transition-all',
+                                        'h-5 w-5 rounded-sm object-cover transition-all',
                                         isSelected
                                             ? 'grayscale-0'
                                             : 'grayscale group-hover:grayscale-0',
                                     ].join(' ')}
                                 />
-                                <div className="flex flex-col text-left">
-                                    <span className="text-sm font-medium">{skill.label}</span>
-                                    <span className="text-muted-foreground text-[10px]">
-                                        {skill.category}
-                                    </span>
-                                </div>
-                                {isAtLimit && !isSelected && (
-                                    <span className="text-muted-foreground ml-auto text-[10px]">
-                                        Max {maxItems}
-                                    </span>
+                                <span className="text-sm font-medium">{lang.label}</span>
+                                {isSelected && (
+                                    <span className="text-primary ml-auto text-xs">✓</span>
                                 )}
                             </div>
                         )}
                         // ── Selected chip ──
-                        renderBadge={(skill) => (
+                        renderBadge={(lang) => (
                             <div className="flex items-center gap-1">
-                                <SkillIcon
-                                    src={skill.icon}
-                                    alt={skill.label}
-                                    className="h-3 w-3 object-contain"
+                                <LanguageFlag
+                                    src={lang.imageUrl}
+                                    alt={lang.label}
+                                    className="h-3 w-3 rounded-sm object-cover"
                                 />
-                                <span className="text-[10px]">{skill.label}</span>
+                                <span className="text-[10px]">{lang.label}</span>
                             </div>
                         )}
                         // ── Trigger label ──
-                        renderButtonLabel={(selectedSkills) => {
-                            if (selectedSkills.length === 0) return placeholder
-                            if (selectedSkills.length === 1) return selectedSkills[0].label
+                        renderButtonLabel={(selectedLangs) => {
+                            if (selectedLangs.length === 0) return placeholder
+                            if (selectedLangs.length === 1) return (
+                                <div className="flex items-center gap-1.5">
+                                    <LanguageFlag
+                                        src={selectedLangs[0].imageUrl}
+                                        alt={selectedLangs[0].label}
+                                        className="h-4 w-4 rounded-sm object-cover"
+                                    />
+                                    <span>{selectedLangs[0].label}</span>
+                                </div>
+                            )
                             return (
                                 <div className="flex items-center gap-1.5">
-                                    {selectedSkills.slice(0, 3).map((skill) => (
-                                        <SkillIcon
-                                            key={skill.id}
-                                            src={skill.icon}
-                                            alt={skill.label}
-                                            className="h-4 w-4 object-contain"
+                                    {selectedLangs.slice(0, 3).map((lang) => (
+                                        <LanguageFlag
+                                            key={lang.id}
+                                            src={lang.imageUrl}
+                                            alt={lang.label}
+                                            className="h-4 w-4 rounded-sm object-cover"
                                         />
                                     ))}
-                                    {selectedSkills.length > 3 && (
+                                    {selectedLangs.length > 3 && (
                                         <span className="text-muted-foreground text-xs">
-                                            +{selectedSkills.length - 3} lainnya
+                                            +{selectedLangs.length - 3} more
                                         </span>
                                     )}
                                 </div>

@@ -1,4 +1,5 @@
-import type { ApiResponse } from '@/types/api-response'
+
+import type { IApiResponse } from '@/types'
 import { z } from 'zod'
 
 export const InstitutionSchema = z.object({
@@ -23,4 +24,4 @@ export type IInstitution = IInstitutionDTO & {
     updatedAt: string
 }
 
-export type InstitutionResponse = ApiResponse<IInstitution[]>
+export type InstitutionResponse = IApiResponse<IInstitution[]>
