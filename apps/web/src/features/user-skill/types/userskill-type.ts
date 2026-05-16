@@ -1,3 +1,4 @@
+import type { IApiResponse } from '@/types';
 import { z } from 'zod';
 export const userSkillValidation = z.object({
   // Validasi ID Master Skill menggunakan Regex agar ringan di Client Side
@@ -40,11 +41,9 @@ export type IBulkUserSkills = z.infer<typeof userSkillsArrayValidation>;
 export interface ISkillMaster {
   id: string;
   name: string;
-  category: 'Frontend' | 'Backend' | 'Mobile' | 'Database' | 'DevOps' | 'Data & AI' | 'UI/UX' | 'Security' | 'Tools';
+  category: string;
   icon: string;
   isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
 }
 
 /**
@@ -58,15 +57,6 @@ export interface IUserSkillResponse {
   orderPosition: number;
   createdAt: string;
   updatedAt: string;
-}
-
-/**
- * Tipe pembungkus standar API Response
- */
-export interface IApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
 }
 
 // Penggunaan spesifik untuk Skill Response

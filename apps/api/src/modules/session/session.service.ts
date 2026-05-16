@@ -48,6 +48,11 @@ export const getSessionByIdService = async (sessionId: string) => {
                     select: '-__v -createdAt -updatedAt',
                     model: 'Company', // Ensure this matches your Company model name
                 },
+                {
+                    path: 'skills.skill', // Populating the skill inside skills
+                    select: '-__v -createdAt -updatedAt',
+                    model: 'Skill', // Ensure this matches your Skill model name
+                },
             ],
         })
         .select('-expiresAt')
