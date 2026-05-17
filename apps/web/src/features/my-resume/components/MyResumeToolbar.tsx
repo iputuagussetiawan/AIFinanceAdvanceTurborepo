@@ -290,7 +290,7 @@ export default function MyResumeToolbar({
             </ResumeDrawer>
 
             <ResumeDrawer
-                className="sm:min-w-[800px]"
+                className="sm:min-w-[1000px]"
                 direction="right"
                 title="Languages"
                 open={isOpenLanguagesDrawer}

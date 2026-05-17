@@ -3,8 +3,7 @@ import { z } from 'zod';
 
 const ProficiencyLevel = z.enum(['Beginner', 'Intermediate', 'Advanced']).optional()
 export const userLanguageValidation = z.object({
-    language: z.string(),
-    name: z.string().min(1, 'Name is required'),
+    language: z.string().min(1, 'Language is required'),
     proficiency: z.object({
         speaking: ProficiencyLevel,
         listening: ProficiencyLevel,
@@ -17,7 +16,14 @@ export const userLanguageValidation = z.object({
 export const userLanguagesArrayValidation = z.object({
     languages: z
         .array(userLanguageValidation)
-        .min(1, 'Please provide at least one language'),
+        .min(1, 'Please provide at least one language')
+        .refine(
+            (languages) => {
+                const ids = languages.map((l) => l.language)
+                return new Set(ids).size === ids.length
+            },
+            { message: 'Duplicate languages are not allowed' },
+        ),
 });
 
 

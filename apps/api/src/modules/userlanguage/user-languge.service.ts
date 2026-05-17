@@ -55,37 +55,15 @@ export const bulkUpdateUserLanguagesService = async (
     const user = await UserModel.findById(userId)
     if (!user) throw new NotFoundException('User not found')
 
-    // 1. Inisialisasi array jika undefined
-    if (!user.languages) {
-        user.languages = []
-    }
-
-    // 2. Filter data masuk: Pastikan hanya memproses yang memiliki ID language
-    // Ini mencegah error "Language ID is required" saat save
+    // 1. Filter valid incoming data first
     const validIncomingData = languagesArray.filter((lang) => lang && lang.language)
 
-    for (const incomingLang of validIncomingData) {
-        // Cari index berdasarkan 'language' (sebelumnya languageId)
-        // Gunakan optional chaining (?.) untuk keamanan ekstra
-        const index = user.languages.findIndex(
-            (existing) => existing?.language?.toString() === incomingLang.language.toString(),
-        )
+    // 2. Replace entire languages array with incoming data
+    user.languages = validIncomingData
 
-        if (index > -1) {
-            // UPDATE: Timpa data pada index tersebut
-            user.languages[index] = incomingLang
-        } else {
-            // ADD: Masukkan data baru
-            user.languages.push(incomingLang)
-        }
-    }
-
-    // 3. Beritahu Mongoose bahwa array 'languages' telah dimodifikasi
     user.markModified('languages')
-
     await user.save()
 
-    // 4. Populate: Ambil detail nama bahasa dari master data sebelum dikembalikan ke Nuxt
     await user.populate('languages.language')
 
     return user.languages

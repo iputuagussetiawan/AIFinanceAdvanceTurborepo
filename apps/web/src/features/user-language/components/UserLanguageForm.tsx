@@ -17,8 +17,8 @@ import {
 } from '@dnd-kit/sortable'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Loader2, Plus, Save } from 'lucide-react'
-import { FormProvider, useFieldArray, useForm } from 'react-hook-form'
+import { AlertCircle, Loader2, Plus, Save } from 'lucide-react'
+import { Controller, FormProvider, useFieldArray, useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -37,8 +37,10 @@ import {
 import { SortableUserLanguageCard } from './SortableUserLanguageCard'
 import { userLanguageService } from '../services/user-language-service'
 import LanguageAutoSuggest from '@/features/language/components/LanguageAutoSuggest'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 const PROFICIENCY_LEVELS = ['Beginner', 'Intermediate', 'Advanced'] as const
+const JLPT_LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'] as const
 
 export default function UserLanguageForm() {
     const queryClient = useQueryClient()
@@ -56,23 +58,22 @@ export default function UserLanguageForm() {
         },
     })
 
-    const { control, handleSubmit, setValue, reset, formState: { isSubmitting } } = methods
+    const { control, handleSubmit, reset, formState: { isSubmitting, errors } } = methods
 
     const { fields, prepend, remove, move } = useFieldArray({
         control,
         name: 'languages',
     })
 
-    // Sync data dari Auth ke Form
     React.useEffect(() => {
         if (authData?.user?.languages) {
             const formatted = [...authData.user.languages].map((l) => ({
                 language: l.language?.id || '',
-                name: l.language?.name || '',
                 proficiency: {
                     speaking: l.proficiency?.speaking,
                     listening: l.proficiency?.listening,
                     writing: l.proficiency?.writing,
+                    jlptLevel: l.proficiency?.jlptLevel,
                 },
             }))
             reset({ languages: formatted })
@@ -125,11 +126,11 @@ export default function UserLanguageForm() {
                         onClick={() =>
                             prepend({
                                 language: '',
-                                name: '',
                                 proficiency: {
                                     speaking: undefined,
                                     listening: undefined,
                                     writing: undefined,
+                                    jlptLevel: undefined,
                                 },
                             })
                         }
@@ -137,6 +138,24 @@ export default function UserLanguageForm() {
                         <Plus className="mr-2 h-4 w-4" /> Add Language
                     </Button>
                 </div>
+
+                {/* Array-level errors */}
+                {errors.languages?.root?.message && (
+                     <Alert className="border-destructive/50 bg-destructive/10">
+                        <AlertCircle className="h-4 w-4 text-destructive"  />
+                        <AlertDescription className="text-destructive">
+                            {errors.languages.root.message}
+                        </AlertDescription>
+                    </Alert>
+                )}
+                {typeof errors.languages?.message === 'string' && (
+                    <Alert className="border-destructive/50 bg-destructive/10">
+                        <AlertCircle className="h-4 w-4 text-destructive"  />
+                        <AlertDescription className="text-destructive">
+                            {errors.languages.message}
+                        </AlertDescription>
+                    </Alert>
+                )}
 
                 {/* Sortable List */}
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -160,63 +179,87 @@ export default function UserLanguageForm() {
                                         </div>
 
                                         {/* Speaking */}
-                                        <div className="md:col-span-3">
+                                        <div className="md:col-span-2">
                                             <label className="text-xs font-medium mb-1.5 block">Speaking</label>
-                                            <Select
-                                                defaultValue={field.proficiency?.speaking}
-                                                onValueChange={(val) =>
-                                                    setValue(`languages.${index}.proficiency.speaking`, val as any)
-                                                }
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Speaking" />
-                                                </SelectTrigger>
-                                                <SelectContent className="z-99999">
-                                                    {PROFICIENCY_LEVELS.map((l) => (
-                                                        <SelectItem key={l} value={l}>{l}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            <Controller
+                                                control={control}
+                                                name={`languages.${index}.proficiency.speaking`}
+                                                render={({ field }) => (
+                                                    <Select value={field.value ?? ''} onValueChange={field.onChange}>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Speaking" />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="z-99999">
+                                                            {PROFICIENCY_LEVELS.map((l) => (
+                                                                <SelectItem key={l} value={l}>{l}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                )}
+                                            />
                                         </div>
 
                                         {/* Listening */}
-                                        <div className="md:col-span-3">
+                                        <div className="md:col-span-2">
                                             <label className="text-xs font-medium mb-1.5 block">Listening</label>
-                                            <Select
-                                                defaultValue={field.proficiency?.listening}
-                                                onValueChange={(val) =>
-                                                    setValue(`languages.${index}.proficiency.listening`, val as any)
-                                                }
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Listening" />
-                                                </SelectTrigger>
-                                                <SelectContent className="z-99999">
-                                                    {PROFICIENCY_LEVELS.map((l) => (
-                                                        <SelectItem key={l} value={l}>{l}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            <Controller
+                                                control={control}
+                                                name={`languages.${index}.proficiency.listening`}
+                                                render={({ field }) => (
+                                                    <Select value={field.value ?? ''} onValueChange={field.onChange}>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Listening" />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="z-99999">
+                                                            {PROFICIENCY_LEVELS.map((l) => (
+                                                                <SelectItem key={l} value={l}>{l}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                )}
+                                            />
                                         </div>
 
                                         {/* Writing */}
                                         <div className="md:col-span-2">
                                             <label className="text-xs font-medium mb-1.5 block">Writing</label>
-                                            <Select
-                                                defaultValue={field.proficiency?.writing}
-                                                onValueChange={(val) =>
-                                                    setValue(`languages.${index}.proficiency.writing`, val as any)
-                                                }
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Writing" />
-                                                </SelectTrigger>
-                                                <SelectContent className="z-99999">
-                                                    {PROFICIENCY_LEVELS.map((l) => (
-                                                        <SelectItem key={l} value={l}>{l}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            <Controller
+                                                control={control}
+                                                name={`languages.${index}.proficiency.writing`}
+                                                render={({ field }) => (
+                                                    <Select value={field.value ?? ''} onValueChange={field.onChange}>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Writing" />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="z-99999">
+                                                            {PROFICIENCY_LEVELS.map((l) => (
+                                                                <SelectItem key={l} value={l}>{l}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                )}
+                                            />
+                                        </div>
+
+                                        {/* JLPT Level */}
+                                        <div className="md:col-span-2">
+                                            <label className="text-xs font-medium mb-1.5 block">JLPT Level</label>
+                                            <Controller
+                                                control={control}
+                                                name={`languages.${index}.proficiency.jlptLevel`}
+                                                render={({ field }) => (
+                                                    <Select value={field.value ?? ''} onValueChange={field.onChange}>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="JLPT" />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="z-99999">
+                                                            {JLPT_LEVELS.map((l) => (
+                                                                <SelectItem key={l} value={l}>{l}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                )}
+                                            />
                                         </div>
 
                                     </div>
