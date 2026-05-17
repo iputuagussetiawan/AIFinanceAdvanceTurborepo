@@ -83,7 +83,7 @@ function LanguageFormRow({
             <div className="grid grid-cols-1 gap-4 md:grid-cols-12 items-end">
 
                 {/* Language Selection */}
-                <div className={isJapanese ? 'md:col-span-3' : 'md:col-span-4'}>
+                <div className={isJapanese ? 'md:col-span-10' : 'md:col-span-10'}>
                     <LanguageAutoSuggest
                         name={`languages.${index}.language`}
                         namePath={`languages.${index}.name`}
@@ -95,6 +95,28 @@ function LanguageFormRow({
                         name={`languages.${index}.name`}
                         render={({ field }) => (
                             <input type="hidden" {...field} value={field.value ?? ''} />
+                        )}
+                    />
+                </div>
+
+                 {/* Is Current Language */}
+                <div className={isJapanese ? 'md:col-span-1' : 'md:col-span-2'}>
+                    <Controller
+                        control={control}
+                        name={`languages.${index}.isCurrentLanguage`}
+                        render={({ field }) => (
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-medium">Current</label>
+                                <div className="flex items-center gap-2">
+                                    <Switch
+                                        checked={field.value ?? false}
+                                        onCheckedChange={field.onChange}
+                                    />
+                                    <span className="text-muted-foreground text-xs">
+                                        {field.value ? 'Yes' : 'No'}
+                                    </span>
+                                </div>
+                            </div>
                         )}
                     />
                 </div>
@@ -185,27 +207,7 @@ function LanguageFormRow({
                     </div>
                 )}
 
-                {/* Is Current Language */}
-                <div className={isJapanese ? 'md:col-span-1' : 'md:col-span-2'}>
-                    <Controller
-                        control={control}
-                        name={`languages.${index}.isCurrentLanguage`}
-                        render={({ field }) => (
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-medium">Current</label>
-                                <div className="flex items-center gap-2">
-                                    <Switch
-                                        checked={field.value ?? false}
-                                        onCheckedChange={field.onChange}
-                                    />
-                                    <span className="text-muted-foreground text-xs">
-                                        {field.value ? 'Yes' : 'No'}
-                                    </span>
-                                </div>
-                            </div>
-                        )}
-                    />
-                </div>
+               
 
             </div>
         </SortableUserLanguageCard>
