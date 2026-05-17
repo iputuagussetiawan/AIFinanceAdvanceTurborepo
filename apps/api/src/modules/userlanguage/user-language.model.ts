@@ -1,6 +1,5 @@
 import mongoose, { Document, Model, Schema } from 'mongoose'
-
-import type { IUserLanguage } from './user-language.validation'
+import { jlptField, proficiencyField, type IUserLanguage } from './user-language.validation'
 
 export const userLanguageSchema = new Schema<IUserLanguage>(
     {
@@ -9,12 +8,28 @@ export const userLanguageSchema = new Schema<IUserLanguage>(
             ref: 'Language',
             required: true,
         },
+        isCurrentLanguage: {
+            type: Boolean,
+            default: false,
+        },
         proficiency: {
-            speaking: { type: String, enum: ['Beginner', 'Intermediate', 'Advanced', 'Native'] },
-            listening: { type: String, enum: ['Beginner', 'Intermediate', 'Advanced', 'Native'] },
-            writing: { type: String, enum: ['Beginner', 'Intermediate', 'Advanced', 'Native'] },
-            jlptLevel: { type: String, enum: ['N1', 'N2', 'N3', 'N4', 'N5'] },
+            speaking: proficiencyField,
+            listening: proficiencyField,
+            writing: proficiencyField,
+            jlptLevel: jlptField,
         },
     },
-    { _id: false },
+    {
+        _id: true,
+        timestamps: true,
+        toJSON: {
+            virtuals: true,
+            transform: (doc, ret) => {
+                delete (ret as any)._id
+                delete (ret as any).__v
+                return ret
+            },
+        },
+        toObject: { virtuals: true },
+    },
 )

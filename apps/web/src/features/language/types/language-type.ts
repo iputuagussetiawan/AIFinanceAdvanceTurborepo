@@ -1,36 +1,27 @@
+import type { IApiResponse } from '@/types'
 import { z } from 'zod'
 
 export const LanguageSchema = z.object({
-    name: z.string().min(1, 'Name is required'),
-    description: z.string().min(1, 'Description is required'),
-    orderPosition: z.number().int().nonnegative(),
-    isActive: z.boolean(),
+    name: z.string().trim().min(2, 'Language name must be at least 2 characters'),
+    description: z.string().trim().optional().or(z.literal('')),
+    imageUrl: z.string().trim().url('Must be a valid URL').optional().or(z.literal('')),
+    priority: z.coerce.number().int().nonnegative('Priority cannot be negative').default(0),
+    orderPosition: z.coerce.number().int().nonnegative('Order position cannot be negative').default(0),
+    isActive: z.boolean().default(true),
 })
 
 export type ILanguageDTO = z.infer<typeof LanguageSchema>
 
-export interface IPaginationMeta {
-    totalData: number
-    totalPage: number
-    currentPage: number
-    limit: number
-}
-
 export interface ILanguage {
     id: string
     name: string
-    description: string
+    description?: string
+    imageUrl?: string
+    priority: number
     orderPosition: number
     isActive: boolean
     createdAt: string
     updatedAt: string
-}
-
-export interface IApiResponse<T> {
-    success: boolean
-    message: string
-    data: T
-    meta?: IPaginationMeta // Opsional karena tidak semua API memiliki pagination
 }
 
 // Tipe spesifik untuk Response Language

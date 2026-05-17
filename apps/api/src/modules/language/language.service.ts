@@ -14,30 +14,41 @@ export interface PaginationResponse {
     }
 }
 
+// Consistent sort order matching the compound index: priority desc, orderPosition asc
+const DEFAULT_SORT = { priority: -1, orderPosition: 1 } as const
+
+const toDTO = ({ _id, ...rest }: any) => ({ id: (_id as mongoose.Types.ObjectId).toString(), ...rest })
+
+
+export const searchLanguagesService = async (search: string = '', priority?: number) => {
+    const filter: FilterQuery<LanguageDocument> = { isActive: true }
+
+    if (search) filter.name = { $regex: search, $options: 'i' }
+    if (priority !== undefined) filter.priority = priority
+
+    const data = await LanguageModel.find(filter)
+        .select('-__v')
+        .sort(DEFAULT_SORT)
+
+    return data.map((doc) => doc.toJSON())
+}
+
 export const getAllLanguagesService = async (isActive?: boolean) => {
     const query: FilterQuery<LanguageDocument> = {}
 
-    // Tetap pertahankan filter isActive agar kita bisa mengambil hanya bahasa yang aktif
     if (typeof isActive === 'boolean') {
         query.isActive = isActive
     }
 
-    // Mengambil semua data tanpa skip dan limit
     const rawItems = await LanguageModel.find(query)
         .select('-__v')
-        .sort({ orderPosition: 1, name: 1 })
+        .sort(DEFAULT_SORT)
         .lean()
-
-    // Transformasi _id menjadi id
-    const data = rawItems.map(({ _id, ...rest }) => ({
-        id: _id.toString(),
-        ...rest,
-    }))
 
     return {
         success: true,
         message: 'Successfully fetched all languages',
-        data,
+        data: rawItems.map(toDTO),
     }
 }
 
@@ -69,20 +80,15 @@ export const getLanguagesPaginatedService = async (
     const [rawItems, totalData] = await Promise.all([
         LanguageModel.find(query)
             .select('-__v')
-            .sort({ orderPosition: 1, name: 1 })
+            .sort(DEFAULT_SORT)
             .skip(skip)
             .limit(limit)
             .lean(),
         LanguageModel.countDocuments(query),
     ])
 
-    const data = rawItems.map(({ _id, ...rest }) => ({
-        id: _id.toString(),
-        ...rest,
-    }))
-
     return {
-        data,
+        data: rawItems.map(toDTO),
         meta: {
             totalData,
             totalPage: Math.ceil(totalData / limit),
@@ -92,17 +98,17 @@ export const getLanguagesPaginatedService = async (
     }
 }
 
-/**
- * Create a new master language entry
- */
 export const createLanguageService = async (body: LanguageDTO) => {
+    const existing = await LanguageModel.findOne({ name: new RegExp(`^${body.name}$`, 'i') }).lean()
+    if (existing) {
+        throw new ConflictException(`Language "${body.name}" already exists`)
+    }
+
     const session = await mongoose.startSession()
     try {
         session.startTransaction()
-
         const language = new LanguageModel(body)
         await language.save({ session })
-
         await session.commitTransaction()
         return language
     } catch (error: any) {
@@ -114,20 +120,12 @@ export const createLanguageService = async (body: LanguageDTO) => {
     }
 }
 
-/**
- * Service to bulk insert multiple master languages
- * Useful for initial setup or migrations
- */
 export const bulkCreateLanguageService = async (languages: LanguageDTO[]) => {
     const session = await mongoose.startSession()
-
     try {
         session.startTransaction()
 
-        // 1. Extract names to check for duplicates in the database
         const names = languages.map((lang) => lang.name)
-
-        // 2. Check if any of these languages already exist
         const existingLanguages = await LanguageModel.find({
             name: { $in: names.map((n) => new RegExp(`^${n}$`, 'i')) },
         }).session(session)
@@ -137,10 +135,7 @@ export const bulkCreateLanguageService = async (languages: LanguageDTO[]) => {
             throw new ConflictException(`Some languages already exist: ${existingNames}`)
         }
 
-        // 3. Bulk Insert
-        // insertMany is more efficient than looping .save()
         const savedLanguages = await LanguageModel.insertMany(languages, { session })
-
         await session.commitTransaction()
 
         return {
@@ -156,13 +151,20 @@ export const bulkCreateLanguageService = async (languages: LanguageDTO[]) => {
     }
 }
 
-/**
- * Update a language entry by its ID
- */
 export const updateLanguageService = async (id: string, body: UpdateLanguageDTO) => {
-    // Validate ID format
     if (!mongoose.Types.ObjectId.isValid(id)) {
-        throw new Error('Invalid Language ID format')
+        throw new BadRequestException('Invalid Language ID format')
+    }
+
+    // Check name uniqueness if name is being updated
+    if (body.name) {
+        const conflict = await LanguageModel.findOne({
+            name: new RegExp(`^${body.name}$`, 'i'),
+            _id: { $ne: id },
+        }).lean()
+        if (conflict) {
+            throw new ConflictException(`Language "${body.name}" already exists`)
+        }
     }
 
     const session = await mongoose.startSession()
@@ -173,7 +175,7 @@ export const updateLanguageService = async (id: string, body: UpdateLanguageDTO)
             id,
             { $set: body },
             { new: true, session, runValidators: true },
-        )
+        ).select('-__v')
 
         if (!updatedLanguage) {
             throw new NotFoundException('Language not found')
@@ -189,19 +191,13 @@ export const updateLanguageService = async (id: string, body: UpdateLanguageDTO)
     }
 }
 
-/**
- * Fetch a single language by its ID
- */
 export const getLanguageByIdService = async (id: string): Promise<LanguageDocument> => {
-    // 1. Validasi format ID MongoDB agar tidak menyebabkan crash
     if (!mongoose.Types.ObjectId.isValid(id)) {
         throw new BadRequestException('Invalid Language ID format')
     }
 
-    // 2. Cari data berdasarkan ID
     const language = await LanguageModel.findById(id).select('-__v').lean()
 
-    // 3. Jika tidak ditemukan, lempar NotFoundException
     if (!language) {
         throw new NotFoundException('Language record not found')
     }
@@ -209,10 +205,11 @@ export const getLanguageByIdService = async (id: string): Promise<LanguageDocume
     return language as unknown as LanguageDocument
 }
 
-/**
- * Delete a language from master data
- */
 export const deleteLanguageService = async (id: string) => {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new BadRequestException('Invalid Language ID format')
+    }
+
     const result = await LanguageModel.findByIdAndDelete(id)
 
     if (!result) {
