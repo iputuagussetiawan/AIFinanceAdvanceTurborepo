@@ -1,9 +1,7 @@
-import EducationListing from './educations/EducationListing'
 import ExperienceListing from './experiences/ExperienceListing'
 import LanguageListing from './languages/LanguageListing'
-import SkillListing from './skill/SkillListing'
 
-const ResumeExpOne = () => {
+const ResumeExpTwo = () => {
     return (
         <section
             className="mt-8 flex w-full flex-1 px-12 pb-12"
@@ -11,10 +9,8 @@ const ResumeExpOne = () => {
         >
             {/* LEFT COLUMN: Education, Skills, Language */}
             <aside className="w-1/3 pr-8">
-                {/* EDUCATION */}
-                <EducationListing />                
-                {/* SKILLS */}
-                <SkillListing/>
+                {/* LANGUAGE */}
+                <LanguageListing />
             </aside>
 
             {/* RIGHT COLUMN: Experience */}
@@ -25,4 +21,4 @@ const ResumeExpOne = () => {
     )
 }
 
-export default ResumeExpOne
+export default ResumeExpTwo

@@ -9,6 +9,7 @@ import MyResumeToolbar from './MyResumeToolbar'
 import ResumeAbout from './template/v1/ResumeAbout'
 import ResumeExpOne from './template/v1/ResumeExpOne'
 import ResumeWrapper from './template/v1/ResumeWrapper'
+import ResumeExpTwo from './template/v1/ResumeExpTwo'
 
 interface ResumeData {
     about: any
@@ -117,7 +118,7 @@ const MyResume = ({ mode = 'manage', onChange }: MyResumeProps) => {
                     <ResumeExpOne />
                 </ResumeWrapper>
                 <ResumeWrapper pageNumber={2} totalPages={2}>
-                    <ResumeExpOne />
+                    <ResumeExpTwo />
                 </ResumeWrapper>
             </div>
 
