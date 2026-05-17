@@ -22,6 +22,7 @@ import { Controller, FormProvider, useFieldArray, useForm, useWatch } from 'reac
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import {
     Select,
     SelectContent,
@@ -81,11 +82,20 @@ function LanguageFormRow({
         >
             <div className="grid grid-cols-1 gap-4 md:grid-cols-12 items-end">
 
+                {/* Language Selection */}
                 <div className={isJapanese ? 'md:col-span-3' : 'md:col-span-4'}>
                     <LanguageAutoSuggest
                         name={`languages.${index}.language`}
                         namePath={`languages.${index}.name`}
                         label="Select Language"
+                    />
+                    {/* Hidden name field */}
+                    <Controller
+                        control={control}
+                        name={`languages.${index}.name`}
+                        render={({ field }) => (
+                            <input type="hidden" {...field} value={field.value ?? ''} />
+                        )}
                     />
                 </div>
 
@@ -154,7 +164,7 @@ function LanguageFormRow({
 
                 {/* JLPT Level — only shown for Japanese */}
                 {isJapanese && (
-                    <div className="md:col-span-3">
+                    <div className="md:col-span-2">
                         <label className="text-xs font-medium mb-1.5 block">JLPT Level</label>
                         <Controller
                             control={control}
@@ -174,6 +184,28 @@ function LanguageFormRow({
                         />
                     </div>
                 )}
+
+                {/* Is Current Language */}
+                <div className={isJapanese ? 'md:col-span-1' : 'md:col-span-2'}>
+                    <Controller
+                        control={control}
+                        name={`languages.${index}.isCurrentLanguage`}
+                        render={({ field }) => (
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-medium">Current</label>
+                                <div className="flex items-center gap-2">
+                                    <Switch
+                                        checked={field.value ?? false}
+                                        onCheckedChange={field.onChange}
+                                    />
+                                    <span className="text-muted-foreground text-xs">
+                                        {field.value ? 'Yes' : 'No'}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+                    />
+                </div>
 
             </div>
         </SortableUserLanguageCard>
@@ -210,6 +242,7 @@ export default function UserLanguageForm() {
             const formatted = [...authData.user.languages].map((l) => ({
                 language: l.language?.id || '',
                 name: l.language?.name || '',
+                isCurrentLanguage: l.isCurrentLanguage ?? false,
                 proficiency: {
                     speaking: l.proficiency?.speaking,
                     listening: l.proficiency?.listening,
@@ -282,6 +315,7 @@ export default function UserLanguageForm() {
                             prepend({
                                 language: '',
                                 name: '',
+                                isCurrentLanguage: false,
                                 proficiency: {
                                     speaking: undefined,
                                     listening: undefined,
