@@ -7,31 +7,20 @@ import { UiFormSelect, type UiSelectItem } from '@/components/ui/UiFormSelect'
 import { useDebounce } from '@/hooks/use-debounce'
 import { useLanguageSearch } from '../hooks/use-language'
 
-// ─────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────
-
 interface LanguageSelectItem extends UiSelectItem {
     imageUrl: string
 }
 
 interface LanguageAutoSuggestProps {
     name: string
+    namePath?: string
     label?: string
     placeholder?: string
     isSubmitting?: boolean
     isMultiple?: boolean
 }
 
-// ─────────────────────────────────────────────
-// Constants
-// ─────────────────────────────────────────────
-
 const FALLBACK_FLAG = '/images/flags/unknown.svg'
-
-// ─────────────────────────────────────────────
-// LanguageFlag — isolated so onError doesn't bubble
-// ─────────────────────────────────────────────
 
 const LanguageFlag = ({ src, alt, className }: { src: string; alt: string; className?: string }) => (
     <img
@@ -44,22 +33,23 @@ const LanguageFlag = ({ src, alt, className }: { src: string; alt: string; class
     />
 )
 
-// ─────────────────────────────────────────────
-// Component
-// ─────────────────────────────────────────────
-
 const LanguageAutoSuggest = ({
     name,
+    namePath,
     label = 'Language',
     placeholder = 'Select a language...',
     isSubmitting,
     isMultiple = false,
 }: LanguageAutoSuggestProps) => {
-    const { control } = useFormContext()
+    const { control, setValue } = useFormContext()
     const [searchTerm, setSearchTerm] = useState('')
 
     const debouncedSearch = useDebounce(searchTerm, 300)
     const { languages, isLoading, isFetching } = useLanguageSearch(debouncedSearch)
+
+    const selectProps = isMultiple
+        ? { multiple: true as const }
+        : { multiple: false as const }
 
     return (
         <Controller
@@ -67,12 +57,6 @@ const LanguageAutoSuggest = ({
             control={control}
             defaultValue={isMultiple ? [] : ''}
             render={({ field, fieldState }) => {
-                const selectedValues: string[] = Array.isArray(field.value)
-                    ? field.value
-                    : field.value
-                    ? [field.value]
-                    : []
-
                 const items: LanguageSelectItem[] = languages
                     .filter((lang) => lang.isActive)
                     .map((lang) => ({
@@ -81,6 +65,15 @@ const LanguageAutoSuggest = ({
                         imageUrl: lang.imageUrl ?? '',
                     }))
 
+                const handleChange = (value: string | string[]) => {
+                    field.onChange(value)
+                    if (namePath && !isMultiple) {
+                        const id = value as string
+                        const selected = languages.find((lang) => lang.id === id)
+                        setValue(namePath as any, selected?.name ?? '')
+                    }
+                }
+
                 return (
                     <UiFormSelect<LanguageSelectItem>
                         // ── RHF wiring ──
@@ -88,14 +81,14 @@ const LanguageAutoSuggest = ({
                         ref={field.ref}
                         name={field.name}
                         value={field.value}
-                        onChange={field.onChange}
+                        onChange={handleChange}
                         onBlur={field.onBlur}
                         // ── Field meta ──
                         label={label}
                         error={fieldState.error}
                         isSubmitting={isSubmitting}
                         // ── Select config ──
-                        multiple={isMultiple}
+                        {...selectProps}
                         items={items}
                         isLoading={isLoading || isFetching}
                         onSearchChange={setSearchTerm}
@@ -120,7 +113,6 @@ const LanguageAutoSuggest = ({
                                     ].join(' ')}
                                 />
                                 <span className="text-sm font-medium">{lang.label}</span>
-                               
                             </div>
                         )}
                         // ── Selected chip ──
