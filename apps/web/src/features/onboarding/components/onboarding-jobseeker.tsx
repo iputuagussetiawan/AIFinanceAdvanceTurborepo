@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Briefcase, Check, GraduationCap, User } from 'lucide-react'
@@ -12,6 +12,7 @@ import { handleSaveJobseekerProfile } from '@/features/jobseeker/actions/jobseek
 import { OnboardingStepper } from '@/features/onboarding/components/onboarding-stepper'
 import { Button } from '@/components/ui/button'
 import { useFormPersist } from '@/hooks/use-form-persist'
+import useAuth from '@/hooks/use-auth'
 
 import { jobseekerValidation, type JobseekerDTO } from '../types/jobseeker-type'
 import { FormNavigation } from './jobseeker/onboarding-stepper-navigation'
@@ -33,8 +34,11 @@ const OnboardingJobseeker = () => {
     const [currentStep, setCurrentStep] = useState(1)
     const [isSubmitted, setIsSubmitted] = useState(false)
 
+    // 👇 1. Fetch authenticated user data
+    const { data: session, isLoading } = useAuth()
+
     const form = useForm<JobseekerDTO>({
-        resolver: zodResolver(jobseekerValidation) as Resolver<JobseekerDTO>,
+        resolver: zodResolver(jobseekerValidation as any) as Resolver<JobseekerDTO>,
         mode: 'onTouched',
         defaultValues: {
             firstName: '',
@@ -60,10 +64,27 @@ const OnboardingJobseeker = () => {
                     description: '',
                     orderPosition: 0,
                 },
-            ], // Updated to match schema array
-            experiences: [], // Updated to match schema array
+            ],
+            experiences: [],
         },
     })
+
+    // 👇 2. Once session loads, patch firstName & lastName into the form
+    useEffect(() => {
+        if (isLoading || !session?.user) return
+
+        form.reset(
+            {
+                firstName: session.user.firstName ?? '',
+                lastName: session.user.lastName ?? '',
+            },
+            {
+                keepValues: true,  // keeps all other fields untouched
+                keepErrors: false,
+                keepDirty: false,
+            }
+        )
+    }, [isLoading, session, form.reset])
 
     const { clearStorage } = useFormPersist(form, 'jobseeker-onboarding-data')
 
@@ -82,16 +103,14 @@ const OnboardingJobseeker = () => {
                 'birthday',
             ],
         },
-        2: { fields: ['educations'] }, // Validates the entire array
-        3: { fields: ['experiences'] }, // Validates the entire array
+        2: { fields: ['educations'] },
+        3: { fields: ['experiences'] },
         4: { fields: [] },
     } as Record<number, { fields: (keyof JobseekerDTO)[] }>
 
     const next = async () => {
         const fieldsToValidate = stepConfig[currentStep]?.fields || []
-        // Validate only the current step's fields
         const isValid = await form.trigger(fieldsToValidate)
-
         if (isValid) {
             setCurrentStep((prev) => Math.min(prev + 1, totalSteps))
         }
@@ -100,32 +119,26 @@ const OnboardingJobseeker = () => {
     const prev = () => setCurrentStep((s) => Math.max(s - 1, 1))
 
     const onSubmit = async (data: JobseekerDTO) => {
-        if (currentStep !== totalSteps) {
-            return // prevent submit before review step
-        }
+        if (currentStep !== totalSteps) return
 
         try {
-            // Your API call here
             console.log('Final Submission:', data)
             const result = await handleSaveJobseekerProfile(data)
             const resultEducation = await handleCreateEducation(data.educations[0])
             const resultExperience = await handleCreateExperience(data.experiences[0])
-            console.log(result)
-            console.log(resultEducation)
-            console.log(resultExperience)
 
             if (result.success && resultEducation.success && resultExperience.success) {
                 clearStorage()
                 setIsSubmitted(true)
             } else {
-                // This is likely where your error is hiding!
                 console.error('Server Logic Error:', result.error)
-                alert(result.error) // Show the user what went wrong
+                alert(result.error)
             }
         } catch (error) {
             console.error('Submission failed', error)
         }
     }
+
     // Success View
     if (isSubmitted) {
         return (
@@ -170,7 +183,8 @@ const OnboardingJobseeker = () => {
                             exit={{ opacity: 0, x: -10 }}
                             transition={{ duration: 0.2 }}
                         >
-                            {currentStep === 1 && <PersonalInfo />}
+                            {/* 👇 3. Pass isLoading so fields disable while session fetches */}
+                            {currentStep === 1 && <PersonalInfo isAuthLoading={isLoading} />}
                             {currentStep === 2 && <EducationInfo />}
                             {currentStep === 3 && <ExperienceInfo />}
                             {currentStep === 4 && <ReviewStep />}
