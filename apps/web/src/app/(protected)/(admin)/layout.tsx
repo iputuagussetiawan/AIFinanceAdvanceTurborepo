@@ -6,9 +6,11 @@ import { AppSidebar } from '@/components/app-sidebar'
 import { DynamicBreadcrumbs } from '@/components/dynamic-breadcrumbs'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { protectDashboard } from '@/features/dashboard/lib/dashboard-guard'
 
 // 1. This remains a Server Component (no 'use client' at the top)
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+    await protectDashboard() // 👈 just call it directly, no need to await here since the guard will handle redirects immediately
     const queryClient = new QueryClient()
 
     // 2. Prefetch the auth data on the server
