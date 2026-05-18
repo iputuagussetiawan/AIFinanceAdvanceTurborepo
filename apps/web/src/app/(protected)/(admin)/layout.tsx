@@ -3,10 +3,9 @@ import { AppSidebar } from '@/components/app-sidebar'
 import { DynamicBreadcrumbs } from '@/components/dynamic-breadcrumbs'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
-
-// No need for protectDashboard, QueryClient, sessionService, HydrationBoundary
-// — parent ProtectedLayout already handles all of that
+import { protectDashboard } from '@/features/dashboard/lib/dashboard-guard'
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+    await protectDashboard()
     return (
         <AuthProvider>
             <SidebarProvider>
