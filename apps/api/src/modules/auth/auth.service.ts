@@ -26,12 +26,13 @@ import type { ResetPasswordDto } from './auth.validation'
 
 export const loginOrCreateAccountService = async (data: {
     provider: string
-    displayName: string
+    firstName: string
+    lastName: string
     providerId: string
     picture?: string
     email?: string
 }) => {
-    const { providerId, provider, displayName, email, picture } = data
+    const { providerId, provider, firstName, lastName, email, picture } = data
     const session = await mongoose.startSession()
     try {
         session.startTransaction()
@@ -45,7 +46,8 @@ export const loginOrCreateAccountService = async (data: {
             //buat user baru
             user = new UserModel({
                 email,
-                name: displayName,
+                firstName: firstName,
+                lastName: lastName,
                 profilePicture: picture || null,
                 isEmailVerified: true,
             })

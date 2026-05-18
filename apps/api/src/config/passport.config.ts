@@ -58,7 +58,8 @@ passport.use(
                 }
                 const { user } = await loginOrCreateAccountService({
                     provider: ProviderEnum.GOOGLE,
-                    displayName: profile.displayName,
+                    firstName: profile.name?.givenName || profile.displayName || 'Your First Name', 
+                    lastName: profile.name?.familyName || profile.displayName || 'Your Last Name',
                     providerId: googleId,
                     picture: picture,
                     email: email,

@@ -3,7 +3,7 @@ import React from 'react'
 import { protectOnboarding } from '@/features/onboarding/lib/onboarding-guard'
 
 const page = async () => {
-    const user = await protectOnboarding()
+    await protectOnboarding()
     return <div>Employer</div>
 }
 

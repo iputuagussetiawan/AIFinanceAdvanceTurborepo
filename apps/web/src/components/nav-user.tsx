@@ -21,6 +21,7 @@ import {
 
 import { LogoutMenuItem } from './logout-menu-item'
 import { UserAvatar } from './user-avatar'
+import Link from 'next/link'
 
 export function NavUser({ user }: { user: IUser | null }) {
     const { isMobile } = useSidebar()
@@ -67,9 +68,11 @@ export function NavUser({ user }: { user: IUser | null }) {
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
                         <DropdownMenuGroup>
-                            <DropdownMenuItem>
-                                <BadgeCheck />
-                                Account
+                            <DropdownMenuItem asChild>
+                                <Link href="/dashboard/account" className="flex w-full items-center gap-2 cursor-pointer">
+                                    <BadgeCheck className="h-4 w-4" />
+                                    <span>Account</span>
+                                </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                                 <CreditCard />

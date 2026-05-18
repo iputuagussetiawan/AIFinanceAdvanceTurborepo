@@ -4,8 +4,6 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, Briefcase, User } from 'lucide-react'
-
-import { getCurrentUser } from '@/features/auth/actions/auth'
 import { OnboardingCard } from '@/features/onboarding/components/onboarding-card'
 import { Button } from '@/components/ui/button'
 

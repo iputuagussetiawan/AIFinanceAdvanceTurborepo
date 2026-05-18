@@ -2,7 +2,7 @@ import OnboardingJobseeker from '@/features/onboarding/components/onboarding-job
 import { protectOnboarding } from '@/features/onboarding/lib/onboarding-guard'
 
 const page = async () => {
-    const user = await protectOnboarding()
+    await protectOnboarding()
     return (
         <div>
             <OnboardingJobseeker />
