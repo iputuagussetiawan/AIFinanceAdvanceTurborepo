@@ -18,8 +18,10 @@ class FetchFactory {
             const { cookies } = await import('next/headers')
             const cookieStore = await cookies()
             const token = cookieStore.get(AUTH_COOKIE_NAME)?.value
+            const csrfToken = cookieStore.get(CSRF_COOKIE_NAME)?.value
 
             if (token) headers['Authorization'] = `Bearer ${token}`
+            if (csrfToken) headers[CSRF_HEADER_NAME] = decodeURIComponent(csrfToken)
             headers['Cookie'] = cookieStore.toString()
         } else {
             const csrfToken = document.cookie

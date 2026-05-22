@@ -5,9 +5,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Briefcase, Check, GraduationCap, User } from 'lucide-react'
 import { FormProvider, useForm, type Resolver } from 'react-hook-form'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 
-import { handleCreateEducation } from '@/features/education/actions/education-action'
-import { handleCreateExperience } from '@/features/experience/actions/experience-action'
+import { educationService } from '@/features/education/services/education-service'
+import { experienceService } from '@/features/experience/services/experience-service'
 import { handleSaveJobseekerProfile } from '@/features/jobseeker/actions/jobseeker-action'
 import { OnboardingStepper } from '@/features/onboarding/components/onboarding-stepper'
 import { Button } from '@/components/ui/button'
@@ -54,11 +56,12 @@ const OnboardingJobseeker = () => {
             birthday: '',
             educations: [
                 {
-                    schoolName: '',
+                    institution: '',
+                    institutionName: '',
                     degree: '',
                     fieldOfStudy: '',
-                    startDate: '' as unknown as Date,
-                    endDate: '' as unknown as Date,
+                    startDate: '',
+                    endDate: '',
                     grade: '',
                     activities: '',
                     description: '',
@@ -69,24 +72,42 @@ const OnboardingJobseeker = () => {
         },
     })
 
-    // 👇 2. Once session loads, patch firstName & lastName into the form
+    const { clearStorage } = useFormPersist(form, 'jobseeker-onboarding-data')
+
+    // Once session loads, patch firstName & lastName — must run AFTER useFormPersist
+    // so the session values win when cached data makes isLoading=false on first render
     useEffect(() => {
         if (isLoading || !session?.user) return
+        form.setValue('firstName', session.user.firstName ?? '')
+        form.setValue('lastName', session.user.lastName ?? '')
+    }, [isLoading, session, form])
 
-        form.reset(
-            {
-                firstName: session.user.firstName ?? '',
-                lastName: session.user.lastName ?? '',
-            },
-            {
-                keepValues: true,  // keeps all other fields untouched
-                keepErrors: false,
-                keepDirty: false,
+    const queryClient = useQueryClient()
+
+    const { mutate: submitOnboarding, isPending } = useMutation({
+        mutationFn: async (data: JobseekerDTO) => {
+            // Must run sequentially — all three call UserModel.findById+save on the
+            // same document. Parallel execution causes a Mongoose VersionError
+            // because the first save increments __v before the others finish.
+            const profileResult = await handleSaveJobseekerProfile(data)
+            if (!profileResult.success) throw new Error(profileResult.error ?? 'Profile save failed')
+
+            await educationService.updateAll(data.educations)
+
+            if (data.experiences.length > 0) {
+                await experienceService.updateAll(data.experiences)
             }
-        )
-    }, [isLoading, session, form.reset])
-
-    const { clearStorage } = useFormPersist(form, 'jobseeker-onboarding-data')
+        },
+        onSuccess: () => {
+            clearStorage()
+            queryClient.invalidateQueries({ queryKey: ['authUser'] })
+            setIsSubmitted(true)
+            toast.success('Profile created successfully!')
+        },
+        onError: (error: Error) => {
+            toast.error(error.message || 'Submission failed. Please try again.')
+        },
+    })
 
     const stepConfig = {
         1: {
@@ -118,25 +139,9 @@ const OnboardingJobseeker = () => {
 
     const prev = () => setCurrentStep((s) => Math.max(s - 1, 1))
 
-    const onSubmit = async (data: JobseekerDTO) => {
+    const onSubmit = (data: JobseekerDTO) => {
         if (currentStep !== totalSteps) return
-
-        try {
-            console.log('Final Submission:', data)
-            const result = await handleSaveJobseekerProfile(data)
-            const resultEducation = await handleCreateEducation(data.educations[0])
-            const resultExperience = await handleCreateExperience(data.experiences[0])
-
-            if (result.success && resultEducation.success && resultExperience.success) {
-                clearStorage()
-                setIsSubmitted(true)
-            } else {
-                console.error('Server Logic Error:', result.error)
-                alert(result.error)
-            }
-        } catch (error) {
-            console.error('Submission failed', error)
-        }
+        submitOnboarding(data)
     }
 
     // Success View
@@ -195,7 +200,7 @@ const OnboardingJobseeker = () => {
                         totalSteps={totalSteps}
                         prev={prev}
                         next={next}
-                        isSubmitting={form.formState.isSubmitting}
+                        isSubmitting={isPending}
                     />
                 </form>
             </FormProvider>

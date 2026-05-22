@@ -28,19 +28,26 @@ export const saveJobseekerProfileService = async (
         session.startTransaction()
 
         // 3. Upsert Logic: Update if exists, Create if not
-        // We use userId as the unique identifier for the profile
         const profile = await JobseekerModel.findOneAndUpdate(
             { userId },
             {
                 ...body,
-                userId, // Ensure userId is correctly mapped
+                userId,
+                onboardingComplete: true,
             },
             {
-                new: true, // Return the updated document
-                upsert: true, // Create if it doesn't exist
+                new: true,
+                upsert: true,
                 runValidators: true,
                 session,
             },
+        )
+
+        // 4. Mark onboarding complete on the User document
+        await UserModel.findByIdAndUpdate(
+            userId,
+            { $set: { onboardingComplete: true } },
+            { session },
         )
 
         //check owner role

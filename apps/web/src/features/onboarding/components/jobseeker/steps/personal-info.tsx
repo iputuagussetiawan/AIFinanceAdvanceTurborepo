@@ -1,11 +1,17 @@
 'use client'
 
-import React from 'react'
-import { useFormContext } from 'react-hook-form'
+import React, { useState } from 'react'
+import { useFormContext, useController } from 'react-hook-form'
+import { format } from 'date-fns'
+import { CalendarIcon } from 'lucide-react'
 
 import type { JobseekerDTO } from '@/features/onboarding/types/jobseeker-type'
 import { UiFormInput } from '@/components/ui/UiFormInput'
 import { UiFormSearchSelect } from '@/components/ui/UiFormSearchSelect'
+import { Calendar } from '@/components/ui/calendar'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 const countryOptions = [
     { label: 'Indonesia', value: 'id' },
@@ -25,10 +31,16 @@ interface PersonalInfoProps {
 }
 
 const PersonalInfo = ({ isAuthLoading = false }: PersonalInfoProps) => {
+    const [calendarOpen, setCalendarOpen] = useState(false)
     const {
         register,
+        control,
         formState: { errors, isSubmitting },
     } = useFormContext<JobseekerDTO>()
+
+    const {
+        field: birthdayField,
+    } = useController({ name: 'birthday', control })
 
     return (
         <div className="space-y-8">
@@ -144,13 +156,45 @@ const PersonalInfo = ({ isAuthLoading = false }: PersonalInfoProps) => {
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <UiFormInput
-                    {...register('birthday')}
-                    type="date"
-                    label="Birthday"
-                    error={errors.birthday}
-                    isSubmitting={isSubmitting}
-                />
+                <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium">Birthday</label>
+                    <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant="outline"
+                                disabled={isSubmitting}
+                                className={cn(
+                                    'w-full justify-start text-left font-normal',
+                                    !birthdayField.value && 'text-muted-foreground',
+                                    errors.birthday && 'border-destructive',
+                                )}
+                            >
+                                <CalendarIcon className="mr-2 size-4" />
+                                {birthdayField.value
+                                    ? format(new Date(birthdayField.value), 'PPP')
+                                    : 'Pick a date'}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                                mode="single"
+                                captionLayout="dropdown"
+                                selected={birthdayField.value ? new Date(birthdayField.value) : undefined}
+                                onSelect={(date) => {
+                                    birthdayField.onChange(date ? date.toISOString().split('T')[0] : '')
+                                    setCalendarOpen(false)
+                                }}
+                                disabled={{ after: new Date() }}
+                                defaultMonth={birthdayField.value ? new Date(birthdayField.value) : new Date(2000, 0)}
+                                fromYear={1940}
+                                toYear={new Date().getFullYear()}
+                            />
+                        </PopoverContent>
+                    </Popover>
+                    {errors.birthday && (
+                        <p className="text-destructive text-xs">{errors.birthday.message}</p>
+                    )}
+                </div>
                 <UiFormInput
                     {...register('website')}
                     label="Website (Optional)"
