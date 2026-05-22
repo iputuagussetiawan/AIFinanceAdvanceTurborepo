@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { AUTH_COOKIE_NAME, REFRESH_COOKIE_NAME, SIGNIN_URL } from '@/lib/constants'
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8000/api'
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000/api'
 
 // Called by require-auth.ts when accessToken is expired.
 // Refreshes the token then redirects back to the original page.

@@ -25,19 +25,7 @@ export default async function middleware(request: NextRequest) {
         }
     }
 
-    // --- 2. PROXY LOGIC ---
-    if (pathname.startsWith('/api')) {
-        const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000'
-        const targetPath = pathname.replace(/^\/api/, '')
-        const destination = `${BACKEND_URL}${targetPath}${search}`
-
-        const response = NextResponse.rewrite(new URL(destination))
-        response.headers.set('x-forwarded-host', request.headers.get('host') || '')
-
-        return response
-    }
-
-    // --- 3. ROUTE PROTECTION ---
+    // --- 2. ROUTE PROTECTION ---
     const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route))
 
     // Logged in -> Auth Page (Login/Register)

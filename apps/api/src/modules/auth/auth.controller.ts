@@ -221,7 +221,7 @@ export const logOutController = asyncHandler(async (req: Request, res: Response)
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        path: '/api/auth/refresh',
+        path: '/',
     })
 
     // 4. Cleanup local objects

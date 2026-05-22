@@ -1,9 +1,12 @@
-const sharedConfig = require('@repo/jest-config/next.js');
+const nextJest = require('next/jest')
+
+const createJestConfig = nextJest({ dir: './' })
 
 /** @type {import('jest').Config} */
-module.exports = {
-  ...sharedConfig,
+module.exports = createJestConfig({
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  testEnvironment: 'jest-environment-jsdom',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-};
+})
