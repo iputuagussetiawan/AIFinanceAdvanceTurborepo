@@ -33,7 +33,7 @@ export const JobseekerExperienceController = {
         const userId = req.user?._id as string
         if (!userId) throw new BadRequestException('User authentication required')
 
-        const { experienceId } = req.params
+        const { experienceId } = z.object({ experienceId: z.string() }).parse(req.params)
         if (!experienceId) throw new BadRequestException('Experience ID is required')
 
         const data = await ExperienceService.removeJobseekerExperienceService(userId, experienceId)

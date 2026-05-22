@@ -37,7 +37,7 @@ export const removeJobseekerLanguage = asyncHandler(async (req: Request, res: Re
     const userId = req.user?._id as string
     if (!userId) throw new BadRequestException('User authentication required')
 
-    const { languageId } = req.params
+    const languageId = z.string().parse(req.params.languageId)
     if (!languageId) throw new BadRequestException('Language ID is required')
 
     const data = await removeJobseekerLanguageService(userId, languageId)

@@ -36,7 +36,7 @@ export const JobseekerSkillController = {
         const { entryId } = req.params
         if (!entryId) throw new BadRequestException('Skill entry ID is required')
 
-        const data = await JobseekerSkillService.removeJobseekerSkillService(userId, entryId)
+        const data = await JobseekerSkillService.removeJobseekerSkillService(userId, Array.isArray(entryId) ? entryId[0] : entryId)
 
         return res.status(HTTPSTATUS.OK).json({ success: true, message: 'Skill entry removed', data })
     }),

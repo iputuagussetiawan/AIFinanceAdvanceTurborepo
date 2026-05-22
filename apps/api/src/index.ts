@@ -20,12 +20,9 @@ import cookieParser from 'cookie-parser'
 import { passportAuthenticateJWT } from './config/passport.config'
 import authRoutes from './modules/auth/auth.route'
 import companyRoutes from './modules/company/company.route'
-import educationRoutes from './modules/education/education.route'
-import experienceRoutes from './modules/experience/experience.route'
 import institutionRoutes from './modules/institution/institution.route'
 import jobseekerRoutes from './modules/jobseeker/jobseeker.route'
 import languageRoutes from './modules/language/language.route'
-// import memberRoutes from './modules/member/member.route'
 import sessionRoutes from './modules/session/session.route'
 import skillRoutes from './modules/skill/skill.route'
 import userRoutes from './modules/user/user.route'
@@ -82,8 +79,6 @@ app.use(`${BASE_PATH}/user`, passportAuthenticateJWT, userRoutes)
 app.use(`${BASE_PATH}/company`, passportAuthenticateJWT, companyRoutes)
 // app.use(`${BASE_PATH}/member`, passportAuthenticateJWT, memberRoutes)
 app.use(`${BASE_PATH}/session`, passportAuthenticateJWT, sessionRoutes)
-app.use(`${BASE_PATH}/education`, passportAuthenticateJWT, educationRoutes)
-app.use(`${BASE_PATH}/experience`, passportAuthenticateJWT, experienceRoutes)
 app.use(`${BASE_PATH}/jobseeker`, passportAuthenticateJWT, jobseekerRoutes)
 app.use(`${BASE_PATH}/language`, passportAuthenticateJWT, languageRoutes)
 app.use(`${BASE_PATH}/institution`, passportAuthenticateJWT, institutionRoutes)
