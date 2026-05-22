@@ -189,8 +189,6 @@ export const loginController = asyncHandler(
                         updatedAt: user.updatedAt,
                         currentCompany: user.currentCompany,
                     },
-                    access_token,
-                    refresh_token,
                 })
             },
         )(req, res, next)
