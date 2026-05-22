@@ -7,13 +7,14 @@ export async function protectDashboard() {
 
     // 1. Not logged in
     if (!user) {
-        redirect(SIGNIN_URL);
+        redirect(SIGNIN_URL)
+        return null
     }
 
     // 2. Logged in but onboarding incomplete
-    // Safe access using optional chaining
     if (user.user?.onboardingComplete === false) {
-        redirect(ONBOARDING_URL);
+        redirect(ONBOARDING_URL)
+        return null
     }
 
     return user;

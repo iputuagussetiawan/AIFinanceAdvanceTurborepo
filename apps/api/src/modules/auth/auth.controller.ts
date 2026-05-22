@@ -176,6 +176,8 @@ export const loginController = asyncHandler(
                 // 5. Return success (Notice we still return access_token for debugging,
 
                 // but the browser will primarily use the cookie)
+                // access_token + refresh_token included for Next.js Server Action consumption
+                // (server-to-server only — never stored client-side by the frontend)
                 return res.status(HTTPSTATUS.OK).json({
                     message: 'Logged in successfully',
                     user: {
@@ -189,6 +191,8 @@ export const loginController = asyncHandler(
                         updatedAt: user.updatedAt,
                         currentCompany: user.currentCompany,
                     },
+                    access_token,
+                    refresh_token,
                 })
             },
         )(req, res, next)

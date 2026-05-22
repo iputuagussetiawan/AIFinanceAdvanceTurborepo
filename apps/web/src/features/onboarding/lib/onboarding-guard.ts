@@ -7,10 +7,12 @@ export async function protectOnboarding() {
     // 1. Kick out if not logged in
     if (!user) {
         redirect(SIGNIN_URL)
+        return null
     }
     // 2. Kick out if they already finished onboarding
     if (user.user.onboardingComplete) {
         redirect(DASHBOARD_URL)
+        return null
     }
     return user
 }

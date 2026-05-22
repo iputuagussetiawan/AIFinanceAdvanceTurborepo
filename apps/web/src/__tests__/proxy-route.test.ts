@@ -56,11 +56,13 @@ describe('API Proxy Route', () => {
         it('forwards POST request with body to the backend', async () => {
             mockFetch.mockResolvedValueOnce(fakeResponse(200, { success: true }))
 
+            const csrf = 'test-csrf-token'
             const res = await POST(
                 makeRequest('/api/auth/login', {
                     method: 'POST',
-                    headers: { 'content-type': 'application/json' },
+                    headers: { 'content-type': 'application/json', 'x-csrf-token': csrf },
                     body: JSON.stringify({ email: 'a@b.com', password: 'pass' }),
+                    cookies: `csrf-token=${csrf}`,
                 }),
             )
 
@@ -73,7 +75,14 @@ describe('API Proxy Route', () => {
 
         it('passes DELETE through correctly', async () => {
             mockFetch.mockResolvedValueOnce(fakeResponse(200, { deleted: true }))
-            const res = await DELETE(makeRequest('/api/session/abc123', { method: 'DELETE' }))
+            const csrf = 'test-csrf-token'
+            const res = await DELETE(
+                makeRequest('/api/session/abc123', {
+                    method: 'DELETE',
+                    headers: { 'x-csrf-token': csrf },
+                    cookies: `csrf-token=${csrf}`,
+                }),
+            )
             expect(res.status).toBe(200)
             expect(mockFetch).toHaveBeenCalledWith(
                 expect.stringContaining('/session/abc123'),

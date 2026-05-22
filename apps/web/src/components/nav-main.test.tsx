@@ -40,9 +40,9 @@ jest.mock('@/components/ui/sidebar', () => ({
     SidebarMenuSub: ({ children }: any) => <ul>{children}</ul>,
     SidebarMenuSubItem: ({ children }: any) => <li>{children}</li>,
     SidebarMenuSubButton: ({ children, isActive }: any) => (
-        <a data-testid="sub-btn" data-active={String(isActive)}>
+        <button data-testid="sub-btn" data-active={String(isActive)}>
             {children}
-        </a>
+        </button>
     ),
 }))
 
