@@ -53,18 +53,7 @@ export const googleLoginCallback = async (req: Request, res: Response) => {
         // 2. Generate your stateless JWT
         // 3. Generate the JWT
         const access_token = signJwtToken({ userId: user._id, sessionId: session._id })
-        // console.log(`✅[AUTH] Issued JWT for Google User: ${user.email}`)
-        // console.log(access_token)
-
-        // 3. Set the JWT in a secure HttpOnly Cookie
-        // res.cookie('accessToken', access_token, {
-        //     httpOnly: true, // Prevents JavaScript from reading the cookie
-        //     secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in production
-        //     sameSite: 'lax', // Prevents CSRF attacks
-        //     maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
-        //     path: '/' // Cookie available for all routes
-        // })
-
+      
         // 🍪 Cookie Configuration
         res.cookie('accessToken', access_token, {
             httpOnly: true,
@@ -147,17 +136,6 @@ export const loginController = asyncHandler(
 
                 // 3. Generate the JWT
                 const access_token = signJwtToken({ userId: user._id, sessionId: session._id })
-
-                // 4. Set the HttpOnly Cookie
-                // This 'bakes' the token into the browser so it's sent automatically
-                // res.cookie('accessToken', access_token, {
-                //     httpOnly: true,
-                //     secure: process.env.NODE_ENV === 'production', // HTTPS only in prod
-                //     sameSite: 'lax', // Protection against CSRF
-                //     maxAge: 24 * 60 * 60 * 1000, // 1 day expiration
-                //     path: '/'
-                // })
-
                 res.cookie('accessToken', access_token, {
                     httpOnly: true,
                     secure: process.env.NODE_ENV === 'production',

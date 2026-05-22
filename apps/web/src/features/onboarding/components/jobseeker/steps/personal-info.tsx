@@ -19,7 +19,12 @@ const phoneTypeOptions = [
     { label: 'Work', value: 'Work' },
 ]
 
-const PersonalInfo = () => {
+// 👇 Accept isAuthLoading from parent
+interface PersonalInfoProps {
+    isAuthLoading?: boolean
+}
+
+const PersonalInfo = ({ isAuthLoading = false }: PersonalInfoProps) => {
     const {
         register,
         formState: { errors, isSubmitting },
@@ -41,14 +46,14 @@ const PersonalInfo = () => {
                     label="First Name"
                     placeholder="Jane"
                     error={errors.firstName}
-                    isSubmitting={isSubmitting}
+                    isSubmitting={isSubmitting || isAuthLoading}
                 />
                 <UiFormInput
                     {...register('lastName')}
                     label="Last Name"
                     placeholder="Doe"
                     error={errors.lastName}
-                    isSubmitting={isSubmitting}
+                    isSubmitting={isSubmitting || isAuthLoading}
                 />
             </div>
 
@@ -69,7 +74,6 @@ const PersonalInfo = () => {
                 />
             </div>
 
-            {/* Professional Section */}
             <UiFormInput
                 {...register('headline')}
                 label="Headline"
@@ -95,7 +99,6 @@ const PersonalInfo = () => {
                 />
             </div>
 
-            {/* Contact & Location Section */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <UiFormSearchSelect
                     name="country"
@@ -140,7 +143,6 @@ const PersonalInfo = () => {
                 />
             </div>
 
-            {/* Dates & Links */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <UiFormInput
                     {...register('birthday')}

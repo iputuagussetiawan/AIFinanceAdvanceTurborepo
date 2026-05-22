@@ -11,6 +11,7 @@ export default async function middleware(request: NextRequest) {
     const { pathname, search } = request.nextUrl
     const cookie = request.cookies.get(AUTH_COOKIE_NAME)
     const token = cookie?.value
+    
 
     // --- 1. TOKEN EXPIRY CHECK (Client-Side Logic in Middleware) ---
     if (token) {
@@ -41,6 +42,7 @@ export default async function middleware(request: NextRequest) {
 
     // Logged in -> Auth Page (Login/Register)
     if (isAuthRoute && token) {
+         
         return NextResponse.redirect(new URL('/dashboard', request.url))
     }
 

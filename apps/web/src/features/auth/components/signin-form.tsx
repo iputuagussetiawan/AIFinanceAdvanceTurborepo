@@ -24,7 +24,7 @@ export function SignInForm({ className, ...props }: React.ComponentProps<'form'>
         setError,
         formState: { errors },
     } = useForm<SigninInputType>({
-        resolver: zodResolver(signinValidation),
+        resolver: zodResolver(signinValidation as any),
         defaultValues: {
             email: '',
             password: '',
