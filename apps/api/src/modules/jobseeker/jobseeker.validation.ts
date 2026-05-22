@@ -6,6 +6,7 @@ export const jobseekerPersonalInfoValidation = z.object({
     currentPosition: z.string().trim().min(2, 'Current position is required').max(100),
     industry: z.string().trim().min(2, 'Please select an industry'),
     country: z.string().trim().min(1, 'Please select a country'),
+    state: z.string().trim().min(1, 'State is required'),
     city: z.string().trim().min(1, 'City is required'),
     openToWork: z.boolean().default(false).optional(),
 })

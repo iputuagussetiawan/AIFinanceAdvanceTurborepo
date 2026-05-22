@@ -15,6 +15,7 @@ export interface JobseekerDocument extends Document {
     currentPosition: string
     industry: string
     country: string
+    state: string
     city: string
     openToWork: boolean
     languages?: IJobseekerLanguage[]
@@ -36,18 +37,12 @@ const JobseekerSchema = new Schema<JobseekerDocument>(
         },
         jobTitle: { type: String, trim: true, default: '' },
         headline: { type: String, required: true, trim: true },
-
-        // --- Professional ---
         currentPosition: { type: String, required: true, trim: true },
         industry: { type: String, required: true, index: true },
-
-        // --- Location ---
         country: { type: String, required: true, index: true },
+        state: { type: String, required: true, trim: true },
         city: { type: String, required: true },
-
         openToWork: { type: Boolean, default: false },
-
-        // --- CV Data ---
         languages: { type: [jobseekerLanguageSchema], default: [] },
         educations: { type: [jobseekerEducationSchema], default: [] },
         experiences: { type: [jobseekerExperienceSchema], default: [] },
@@ -58,7 +53,7 @@ const JobseekerSchema = new Schema<JobseekerDocument>(
         timestamps: true,
         toJSON: {
             virtuals: true,
-            transform: (doc, ret) => {
+            transform: (_doc, ret) => {
                 delete (ret as any)._id
                 delete (ret as any).__v
                 return ret

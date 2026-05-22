@@ -45,14 +45,14 @@ const OnboardingJobseeker = () => {
         defaultValues: {
             firstName: '',
             lastName: '',
+            phoneNumber:'',
+            address:'',
             headline: '',
             currentPosition: '',
             industry: '',
             country: '',
             city: '',
-            phoneNumber: '',
             phoneType: '',
-            address: '',
             birthday: '',
             educations: [
                 {
