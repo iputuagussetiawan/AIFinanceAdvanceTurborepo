@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { AUTH_COOKIE_NAME, REFRESH_COOKIE_NAME } from '@/lib/constants'
+import { AUTH_COOKIE_NAME, CSRF_COOKIE_NAME, CSRF_HEADER_NAME, REFRESH_COOKIE_NAME } from '@/lib/constants'
 
 const API_BASE_URL = process.env.BACKEND_URL || 'http://localhost:5000/api'
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
+
+function validateCsrf(request: NextRequest): boolean {
+    if (SAFE_METHODS.has(request.method)) return true
+    const cookieToken = request.cookies.get(CSRF_COOKIE_NAME)?.value
+    const headerToken = request.headers.get(CSRF_HEADER_NAME)
+    return !!(cookieToken && headerToken && cookieToken === headerToken)
+}
 
 function buildTargetUrl(request: NextRequest): string {
     const path = request.nextUrl.pathname.replace('/api/', '')
@@ -45,6 +53,13 @@ async function tryRefreshToken(refreshToken: string): Promise<string | null> {
 }
 
 async function entries(request: NextRequest) {
+    if (!validateCsrf(request)) {
+        return new NextResponse(JSON.stringify({ message: 'Invalid CSRF token' }), {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' },
+        })
+    }
+
     const targetUrl = buildTargetUrl(request)
     const headers = buildHeaders(request)
     const method = request.method

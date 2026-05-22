@@ -1,24 +1,34 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { decodeJwt, jwtVerify } from 'jose' // Optional: install 'jose' for edge-runtime JWT checks
+import { jwtVerify } from 'jose'
 
-import { AUTH_COOKIE_NAME } from './lib/constants'
+import { AUTH_COOKIE_NAME, CSRF_COOKIE_NAME } from './lib/constants'
 
-// const protectedRoutes = ['/dashboard', '/onboarding', '/cv']
 const secret = new TextEncoder().encode(process.env.JWT_SECRET)
 const authRoutes = ['/signin', '/signup', '/register', '/forgot-password', '/reset-password']
 
-export default async function middleware(request: NextRequest) {
-    const { pathname, search } = request.nextUrl
-    const cookie = request.cookies.get(AUTH_COOKIE_NAME)
-    const token = cookie?.value
-    
+function ensureCsrfCookie(response: NextResponse, existing: string | undefined): NextResponse {
+    if (!existing) {
+        response.cookies.set(CSRF_COOKIE_NAME, crypto.randomUUID(), {
+            httpOnly: false, // must be readable by client JS
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            path: '/',
+            maxAge: 60 * 60 * 24, // 24 hours
+        })
+    }
+    return response
+}
 
-    // --- 1. TOKEN EXPIRY CHECK (Client-Side Logic in Middleware) ---
+export default async function middleware(request: NextRequest) {
+    const { pathname } = request.nextUrl
+    const token = request.cookies.get(AUTH_COOKIE_NAME)?.value
+    const csrfToken = request.cookies.get(CSRF_COOKIE_NAME)?.value
+
+    // --- 1. TOKEN EXPIRY CHECK ---
     if (token) {
         try {
             await jwtVerify(token, secret)
-        } catch (e) {
-            // If token is malformed, clear it
+        } catch {
             const response = NextResponse.redirect(new URL('/signin', request.url))
             response.cookies.delete(AUTH_COOKIE_NAME)
             return response
@@ -28,13 +38,12 @@ export default async function middleware(request: NextRequest) {
     // --- 2. ROUTE PROTECTION ---
     const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route))
 
-    // Logged in -> Auth Page (Login/Register)
     if (isAuthRoute && token) {
-         
         return NextResponse.redirect(new URL('/dashboard', request.url))
     }
 
-    return NextResponse.next()
+    // --- 3. CSRF COOKIE ---
+    return ensureCsrfCookie(NextResponse.next(), csrfToken)
 }
 
 export const config = {

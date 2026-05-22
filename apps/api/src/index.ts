@@ -50,15 +50,8 @@ const globalLimiter = rateLimit({
     legacyHeaders: false,
 })
 
-// This middleware looks at incoming requests where the Content-Type is 'application/json'.
-// It parses the raw JSON string from the request body into a JavaScript object,
-// allowing you to access data via 'req.body' (e.g., req.body.username).
-app.use(express.json())
-
-// This middleware parses incoming requests with URL-encoded payloads (usually from HTML <form> tags).
-// The 'extended: true' option allows for parsing complex, nested objects using the 'qs' library
-// instead of the simpler 'querystring' library (extended: false).
-app.use(express.urlencoded({ extended: true }))
+app.use(express.json({ limit: '1mb' }))
+app.use(express.urlencoded({ extended: true, limit: '1mb' }))
 
 app.use(passport.initialize())
 
