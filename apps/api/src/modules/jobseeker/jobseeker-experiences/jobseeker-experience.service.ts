@@ -8,70 +8,63 @@ const findJobseeker = async (userId: string) => {
     return jobseeker
 }
 
-export const updateJobseekerExperienceService = async (
-    userId: string,
-    experienceData: IJobseekerExperience,
-) => {
-    const jobseeker = await findJobseeker(userId)
+export const JobseekerExperienceService = {
+    updateExperience: async (userId: string, experienceData: IJobseekerExperience) => {
+        const jobseeker = await findJobseeker(userId)
 
-    if (!jobseeker.experiences) jobseeker.experiences = []
+        if (!jobseeker.experiences) jobseeker.experiences = []
 
-    const experienceIndex = jobseeker.experiences.findIndex(
-        (exp) =>
-            exp.companyName === experienceData.companyName && exp.title === experienceData.title,
-    )
+        const experienceIndex = jobseeker.experiences.findIndex(
+            (exp) =>
+                exp.companyName === experienceData.companyName && exp.title === experienceData.title,
+        )
 
-    if (experienceIndex > -1) {
-        jobseeker.experiences[experienceIndex] = experienceData as any
-    } else {
-        jobseeker.experiences.push(experienceData as any)
-    }
+        if (experienceIndex > -1) {
+            jobseeker.experiences[experienceIndex] = experienceData as any
+        } else {
+            jobseeker.experiences.push(experienceData as any)
+        }
 
-    jobseeker.markModified('experiences')
-    await jobseeker.save()
-    await jobseeker.populate('experiences.company')
+        jobseeker.markModified('experiences')
+        await jobseeker.save()
+        await jobseeker.populate('experiences.company')
 
-    return jobseeker.experiences
-}
+        return jobseeker.experiences
+    },
 
-export const bulkUpdateJobseekerExperienceService = async (
-    userId: string,
-    experienceArray: IJobseekerExperience[],
-) => {
-    const jobseeker = await findJobseeker(userId)
+    bulkUpdateExperience: async (userId: string, experienceArray: IJobseekerExperience[]) => {
+        const jobseeker = await findJobseeker(userId)
 
-    jobseeker.experiences = experienceArray as any
-    jobseeker.markModified('experiences')
-    await jobseeker.save()
+        jobseeker.experiences = experienceArray as any
+        jobseeker.markModified('experiences')
+        await jobseeker.save()
 
-    return jobseeker
-}
+        return jobseeker
+    },
 
-export const removeJobseekerExperienceService = async (userId: string, experienceId: string) => {
-    const jobseeker = await JobseekerModel.findOneAndUpdate(
-        { userId },
-        { $pull: { experiences: { _id: experienceId } } },
-        { new: true },
-    )
+    removeExperience: async (userId: string, experienceId: string) => {
+        const jobseeker = await JobseekerModel.findOneAndUpdate(
+            { userId },
+            { $pull: { experiences: { _id: experienceId } } },
+            { new: true },
+        )
 
-    if (!jobseeker) throw new NotFoundException('Jobseeker profile not found')
+        if (!jobseeker) throw new NotFoundException('Jobseeker profile not found')
 
-    await jobseeker.populate('experiences.company')
-    return jobseeker.experiences
-}
+        await jobseeker.populate('experiences.company')
+        return jobseeker.experiences
+    },
 
-export const bulkRemoveJobseekerExperienceService = async (
-    userId: string,
-    experienceIds: string[],
-) => {
-    const jobseeker = await JobseekerModel.findOneAndUpdate(
-        { userId },
-        { $pull: { experiences: { _id: { $in: experienceIds } } } },
-        { new: true },
-    )
+    bulkRemoveExperience: async (userId: string, experienceIds: string[]) => {
+        const jobseeker = await JobseekerModel.findOneAndUpdate(
+            { userId },
+            { $pull: { experiences: { _id: { $in: experienceIds } } } },
+            { new: true },
+        )
 
-    if (!jobseeker) throw new NotFoundException('Jobseeker profile not found')
+        if (!jobseeker) throw new NotFoundException('Jobseeker profile not found')
 
-    await jobseeker.populate('experiences.company')
-    return jobseeker.experiences
+        await jobseeker.populate('experiences.company')
+        return jobseeker.experiences
+    },
 }

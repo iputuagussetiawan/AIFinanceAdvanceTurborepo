@@ -1,18 +1,18 @@
 import { Router } from 'express'
 
-import * as SkillController from './skill.controller'
+import { SkillController } from './skill.controller'
 
 const skillRoutes = Router()
 
-skillRoutes.get('/search', SkillController.searchSkillsController)
-skillRoutes.get('/', SkillController.getSkillsController)
-skillRoutes.get('/:id', SkillController.getSkillByIdController)
-skillRoutes.post('/', SkillController.createSkillController)
-skillRoutes.post('/bulk', SkillController.bulkCreateSkillController)
-skillRoutes.put('/:id', SkillController.updateSkillController)
-skillRoutes.delete('/bulk/soft', SkillController.bulkDeleteSkillController)
-skillRoutes.delete('/bulk/hard', SkillController.bulkHardDeleteSkillController)
-skillRoutes.delete('/hard/:id', SkillController.hardDeleteSkillController)
-skillRoutes.delete('/:id', SkillController.deleteSkillController)
+skillRoutes.get('/search', SkillController.searchSkills)
+skillRoutes.get('/', SkillController.getSkills)
+skillRoutes.get('/:id', SkillController.getSkillById)
+skillRoutes.post('/', SkillController.createSkill)
+skillRoutes.post('/bulk', SkillController.bulkCreateSkill)
+skillRoutes.put('/:id', SkillController.updateSkill)
+skillRoutes.delete('/bulk/soft', SkillController.bulkDeleteSkill)
+skillRoutes.delete('/bulk/hard', SkillController.bulkHardDeleteSkill)
+skillRoutes.delete('/hard/:id', SkillController.hardDeleteSkill)
+skillRoutes.delete('/:id', SkillController.deleteSkill)
 
 export default skillRoutes

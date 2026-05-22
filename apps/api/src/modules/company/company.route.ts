@@ -1,13 +1,13 @@
 import { Router } from 'express'
 
-import * as CompanyController from './company.controller'
+import { CompanyController } from './company.controller'
 
 const companyRoutes = Router()
-companyRoutes.get('/', CompanyController.getCompaniesController)
-companyRoutes.get('/search', CompanyController.searchCompaniesController)
-companyRoutes.get('/:slug', CompanyController.getCompanyBySlugController)
-companyRoutes.post('/', CompanyController.createCompanyController)
-companyRoutes.post('/bulk', CompanyController.bulkCreateCompanyController)
-companyRoutes.put('/:id', CompanyController.updateCompanyController)
+companyRoutes.get('/', CompanyController.getCompanies)
+companyRoutes.get('/search', CompanyController.searchCompanies)
+companyRoutes.get('/:slug', CompanyController.getCompanyBySlug)
+companyRoutes.post('/', CompanyController.createCompany)
+companyRoutes.post('/bulk', CompanyController.bulkCreateCompany)
+companyRoutes.put('/:id', CompanyController.updateCompany)
 
 export default companyRoutes

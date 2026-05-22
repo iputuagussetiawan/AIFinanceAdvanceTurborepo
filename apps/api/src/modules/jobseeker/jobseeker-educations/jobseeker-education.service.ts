@@ -8,71 +8,64 @@ const findJobseeker = async (userId: string) => {
     return jobseeker
 }
 
-export const updateJobseekerEducationService = async (
-    userId: string,
-    educationData: IJobseekerEducation,
-) => {
-    const jobseeker = await findJobseeker(userId)
+export const JobseekerEducationService = {
+    updateEducation: async (userId: string, educationData: IJobseekerEducation) => {
+        const jobseeker = await findJobseeker(userId)
 
-    if (!jobseeker.educations) jobseeker.educations = []
+        if (!jobseeker.educations) jobseeker.educations = []
 
-    const educationIndex = jobseeker.educations.findIndex(
-        (edu) =>
-            edu.institutionName === educationData.institutionName &&
-            edu.degree === educationData.degree,
-    )
+        const educationIndex = jobseeker.educations.findIndex(
+            (edu) =>
+                edu.institutionName === educationData.institutionName &&
+                edu.degree === educationData.degree,
+        )
 
-    if (educationIndex > -1) {
-        jobseeker.educations[educationIndex] = educationData as any
-    } else {
-        jobseeker.educations.push(educationData as any)
-    }
+        if (educationIndex > -1) {
+            jobseeker.educations[educationIndex] = educationData as any
+        } else {
+            jobseeker.educations.push(educationData as any)
+        }
 
-    jobseeker.markModified('educations')
-    await jobseeker.save()
-    await jobseeker.populate('educations.institution')
+        jobseeker.markModified('educations')
+        await jobseeker.save()
+        await jobseeker.populate('educations.institution')
 
-    return jobseeker.educations
-}
+        return jobseeker.educations
+    },
 
-export const bulkUpdateJobseekerEducationService = async (
-    userId: string,
-    educationArray: IJobseekerEducation[],
-) => {
-    const jobseeker = await findJobseeker(userId)
+    bulkUpdateEducation: async (userId: string, educationArray: IJobseekerEducation[]) => {
+        const jobseeker = await findJobseeker(userId)
 
-    jobseeker.educations = educationArray as any
-    jobseeker.markModified('educations')
-    await jobseeker.save()
+        jobseeker.educations = educationArray as any
+        jobseeker.markModified('educations')
+        await jobseeker.save()
 
-    return jobseeker
-}
+        return jobseeker
+    },
 
-export const removeJobseekerEducationService = async (userId: string, educationId: string) => {
-    const jobseeker = await JobseekerModel.findOneAndUpdate(
-        { userId },
-        { $pull: { educations: { _id: educationId } } },
-        { new: true },
-    )
+    removeEducation: async (userId: string, educationId: string) => {
+        const jobseeker = await JobseekerModel.findOneAndUpdate(
+            { userId },
+            { $pull: { educations: { _id: educationId } } },
+            { new: true },
+        )
 
-    if (!jobseeker) throw new NotFoundException('Jobseeker profile not found')
+        if (!jobseeker) throw new NotFoundException('Jobseeker profile not found')
 
-    await jobseeker.populate('educations.institution')
-    return jobseeker.educations
-}
+        await jobseeker.populate('educations.institution')
+        return jobseeker.educations
+    },
 
-export const bulkRemoveJobseekerEducationService = async (
-    userId: string,
-    educationIds: string[],
-) => {
-    const jobseeker = await JobseekerModel.findOneAndUpdate(
-        { userId },
-        { $pull: { educations: { _id: { $in: educationIds } } } },
-        { new: true },
-    )
+    bulkRemoveEducation: async (userId: string, educationIds: string[]) => {
+        const jobseeker = await JobseekerModel.findOneAndUpdate(
+            { userId },
+            { $pull: { educations: { _id: { $in: educationIds } } } },
+            { new: true },
+        )
 
-    if (!jobseeker) throw new NotFoundException('Jobseeker profile not found')
+        if (!jobseeker) throw new NotFoundException('Jobseeker profile not found')
 
-    await jobseeker.populate('educations.institution')
-    return jobseeker.educations
+        await jobseeker.populate('educations.institution')
+        return jobseeker.educations
+    },
 }

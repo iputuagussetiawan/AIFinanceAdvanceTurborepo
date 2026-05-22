@@ -5,11 +5,7 @@ import { ExtractJwt, Strategy as JwtStrategy, StrategyOptions } from 'passport-j
 import { Strategy as LocalStrategy } from 'passport-local'
 
 import { ProviderEnum } from '../enums/account-provider.enum'
-import {
-    loginOrCreateAccountService,
-    verifyUserByIdService,
-    verifyUserService,
-} from '../modules/auth/auth.service'
+import { AuthService } from '../modules/auth/auth.service'
 import SessionModel from '../modules/session/session.model'
 import { NotFoundException } from '../utils/appError'
 import { signJwtToken } from '../utils/jwt'
@@ -66,7 +62,7 @@ passport.use(
                     displayParts.slice(1).join(' ') ||
                     '-'
 
-                const { user } = await loginOrCreateAccountService({
+                const { user } = await AuthService.loginOrCreateAccount({
                     provider: ProviderEnum.GOOGLE,
                     firstName,
                     lastName,
@@ -93,7 +89,7 @@ passport.use(
         },
         async (email, password, done) => {
             try {
-                const user = await verifyUserService({ email, password })
+                const user = await AuthService.verifyUser({ email, password })
                 return done(null, user)
             } catch (error: any) {
                 return done(error, false, { message: error?.message })
@@ -105,7 +101,7 @@ passport.use(
 passport.use(
     new JwtStrategy(options, async (req, payload: JwtPayload, done) => {
         try {
-            const user = await verifyUserByIdService(payload.userId)
+            const user = await AuthService.verifyUserById(payload.userId)
             if (!user) {
                 return done(null, false)
             }

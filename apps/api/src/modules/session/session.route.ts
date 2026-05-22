@@ -1,9 +1,9 @@
 import { Router } from 'express'
 
-import { deleteSession, getAllSession, getSession } from './session.controller'
+import { SessionController } from './session.controller'
 
 const sessionRoutes = Router()
-sessionRoutes.get('/all', getAllSession)
-sessionRoutes.get('/', getSession)
-sessionRoutes.delete('/:id', deleteSession)
+sessionRoutes.get('/all', SessionController.getAllSessions)
+sessionRoutes.get('/', SessionController.getSession)
+sessionRoutes.delete('/:id', SessionController.deleteSession)
 export default sessionRoutes

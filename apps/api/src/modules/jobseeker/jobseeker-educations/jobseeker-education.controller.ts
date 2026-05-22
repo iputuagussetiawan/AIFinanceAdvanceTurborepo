@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { HTTPSTATUS } from '../../../config/http.config'
 import { asyncHandler } from '../../../middlewares/asyncHandler.middleware'
 import { BadRequestException } from '../../../utils/appError'
-import * as EducationService from './jobseeker-education.service'
+import { JobseekerEducationService } from './jobseeker-education.service'
 import { jobseekerEducationValidation } from './jobseeker-education.validation'
 
 export const JobseekerEducationController = {
@@ -13,7 +13,7 @@ export const JobseekerEducationController = {
         if (!userId) throw new BadRequestException('User authentication required')
 
         const body = jobseekerEducationValidation.parse(req.body)
-        const data = await EducationService.updateJobseekerEducationService(userId, body)
+        const data = await JobseekerEducationService.updateEducation(userId, body)
 
         return res.status(HTTPSTATUS.OK).json({ success: true, message: 'Education updated successfully', data })
     }),
@@ -22,9 +22,8 @@ export const JobseekerEducationController = {
         const userId = req.user?._id as string
         if (!userId) throw new BadRequestException('User authentication required')
 
-        const { educations } = req.body
-        const validatedEducations = z.array(jobseekerEducationValidation).parse(educations)
-        const data = await EducationService.bulkUpdateJobseekerEducationService(userId, validatedEducations)
+        const { educations } = z.object({ educations: z.array(jobseekerEducationValidation) }).parse(req.body)
+        const data = await JobseekerEducationService.bulkUpdateEducation(userId, educations)
 
         return res.status(HTTPSTATUS.OK).json({ success: true, message: 'Education history synced successfully', data })
     }),
@@ -33,10 +32,10 @@ export const JobseekerEducationController = {
         const userId = req.user?._id as string
         if (!userId) throw new BadRequestException('User authentication required')
 
-        const educationId = req.params.educationId as string
+        const { educationId } = z.object({ educationId: z.string() }).parse(req.params)
         if (!educationId) throw new BadRequestException('Education ID is required')
 
-        const data = await EducationService.removeJobseekerEducationService(userId, educationId)
+        const data = await JobseekerEducationService.removeEducation(userId, educationId)
 
         return res.status(HTTPSTATUS.OK).json({ success: true, message: 'Education entry removed', data })
     }),
@@ -47,7 +46,7 @@ export const JobseekerEducationController = {
 
         const { educationIds } = req.body
         const validatedIds = z.array(z.string()).parse(educationIds)
-        const data = await EducationService.bulkRemoveJobseekerEducationService(userId, validatedIds)
+        const data = await JobseekerEducationService.bulkRemoveEducation(userId, validatedIds)
 
         return res.status(HTTPSTATUS.OK).json({ success: true, message: 'Selected education entries removed', data })
     }),

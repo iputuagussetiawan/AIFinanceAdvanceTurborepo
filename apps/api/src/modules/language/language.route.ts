@@ -1,23 +1,15 @@
 import { Router } from 'express'
 
-import {
-    bulkCreateLanguageController,
-    createLanguageController,
-    deleteLanguageController,
-    getAllLanguagesController,
-    getLanguageByIdController,
-    searchLanguagesController,
-    updateLanguageController,
-} from './language.controller'
+import { LanguageController } from './language.controller'
 
 const languageRoutes = Router()
 
-languageRoutes.post('/', createLanguageController)
-languageRoutes.post('/bulk', bulkCreateLanguageController)
-languageRoutes.get('/search', searchLanguagesController)
-languageRoutes.get('/', getAllLanguagesController)
-languageRoutes.get('/:id', getLanguageByIdController)
-languageRoutes.patch('/:id', updateLanguageController)
-languageRoutes.delete('/:id', deleteLanguageController)
+languageRoutes.post('/', LanguageController.createLanguage)
+languageRoutes.post('/bulk', LanguageController.bulkCreateLanguage)
+languageRoutes.get('/search', LanguageController.searchLanguages)
+languageRoutes.get('/', LanguageController.getAllLanguages)
+languageRoutes.get('/:id', LanguageController.getLanguageById)
+languageRoutes.patch('/:id', LanguageController.updateLanguage)
+languageRoutes.delete('/:id', LanguageController.deleteLanguage)
 
 export default languageRoutes

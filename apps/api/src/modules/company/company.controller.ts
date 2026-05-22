@@ -2,88 +2,42 @@ import { Request, Response } from 'express'
 
 import { HTTPSTATUS } from '../../config/http.config'
 import { asyncHandler } from '../../middlewares/asyncHandler.middleware'
-import * as CompanyService from './company.service'
+import { CompanyService } from './company.service'
 import { createCompanySchema, updateCompanySchema } from './company.validation'
 
-export const searchCompaniesController = asyncHandler(async (req: Request, res: Response) => {
-    const search = req.query.search as string | undefined
-    const data = await CompanyService.searchCompaniesService(search)
-    return res.status(HTTPSTATUS.OK).json({
-        message: 'Companies retrieved successfully',
-        data,
-    })
-})
+export const CompanyController = {
+    searchCompanies: asyncHandler(async (req: Request, res: Response) => {
+        const search = req.query.search as string | undefined
+        const data = await CompanyService.searchCompanies(search)
+        return res.status(HTTPSTATUS.OK).json({ message: 'Companies retrieved successfully', data })
+    }),
 
-/**
- * Mendapatkan daftar perusahaan dengan filter & pagination
- */
-export const getCompaniesController = asyncHandler(async (req: Request, res: Response) => {
-    const result = await CompanyService.getCompaniesService(req.query)
+    getCompanies: asyncHandler(async (req: Request, res: Response) => {
+        const result = await CompanyService.getCompanies(req.query)
+        return res.status(HTTPSTATUS.OK).json({ message: 'Companies retrieved successfully', ...result })
+    }),
 
-    return res.status(HTTPSTATUS.OK).json({
-        message: 'Companies retrieved successfully',
-        ...result,
-    })
-})
+    getCompanyBySlug: asyncHandler(async (req: Request, res: Response) => {
+        const { slug } = req.params
+        const company = await CompanyService.getCompanyBySlug(slug.toString())
+        return res.status(HTTPSTATUS.OK).json({ message: 'Company profile retrieved successfully', company })
+    }),
 
-/**
- * @desc    Mendapatkan detail perusahaan berdasarkan slug
- * @route   GET /api/v1/companies/profile/:slug
- * @access  Public
- */
-export const getCompanyBySlugController = asyncHandler(async (req: Request, res: Response) => {
-    const { slug } = req.params
+    createCompany: asyncHandler(async (req: Request, res: Response) => {
+        const body = createCompanySchema.parse(req.body)
+        const company = await CompanyService.createCompany(body)
+        return res.status(HTTPSTATUS.CREATED).json({ message: 'Company created successfully', company })
+    }),
 
-    // Memanggil service yang sudah Anda buat
-    const company = await CompanyService.getCompanyBySlugService(slug.toString())
+    updateCompany: asyncHandler(async (req: Request, res: Response) => {
+        const { id } = req.params
+        const body = updateCompanySchema.parse(req.body)
+        const company = await CompanyService.updateCompany(id.toString(), body)
+        return res.status(HTTPSTATUS.OK).json({ message: 'Company updated successfully', company })
+    }),
 
-    return res.status(HTTPSTATUS.OK).json({
-        message: 'Company profile retrieved successfully',
-        company,
-    })
-})
-
-/**
- * Membuat perusahaan baru tunggal
- */
-export const createCompanyController = asyncHandler(async (req: Request, res: Response) => {
-    // Validasi input menggunakan Zod
-    const body = createCompanySchema.parse(req.body)
-
-    const company = await CompanyService.createCompanyService(body)
-
-    return res.status(HTTPSTATUS.CREATED).json({
-        message: 'Company created successfully',
-        company,
-    })
-})
-
-/**
- * Mengupdate data perusahaan
- */
-export const updateCompanyController = asyncHandler(async (req: Request, res: Response) => {
-    const { id } = req.params
-
-    // partial() memastikan user bisa mengirim field tertentu saja
-    const body = updateCompanySchema.parse(req.body)
-
-    const company = await CompanyService.updateCompanyService(id.toString(), body)
-
-    return res.status(HTTPSTATUS.OK).json({
-        message: 'Company updated successfully',
-        company,
-    })
-})
-
-/**
- * Import banyak perusahaan sekaligus (Bulk Insert)
- */
-export const bulkCreateCompanyController = asyncHandler(async (req: Request, res: Response) => {
-    // Pastikan req.body adalah array perusahaan
-    const companies = await CompanyService.bulkCreateCompanyService(req.body)
-
-    return res.status(HTTPSTATUS.CREATED).json({
-        // message: `${companies.length} companies imported successfully`,
-        companies,
-    })
-})
+    bulkCreateCompany: asyncHandler(async (req: Request, res: Response) => {
+        const companies = await CompanyService.bulkCreateCompany(req.body)
+        return res.status(HTTPSTATUS.CREATED).json({ companies })
+    }),
+}

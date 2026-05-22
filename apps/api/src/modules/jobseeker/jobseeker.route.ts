@@ -2,24 +2,19 @@ import { Router } from 'express'
 
 import { JobseekerEducationController } from './jobseeker-educations/jobseeker-education.controller'
 import { JobseekerExperienceController } from './jobseeker-experiences/jobseeker-experience.controller'
-import {
-    bulkRemoveJobseekerLanguages,
-    bulkUpsertJobseekerLanguages,
-    removeJobseekerLanguage,
-    upsertJobseekerLanguage,
-} from './jobseeker-languages/jobseeker-language.controller'
+import { JobseekerLanguageController } from './jobseeker-languages/jobseeker-language.controller'
 import { JobseekerSkillController } from './jobseeker-skills/jobseeker-skill.controller'
-import { getJobseekerProfileController, saveJobseekerProfileController } from './jobseeker.controller'
+import { JobseekerController } from './jobseeker.controller'
 
 const jobseekerRoutes = Router()
 
-jobseekerRoutes.get('/me', getJobseekerProfileController)
-jobseekerRoutes.post('/save', saveJobseekerProfileController)
+jobseekerRoutes.get('/me', JobseekerController.getProfile)
+jobseekerRoutes.post('/save', JobseekerController.saveProfile)
 
-jobseekerRoutes.put('/languages', upsertJobseekerLanguage)
-jobseekerRoutes.put('/languages/bulk', bulkUpsertJobseekerLanguages)
-jobseekerRoutes.delete('/languages/bulk', bulkRemoveJobseekerLanguages)
-jobseekerRoutes.delete('/languages/:languageId', removeJobseekerLanguage)
+jobseekerRoutes.put('/languages', JobseekerLanguageController.upsertLanguage)
+jobseekerRoutes.put('/languages/bulk', JobseekerLanguageController.bulkUpsertLanguages)
+jobseekerRoutes.delete('/languages/bulk', JobseekerLanguageController.bulkRemoveLanguages)
+jobseekerRoutes.delete('/languages/:languageId', JobseekerLanguageController.removeLanguage)
 
 jobseekerRoutes.put('/educations', JobseekerEducationController.updateEducation)
 jobseekerRoutes.put('/educations/bulk', JobseekerEducationController.bulkUpdateEducation)
