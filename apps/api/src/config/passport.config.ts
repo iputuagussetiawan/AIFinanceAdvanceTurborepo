@@ -50,14 +50,25 @@ passport.use(
         },
         async (req: Request, accessToken, refreshToken, profile, done) => {
             try {
-                const { email, sub: googleId, picture } = profile._json
+                const { email, sub: googleId, picture, given_name, family_name } = profile._json
                 if (!googleId) {
                     throw new NotFoundException('Google ID (sub) is missing')
                 }
+                const displayParts = profile.displayName?.split(' ') ?? []
+                const firstName =
+                    profile.name?.givenName ||
+                    given_name ||
+                    displayParts[0] ||
+                    'User'
+                const lastName =
+                    profile.name?.familyName ||
+                    family_name ||
+                    displayParts.slice(1).join(' ') ||
+                    '-'
                 const { user } = await loginOrCreateAccountService({
                     provider: ProviderEnum.GOOGLE,
-                    firstName: profile.name?.givenName || profile.displayName || 'Your First Name', 
-                    lastName: profile.name?.familyName || profile.displayName || 'Your Last Name',
+                    firstName,
+                    lastName,
                     providerId: googleId,
                     picture: picture,
                     email: email,
