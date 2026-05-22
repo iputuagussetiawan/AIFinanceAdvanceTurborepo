@@ -1,15 +1,19 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-    /* config options here */
-    // async rewrites() {
-    //   return [
-    //     {
-    //       source: '/api/:path*',
-    //       destination: 'http://localhost:8000/:path*', // Your Express Backend
-    //     },
-    //   ]
-    // },
+    images: {
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: 'res.cloudinary.com',
+            },
+            {
+                protocol: 'https',
+                hostname: 'lh3.googleusercontent.com', // Google profile pictures
+            },
+        ],
+        formats: ['image/avif', 'image/webp'],
+    },
 }
 
 export default nextConfig

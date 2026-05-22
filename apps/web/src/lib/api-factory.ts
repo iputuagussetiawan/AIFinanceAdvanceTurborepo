@@ -1,5 +1,5 @@
 // File: lib/api-factory.ts
-import { AUTH_COOKIE_NAME } from './constants'
+import { AUTH_COOKIE_NAME, CSRF_COOKIE_NAME, CSRF_HEADER_NAME } from './constants'
 
 // Tambahkan tipe untuk params agar lebih aman
 type ApiOptions = RequestInit & {
@@ -21,6 +21,12 @@ class FetchFactory {
 
             if (token) headers['Authorization'] = `Bearer ${token}`
             headers['Cookie'] = cookieStore.toString()
+        } else {
+            const csrfToken = document.cookie
+                .split('; ')
+                .find((c) => c.startsWith(`${CSRF_COOKIE_NAME}=`))
+                ?.split('=')[1]
+            if (csrfToken) headers[CSRF_HEADER_NAME] = decodeURIComponent(csrfToken)
         }
 
         return headers

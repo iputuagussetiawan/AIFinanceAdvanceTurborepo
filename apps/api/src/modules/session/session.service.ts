@@ -26,50 +26,30 @@ export const getAllSessionService = async (userId: string) => {
     }
 }
 
-export const getSessionByIdService = async (sessionId: string) => {
-    // 1. Fetch Session and Populate User (Strictly exclude password)
-    const session = await SessionModel.findById(sessionId)
-        .populate({
-            path: 'userId',
-            select: '-password -__v', // 👈 Password excluded here
-            populate: [
-                {
-                    path: 'languages.language',
-                    select: '-__v -createdAt -updatedAt',
-                    model: 'Language',
-                },
-                {
-                    path: 'educations.institution', // Populating the institution inside educations
-                    select: '-__v -createdAt -updatedAt',
-                    model: 'Institution', // Ensure this matches your Institution model name
-                },
-                {
-                    path: 'experiences.company', // Populating the company inside experiences
-                    select: '-__v -createdAt -updatedAt',
-                    model: 'Company', // Ensure this matches your Company model name
-                },
-                {
-                    path: 'skills.skill', // Populating the skill inside skills
-                    select: '-__v -createdAt -updatedAt',
-                    model: 'Skill', // Ensure this matches your Skill model name
-                },
-            ],
-        })
-        .select('-expiresAt')
+export const getSessionByIdService = async (sessionId: string, userId: string) => {
+    const [session, member] = await Promise.all([
+        SessionModel.findById(sessionId)
+            .populate({
+                path: 'userId',
+                select: '-password -__v',
+                populate: [
+                    { path: 'languages.language', select: '-__v -createdAt -updatedAt', model: 'Language' },
+                    { path: 'educations.institution', select: '-__v -createdAt -updatedAt', model: 'Institution' },
+                    { path: 'experiences.company', select: '-__v -createdAt -updatedAt', model: 'Company' },
+                    { path: 'skills.skill', select: '-__v -createdAt -updatedAt', model: 'Skill' },
+                ],
+            })
+            .select('-expiresAt'),
+        MemberModel.findOne({ userId }).populate({ path: 'role', select: 'name permissions' }),
+    ])
 
     if (!session || !session.userId) {
         throw new NotFoundException('Session or User not found')
     }
 
-    const sessionObj = session.toJSON()
-    const user = sessionObj.userId as any
-
-    const member = await MemberModel.findOne({ userId: user.id }) // user.id sudah string
-        .populate({ path: 'role', select: 'name permissions' })
-
+    const user = session.toJSON().userId as any
     const memberObj = member?.toJSON() || null
 
-    // 3. Merge and return
     return {
         user: {
             ...user,

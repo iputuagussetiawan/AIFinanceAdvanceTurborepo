@@ -19,8 +19,8 @@ export function useUser(initialData?: any) {
         mutationFn: (formData: FormData) => userService.update(formData),
         onSuccess: () => {
             toast.success('Profile updated successfully!')
-            // 🔄 This triggers a fresh 'getMe' call to update the UI globally
             queryClient.invalidateQueries({ queryKey: ['user'] })
+            queryClient.invalidateQueries({ queryKey: ['authUser'] })
         },
         onError: (error: Error) => {
             toast.error(error.message || 'Failed to update profile')

@@ -1,10 +1,14 @@
+import { headers } from 'next/headers'
 import { requireAuth } from '@/lib/require-auth'
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query'
 import { sessionService } from '@/features/session/services/session-service'
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
+    const headersList = await headers()
+    const currentPath = headersList.get('x-pathname') ?? '/dashboard'
+
     const [_, queryClient] = await Promise.all([
-        requireAuth(),
+        requireAuth(currentPath),
         (async () => {
             const client = new QueryClient()
             await client.prefetchQuery({
