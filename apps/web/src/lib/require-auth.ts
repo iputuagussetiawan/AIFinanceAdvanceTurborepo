@@ -1,20 +1,24 @@
-// lib/require-auth.ts
-import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { jwtVerify } from 'jose'
-import { AUTH_COOKIE_NAME } from '@/lib/constants'
-import { sessionService } from '@/features/session/services/session-service'
 
-const secret = new TextEncoder().encode(process.env.JWT_SECRET)
+import { AUTH_COOKIE_NAME, SIGNIN_URL } from '@/lib/constants'
 
-export async function requireAuth() {
+const SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
+
+// redirectPath: the page to return to after a successful silent refresh
+export async function requireAuth(redirectPath: string = '/dashboard') {
     const cookieStore = await cookies()
     const token = cookieStore.get(AUTH_COOKIE_NAME)?.value
-    if (!token) redirect('/signin')
+
+    if (!token) {
+        redirect(`/api/auth/silent-refresh?redirect=${encodeURIComponent(redirectPath)}`)
+    }
+
     try {
-        await jwtVerify(token, secret)
-        // return user
+        await jwtVerify(token, SECRET, { audience: 'user' })
     } catch {
-        redirect('/signin')
+        // Token expired — silent-refresh will get a new one and redirect back
+        redirect(`/api/auth/silent-refresh?redirect=${encodeURIComponent(redirectPath)}`)
     }
 }

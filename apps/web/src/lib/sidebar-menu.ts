@@ -27,7 +27,6 @@ export const getSidebarData = (roleName?: string) => {
                 title: 'Dashboard',
                 url: '/dashboard',
                 icon: LayoutDashboard,
-                isActive: true,
                 items: [
                     {
                         title: 'Analytics',

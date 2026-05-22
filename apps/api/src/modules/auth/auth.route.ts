@@ -8,6 +8,7 @@ import {
     googleLoginCallback,
     loginController,
     logOutController,
+    refreshTokenController,
     registerUserController,
     resetPasswordController,
     verifyEmailController,
@@ -20,6 +21,7 @@ authRoutes.post('/verify/email', verifyEmailController)
 authRoutes.post('/password/forgot', forgotPasswordController)
 authRoutes.post('/password/reset', resetPasswordController)
 authRoutes.post('/login', loginController)
+authRoutes.post('/refresh', refreshTokenController)
 authRoutes.post('/logout', passportAuthenticateJWT, logOutController)
 
 authRoutes.get(
