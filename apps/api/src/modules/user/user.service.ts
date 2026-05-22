@@ -124,11 +124,7 @@ export const updateUserProfileService = async (userId: string, body: UpdateUserI
     if (!user) throw new NotFoundException('User not found')
     if (!member) throw new BadRequestException('User or Member record not found')
 
-    if (body.email && body.email !== user.email) {
-        await handleEmailChange(user, body.email)
-    }
-
-    const { firstName, lastName, jobTitle, bio, phoneNumber, address, website } = body
+    const { firstName, lastName, jobTitle, bio, phoneNumber, address, website, birthday } = body
 
     if (firstName !== undefined) user.firstName = firstName
     if (lastName !== undefined) user.lastName = lastName
@@ -137,10 +133,7 @@ export const updateUserProfileService = async (userId: string, body: UpdateUserI
     if (phoneNumber !== undefined) user.phoneNumber = phoneNumber
     if (address !== undefined) user.address = address
     if (website !== undefined) user.website = website
-
-    if (body.password) {
-        user.password = body.password
-    }
+    if (birthday !== undefined) user.birthday = birthday ? new Date(birthday) : undefined
 
     await user.save()
 

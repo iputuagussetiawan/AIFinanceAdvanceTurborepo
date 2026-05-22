@@ -27,40 +27,17 @@ export const saveJobseekerProfileService = async (
     try {
         session.startTransaction()
 
-        // 3. Split DTO: User owns identity/contact, Jobseeker owns profile-specific fields
-        const {
-            firstName,
-            lastName,
-            phoneNumber,
-            address,
-            website,
-            birthday,
-            ...jobseekerFields
-        } = body
-
+        // 3. Mark onboarding complete on User
         await UserModel.findByIdAndUpdate(
             userId,
-            {
-                $set: {
-                    firstName,
-                    lastName,
-                    phoneNumber,
-                    address,
-                    website,
-                    birthday: birthday ? new Date(birthday) : null,
-                    onboardingComplete: true,
-                },
-            },
-            { session, runValidators: true },
+            { $set: { onboardingComplete: true } },
+            { session },
         )
 
         // 4. Upsert jobseeker-specific fields
         const profile = await JobseekerModel.findOneAndUpdate(
             { userId },
-            {
-                ...jobseekerFields,
-                userId,
-            },
+            { ...body, userId },
             {
                 new: true,
                 upsert: true,
