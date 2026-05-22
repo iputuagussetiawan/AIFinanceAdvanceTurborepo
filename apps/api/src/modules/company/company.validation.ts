@@ -1,46 +1,44 @@
 import type mongoose from 'mongoose'
 import { z } from 'zod'
 
-// 1. Reusable Sub-Schemas
-const nameSchema = z
-    .string()
-    .min(3, 'Company name must be at least 3 characters')
-    .max(100, 'Company name is too long')
-    .trim()
+import { CompanySize } from './company.model'
 
-const slugSchema = z
-    .string()
-    .min(3, 'Slug must be at least 3 characters')
-    .regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens')
-    .trim()
+const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/
 
-const baseCurrencySchema = z
-    .string()
-    .length(3, 'Currency must be a 3-letter ISO code (e.g., IDR, USD)')
-    .toUpperCase()
-
-const isActiveSchema = z.boolean().default(true)
-
-// 2. Main Company Schema
 export const createCompanySchema = z.object({
-    name: nameSchema,
-    slug: slugSchema,
-
-    // URL validation untuk media
-    logoUrl: z.string().url('Invalid logo URL format').optional().or(z.literal('')),
-    bgUrl: z.string().url('Invalid background URL format').optional().or(z.literal('')),
-
-    baseCurrency: baseCurrencySchema,
-    isActive: isActiveSchema.optional(),
-
-    // Tambahan umum untuk profil perusahaan rekrutmen
+    name: z
+        .string()
+        .trim()
+        .min(3, 'Company name must be at least 3 characters')
+        .max(100, 'Company name is too long'),
+    slug: z
+        .string()
+        .trim()
+        .min(3, 'Slug must be at least 3 characters')
+        .regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens'),
+    logoUrl: z.string().url('Invalid logo URL').optional().or(z.literal('')),
+    bgUrl: z.string().url('Invalid background URL').optional().or(z.literal('')),
+    baseCurrency: z
+        .string()
+        .length(3, 'Currency must be a 3-letter ISO code (e.g., IDR, USD)')
+        .toUpperCase(),
+    industry: z.string().trim().min(1, 'Industry is required').optional(),
     description: z.string().max(2000, 'Description is too long').optional(),
     website: z.string().url('Invalid website URL').optional().or(z.literal('')),
-    industry: z.string().min(1, 'Industry is required').optional(),
+    size: z.nativeEnum(CompanySize).optional(),
+    country: z.string().trim().max(100).optional().or(z.literal('')),
+    city: z.string().trim().max(100).optional().or(z.literal('')),
+    phone: z
+        .string()
+        .trim()
+        .regex(phoneRegex, 'Invalid phone number format')
+        .optional()
+        .or(z.literal('')),
+    isActive: z.boolean().default(true).optional(),
 })
+
 export const updateCompanySchema = createCompanySchema.partial()
 
-// 3. Types
 export type ICompanyInput = z.infer<typeof createCompanySchema>
 export type ICompanyUpdate = z.infer<typeof updateCompanySchema>
 

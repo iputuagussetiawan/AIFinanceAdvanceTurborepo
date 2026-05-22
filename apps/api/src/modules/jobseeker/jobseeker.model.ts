@@ -1,21 +1,32 @@
-import mongoose, { Document, Model, Schema } from 'mongoose'
+import mongoose, { Document, Model, Schema, type Types } from 'mongoose'
 
-// 1. Define the Interface representing a document in MongoDB
+import { JobseekerSkillSchema } from './jobseeker-skills/jobseeker-skill.model'
+import { jobseekerEducationSchema } from './jobseeker-educations/jobseeker-education.model'
+import type { IJobseekerEducation } from './jobseeker-educations/jobseeker-education.validation'
+import { jobseekerExperienceSchema } from './jobseeker-experiences/jobseeker-experience.model'
+import type { IJobseekerExperience } from './jobseeker-experiences/jobseeker-experience.validation'
+import { jobseekerLanguageSchema } from './jobseeker-languages/jobseeker-language.model'
+import type { IJobseekerLanguage } from './jobseeker-languages/jobseeker-language.validation'
+
 export interface JobseekerDocument extends Document {
     userId: mongoose.Types.ObjectId
+    jobTitle?: string
     headline: string
     currentPosition: string
     industry: string
     country: string
     city: string
+    openToWork: boolean
+    languages?: IJobseekerLanguage[]
+    educations?: IJobseekerEducation[]
+    experiences?: IJobseekerExperience[]
+    skills?: Types.ObjectId[]
     createdAt: Date
     updatedAt: Date
 }
 
-// 2. Define the Schema
 const JobseekerSchema = new Schema<JobseekerDocument>(
     {
-        // --- Identity ---
         userId: {
             type: Schema.Types.ObjectId,
             ref: 'User',
@@ -23,6 +34,7 @@ const JobseekerSchema = new Schema<JobseekerDocument>(
             unique: true,
             index: true,
         },
+        jobTitle: { type: String, trim: true, default: '' },
         headline: { type: String, required: true, trim: true },
 
         // --- Professional ---
@@ -33,16 +45,29 @@ const JobseekerSchema = new Schema<JobseekerDocument>(
         country: { type: String, required: true, index: true },
         city: { type: String, required: true },
 
+        openToWork: { type: Boolean, default: false },
+
+        // --- CV Data ---
+        languages: { type: [jobseekerLanguageSchema], default: [] },
+        educations: { type: [jobseekerEducationSchema], default: [] },
+        experiences: { type: [jobseekerExperienceSchema], default: [] },
+        skills: { type: [JobseekerSkillSchema], default: [] },
     },
     {
+        _id: true,
         timestamps: true,
-        // Ensures virtuals (like the fullName helper below) are included in JSON responses
-        toJSON: { virtuals: true },
+        toJSON: {
+            virtuals: true,
+            transform: (doc, ret) => {
+                delete (ret as any)._id
+                delete (ret as any).__v
+                return ret
+            },
+        },
         toObject: { virtuals: true },
     },
 )
 
-// 3. Create and Export the Model
 const JobseekerModel: Model<JobseekerDocument> =
     mongoose.models.Jobseeker || mongoose.model<JobseekerDocument>('Jobseeker', JobseekerSchema)
 

@@ -1,17 +1,11 @@
-import mongoose, { Document, Model, Schema } from 'mongoose'
-import { jlptField, proficiencyField, type IUserLanguage } from './user-language.validation'
+import { Schema } from 'mongoose'
 
-export const userLanguageSchema = new Schema<IUserLanguage>(
+import { jlptField, proficiencyField, type IJobseekerLanguage } from './jobseeker-language.validation'
+
+export const jobseekerLanguageSchema = new Schema<IJobseekerLanguage>(
     {
-        language: {
-            type: Schema.Types.ObjectId,
-            ref: 'Language',
-            required: true,
-        },
-        isCurrentLanguage: {
-            type: Boolean,
-            default: false,
-        },
+        language: { type: Schema.Types.ObjectId, ref: 'Language', required: true },
+        isCurrentLanguage: { type: Boolean, default: false },
         proficiency: {
             speaking: proficiencyField,
             listening: proficiencyField,

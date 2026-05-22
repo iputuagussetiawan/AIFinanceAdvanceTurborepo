@@ -1,23 +1,14 @@
-import mongoose, { Document, Schema, type Types } from 'mongoose'
+import mongoose, { Document, Schema } from 'mongoose'
 
 import { compareValue, hashValue } from '../../utils/bcrypt'
-import { UserSkillSchema } from '../user-skill/user-skill.model'
-import { userEducationSchema } from '../userEducation/user-education.model'
-import type { IUserEducation } from '../userEducation/user-education.validation'
-import { userExperienceSchema } from '../userExperiences/user-experience.model'
-import type { IUserExperience } from '../userExperiences/user-experience.validation'
-import { userLanguageSchema } from '../userlanguage/user-language.model'
-import type { IUserLanguage } from '../userlanguage/user-language.validation'
-
-// _id: false prevents Mongoose from creating a unique ID for every array item
 
 export interface UserDocument extends Document {
-    firstName: string // New: Added from image
+    firstName: string
     lastName: string
     email: string
-    jobTitle?: string // New: Added from image (e.g. "Graphic Designer")
-    phoneNumber?: string // New: Added from image
-    address?: string // New: Added from image
+
+    phoneNumber?: string
+    address?: string
     website?: string
     birthday?: Date
     bio?: string
@@ -32,10 +23,6 @@ export interface UserDocument extends Document {
     updatedAt: Date
     comparePassword(value: string): Promise<boolean>
     omitPassword(): Omit<UserDocument, 'password'>
-    languages?: IUserLanguage[]
-    educations?: IUserEducation[]
-    experiences?: IUserExperience[]
-    skills?: Types.ObjectId[] // Assuming you will store references to UserSkill documents
 }
 
 const userSchema = new Schema<UserDocument>(
@@ -51,11 +38,6 @@ const userSchema = new Schema<UserDocument>(
             required: [true, 'Last name is required'],
             trim: true,
             uppercase: true, // To match the styling in your image
-        },
-        jobTitle: {
-            type: String,
-            trim: true,
-            default: '', // e.g., "GRAPHIC DESIGNER"
         },
         email: {
             type: String,
@@ -103,22 +85,6 @@ const userSchema = new Schema<UserDocument>(
         isActive: { type: Boolean, default: true },
         lastLogin: { type: Date, default: null },
         onboardingComplete: { type: Boolean, default: false },
-        languages: {
-            type: [userLanguageSchema],
-            default: [],
-        },
-        educations: {
-            type: [userEducationSchema],
-            default: [],
-        },
-        experiences: {
-            type: [userExperienceSchema],
-            default: [],
-        },
-        skills: {
-            type: [UserSkillSchema],
-            default: [],
-        },
     },
     {
         timestamps: true,

@@ -29,16 +29,7 @@ export const getAllSessionService = async (userId: string) => {
 export const getSessionByIdService = async (sessionId: string, userId: string) => {
     const [session, member] = await Promise.all([
         SessionModel.findById(sessionId)
-            .populate({
-                path: 'userId',
-                select: '-password -__v',
-                populate: [
-                    { path: 'languages.language', select: '-__v -createdAt -updatedAt', model: 'Language' },
-                    { path: 'educations.institution', select: '-__v -createdAt -updatedAt', model: 'Institution' },
-                    { path: 'experiences.company', select: '-__v -createdAt -updatedAt', model: 'Company' },
-                    { path: 'skills.skill', select: '-__v -createdAt -updatedAt', model: 'Skill' },
-                ],
-            })
+            .populate({ path: 'userId', select: '-password -__v' })
             .select('-expiresAt'),
         MemberModel.findOne({ userId }).populate({ path: 'role', select: 'name permissions' }),
     ])

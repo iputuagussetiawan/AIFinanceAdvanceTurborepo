@@ -19,6 +19,9 @@ export const Roles = {
 
     JOBSEEKER: 'JOBSEEKER',
 
+    // Company recruiter: Can post jobs and manage applications
+    COMPANY: 'COMPANY',
+
     // External viewer (e.g., a bank or investor) with limited read-only permissions
     GUEST: 'GUEST',
 } as const
@@ -62,6 +65,16 @@ export const Permissions = {
     APPROVE_JOURNAL: 'APPROVE_JOURNAL',
 
     VIEW_ONLY: 'VIEW_ONLY',
+
+    // Recruitment permissions
+    POST_JOB: 'POST_JOB',
+    EDIT_JOB: 'EDIT_JOB',
+    DELETE_JOB: 'DELETE_JOB',
+    MANAGE_JOBS: 'MANAGE_JOBS',
+    VIEW_APPLICATIONS: 'VIEW_APPLICATIONS',
+    MANAGE_APPLICATIONS: 'MANAGE_APPLICATIONS',
+    APPLY_JOB: 'APPLY_JOB',
+    VIEW_JOBS: 'VIEW_JOBS',
 } as const
 
 export type PermissionType = keyof typeof Permissions

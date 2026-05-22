@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npx tsc *)",
       "Bash(node --input-type=module)",
-      "Bash(npx jest *)"
+      "Bash(npx jest *)",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }

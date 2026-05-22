@@ -1,15 +1,33 @@
-import { model, Schema, type Document, type Types } from 'mongoose'
+import mongoose, { model, Schema, type Document, type Types } from 'mongoose'
 
 import type { ICompany } from './company.validation'
 
-// Kita gunakan Interface ICompany yang sudah Anda buat sebelumnya
-// Jika Anda ingin dukungan penuh Mongoose methods, tambahkan interface Document
+export const CompanySize = {
+    STARTUP: 'STARTUP',
+    SME: 'SME',
+    LARGE: 'LARGE',
+    ENTERPRISE: 'ENTERPRISE',
+} as const
+export type CompanySizeType = keyof typeof CompanySize
+
 export interface CompanyDocument extends Omit<ICompany, '_id'>, Document {
     _id: Types.ObjectId
+    owner: mongoose.Types.ObjectId
+    size?: CompanySizeType
+    country?: string
+    city?: string
+    phone?: string
+    isVerified: boolean
 }
 
 const companySchema = new Schema<CompanyDocument>(
     {
+        owner: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: [true, 'Company owner is required'],
+            index: true,
+        },
         name: {
             type: String,
             required: [true, 'Company name is required'],
@@ -20,7 +38,7 @@ const companySchema = new Schema<CompanyDocument>(
         slug: {
             type: String,
             required: [true, 'Slug is required'],
-            unique: true, // Sangat penting untuk SEO dan routing
+            unique: true,
             lowercase: true,
             trim: true,
         },
@@ -40,9 +58,10 @@ const companySchema = new Schema<CompanyDocument>(
             maxlength: 3,
             default: 'IDR',
         },
-        isActive: {
-            type: Boolean,
-            default: true,
+        industry: {
+            type: String,
+            trim: true,
+            index: true,
         },
         description: {
             type: String,
@@ -52,9 +71,33 @@ const companySchema = new Schema<CompanyDocument>(
             type: String,
             default: '',
         },
-        industry: {
+        size: {
+            type: String,
+            enum: Object.values(CompanySize),
+            default: null,
+        },
+        country: {
             type: String,
             trim: true,
+            default: '',
+        },
+        city: {
+            type: String,
+            trim: true,
+            default: '',
+        },
+        phone: {
+            type: String,
+            trim: true,
+            default: '',
+        },
+        isVerified: {
+            type: Boolean,
+            default: false,
+        },
+        isActive: {
+            type: Boolean,
+            default: true,
         },
     },
     {

@@ -1,29 +1,18 @@
 import { Schema } from 'mongoose'
 
-import type { IUserExperience } from './user-experience.validation'
+import type { IJobseekerExperience } from './jobseeker-experience.validation'
 
-export const userExperienceSchema = new Schema<IUserExperience>(
+export const jobseekerExperienceSchema = new Schema<IJobseekerExperience>(
     {
         company: {
             type: Schema.Types.ObjectId,
-            ref: 'Company', // Pastikan model Company sudah ada atau sesuaikan namanya
+            ref: 'Company',
             required: false,
             default: undefined,
         },
-        companyName: {
-            type: String,
-            required: [true, 'Company name is required'],
-            trim: true,
-        },
-        location: {
-            type: String,
-            trim: true,
-        },
-        title: {
-            type: String,
-            required: [true, 'Job title is required'],
-            trim: true,
-        },
+        companyName: { type: String, required: [true, 'Company name is required'], trim: true },
+        location: { type: String, trim: true },
+        title: { type: String, required: [true, 'Job title is required'], trim: true },
         employmentType: {
             type: String,
             enum: [
@@ -37,40 +26,26 @@ export const userExperienceSchema = new Schema<IUserExperience>(
             ],
             default: 'Full-time',
         },
-        startDate: {
-            type: Date,
-            required: [true, 'Start date is required'],
-        },
+        startDate: { type: Date, required: [true, 'Start date is required'] },
         endDate: {
             type: Date,
             default: null,
             validate: {
-                validator: function (this: IUserExperience, value: Date) {
+                validator: function (this: IJobseekerExperience, value: Date) {
                     if (this.isCurrent || !value) return true
                     return value >= this.startDate
                 },
                 message: 'End date must be after the start date.',
             },
         },
-        isCurrent: {
-            type: Boolean,
-            default: false,
-        },
+        isCurrent: { type: Boolean, default: false },
         description: {
             type: String,
             trim: true,
             maxlength: [2000, 'Description cannot exceed 2000 characters'],
         },
-        skills: [
-            {
-                type: String,
-                trim: true,
-            },
-        ],
-        orderPosition: {
-            type: Number,
-            default: 0,
-        },
+        skills: [{ type: String, trim: true }],
+        orderPosition: { type: Number, default: 0 },
     },
     {
         _id: true,
@@ -78,7 +53,7 @@ export const userExperienceSchema = new Schema<IUserExperience>(
         toJSON: {
             virtuals: true,
             transform: (doc, ret) => {
-                delete (ret as any)._id // Hapus _id asli agar lebih rapi
+                delete (ret as any)._id
                 delete (ret as any).__v
                 return ret
             },

@@ -45,22 +45,7 @@ async function handleEmailChange(user: any, newEmail: string) {
 
 export const getCurrentUserService = async (userId: string) => {
     const member = await MemberModel.findOne({ userId })
-        .populate({
-            path: 'userId',
-            select: '-password -__v',
-            populate: [
-                {
-                    path: 'languages.language',
-                    select: '-__v -createdAt -updatedAt',
-                    model: 'Language',
-                },
-                {
-                    path: 'educations.institution',
-                    select: '-__v -createdAt -updatedAt',
-                    model: 'Institution',
-                },
-            ],
-        })
+        .populate({ path: 'userId', select: '-password -__v' })
         .populate('role')
 
     if (!member) {
@@ -100,7 +85,13 @@ export const updateUserService = async (
         user.profilePicture = profilePic.path
     }
 
-    user.bio = body.bio ?? user.bio
+    if (body.firstName !== undefined) user.firstName = body.firstName
+    if (body.lastName !== undefined) user.lastName = body.lastName
+    if (body.bio !== undefined) user.bio = body.bio
+    if (body.phoneNumber !== undefined) user.phoneNumber = body.phoneNumber
+    if (body.address !== undefined) user.address = body.address
+    if (body.website !== undefined) user.website = body.website
+    if (body.birthday !== undefined) user.birthday = body.birthday ? new Date(body.birthday) : undefined
 
     if (body.password) {
         user.password = body.password
@@ -124,11 +115,10 @@ export const updateUserProfileService = async (userId: string, body: UpdateUserI
     if (!user) throw new NotFoundException('User not found')
     if (!member) throw new BadRequestException('User or Member record not found')
 
-    const { firstName, lastName, jobTitle, bio, phoneNumber, address, website, birthday } = body
+    const { firstName, lastName, bio, phoneNumber, address, website, birthday } = body
 
     if (firstName !== undefined) user.firstName = firstName
     if (lastName !== undefined) user.lastName = lastName
-    if (jobTitle !== undefined) user.jobTitle = jobTitle
     if (bio !== undefined) user.bio = bio
     if (phoneNumber !== undefined) user.phoneNumber = phoneNumber
     if (address !== undefined) user.address = address
