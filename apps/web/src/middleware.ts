@@ -29,7 +29,11 @@ export default async function middleware(request: NextRequest) {
         try {
             await jwtVerify(token, secret)
         } catch {
-            const response = NextResponse.redirect(new URL('/signin', request.url))
+            const silentRefresh = new URL(
+                `/api/auth/silent-refresh?redirect=${encodeURIComponent(pathname)}`,
+                request.url,
+            )
+            const response = NextResponse.redirect(silentRefresh)
             response.cookies.delete(AUTH_COOKIE_NAME)
             return response
         }
@@ -42,8 +46,10 @@ export default async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/dashboard', request.url))
     }
 
-    // --- 3. CSRF COOKIE ---
-    return ensureCsrfCookie(NextResponse.next(), csrfToken)
+    // --- 3. CSRF COOKIE + inject pathname for layouts ---
+    const response = NextResponse.next()
+    response.headers.set('x-pathname', pathname)
+    return ensureCsrfCookie(response, csrfToken)
 }
 
 export const config = {
