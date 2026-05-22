@@ -1,6 +1,6 @@
 import mongoose, { FilterQuery } from 'mongoose'
 
-import { BadRequestException, ConflictException, NotFoundException } from '../../utils/appError'
+import { BadRequestException, ConflictException, NotFoundException } from '../../../utils/appError'
 import LanguageModel, { type LanguageDocument } from './language.model'
 import type { LanguageDTO, UpdateLanguageDTO } from './language.validation'
 

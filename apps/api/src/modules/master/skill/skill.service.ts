@@ -1,6 +1,6 @@
 import z from 'zod'
 
-import { BadRequestException, NotFoundException } from '../../utils/appError'
+import { BadRequestException, NotFoundException } from '../../../utils/appError'
 import { SkillModel, type SkillDocument } from './skill.model'
 import { createSkillSchema, type ISkillInput } from './skill.validation'
 

@@ -1,9 +1,9 @@
 import type { Request, Response } from 'express'
 import z from 'zod'
 
-import { HTTPSTATUS } from '../../config/http.config'
-import { asyncHandler } from '../../middlewares/asyncHandler.middleware'
-import { BadRequestException } from '../../utils/appError'
+import { HTTPSTATUS } from '../../../config/http.config'
+import { asyncHandler } from '../../../middlewares/asyncHandler.middleware'
+import { BadRequestException } from '../../../utils/appError'
 import { LanguageService } from './language.service'
 import { languageValidation, updateLanguageValidation } from './language.validation'
 

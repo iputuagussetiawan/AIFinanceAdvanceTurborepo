@@ -1,6 +1,6 @@
 import mongoose, { FilterQuery } from 'mongoose'
 
-import { BadRequestException, ConflictException, NotFoundException } from '../../utils/appError'
+import { BadRequestException, ConflictException, NotFoundException } from '../../../utils/appError'
 import InstitutionModel, { type IInstitution, type InstitutionDocument } from './institution.model'
 import type { InstitutionDTO, UpdateInstitutionDTO } from './institution.validation'
 

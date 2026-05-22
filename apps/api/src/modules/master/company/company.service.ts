@@ -1,8 +1,8 @@
 import z from 'zod'
 
-import { BadRequestException, NotFoundException } from '../../utils/appError'
-import { CompanyModel, type CompanyDocument } from '../company/company.model'
-import { createCompanySchema, type ICompanyInput, type ICompanyUpdate } from '../company/company.validation'
+import { BadRequestException, NotFoundException } from '../../../utils/appError'
+import { CompanyModel, type CompanyDocument } from './company.model'
+import { createCompanySchema, type ICompanyInput, type ICompanyUpdate } from './company.validation'
 
 export const CompanyService = {
     createCompany: async (data: ICompanyInput): Promise<CompanyDocument> => {

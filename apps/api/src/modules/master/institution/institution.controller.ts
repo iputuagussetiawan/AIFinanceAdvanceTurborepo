@@ -1,9 +1,9 @@
 import type { Request, Response } from 'express'
 import z from 'zod'
 
-import { HTTPSTATUS } from '../../config/http.config'
-import { asyncHandler } from '../../middlewares/asyncHandler.middleware'
-import { BadRequestException } from '../../utils/appError'
+import { HTTPSTATUS } from '../../../config/http.config'
+import { asyncHandler } from '../../../middlewares/asyncHandler.middleware'
+import { BadRequestException } from '../../../utils/appError'
 import { InstitutionService } from './institution.service'
 import { institutionValidation, updateInstitutionValidation } from './institution.validation'
 

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 
-import { HTTPSTATUS } from '../../config/http.config'
-import { asyncHandler } from '../../middlewares/asyncHandler.middleware'
+import { HTTPSTATUS } from '../../../config/http.config'
+import { asyncHandler } from '../../../middlewares/asyncHandler.middleware'
 import { SkillService } from './skill.service'
 import { createSkillSchema, updateSkillSchema } from './skill.validation'
 
