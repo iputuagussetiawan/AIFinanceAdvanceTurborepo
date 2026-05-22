@@ -65,6 +65,7 @@ passport.use(
                     family_name ||
                     displayParts.slice(1).join(' ') ||
                     '-'
+
                 const { user } = await loginOrCreateAccountService({
                     provider: ProviderEnum.GOOGLE,
                     firstName,

@@ -22,8 +22,7 @@ async function deleteCloudinaryImage(url: string) {
     if (!publicId) return
     try {
         await cloudinary.uploader.destroy(publicId, { invalidate: true })
-    } catch (error) {
-        console.error('Cloudinary cleanup failed:', error)
+    } catch {
     }
 }
 

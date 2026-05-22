@@ -5,7 +5,7 @@ import InstitutionModel, { type IInstitution, type InstitutionDocument } from '.
 import type { InstitutionDTO, UpdateInstitutionDTO } from './institution.validation'
 
 export interface InstitutionPaginationResponse {
-    data: IInstitution[] // Gunakan tipe Lean di sini
+    data: IInstitution[]
     meta: {
         totalData: number
         totalPage: number
@@ -26,9 +26,6 @@ export const getInstitutionsService = async () => {
     }))
 }
 
-/**
- * Fetch institutions with pagination, search, and filters
- */
 export const getInstitutionsPaginatedService = async (
     page: number = 1,
     limit: number = 10,
@@ -42,7 +39,6 @@ export const getInstitutionsPaginatedService = async (
 
     const query: FilterQuery<InstitutionDocument> = {}
 
-    // Search by Name or Location
     if (search) {
         query.$or = [
             { name: { $regex: search, $options: 'i' } },
@@ -50,7 +46,6 @@ export const getInstitutionsPaginatedService = async (
         ]
     }
 
-    // Filter by Institution Type (university, high_school, etc)
     if (type) {
         query.type = type
     }
@@ -72,7 +67,7 @@ export const getInstitutionsPaginatedService = async (
     ])
 
     return {
-        data: data,
+        data,
         meta: {
             totalData,
             totalPage: Math.ceil(totalData / limit),
@@ -82,15 +77,11 @@ export const getInstitutionsPaginatedService = async (
     }
 }
 
-/**
- * Create a new master institution
- */
 export const createInstitutionService = async (body: InstitutionDTO) => {
     const session = await mongoose.startSession()
     try {
         session.startTransaction()
 
-        // Check for duplicate name
         const existing = await InstitutionModel.findOne({ name: body.name }).session(session)
         if (existing) throw new ConflictException('Institution name already exists')
 
@@ -101,16 +92,12 @@ export const createInstitutionService = async (body: InstitutionDTO) => {
         return institution
     } catch (error: any) {
         await session.abortTransaction()
-        console.error('❌ [TRANSACTION] Institution creation failed:', error.message)
         throw error
     } finally {
         session.endSession()
     }
 }
 
-/**
- * Bulk insert multiple institutions (Useful for migration)
- */
 export const bulkCreateInstitutionService = async (institutions: InstitutionDTO[]) => {
     const session = await mongoose.startSession()
     try {
@@ -138,9 +125,6 @@ export const bulkCreateInstitutionService = async (institutions: InstitutionDTO[
     }
 }
 
-/**
- * Update institution by ID
- */
 export const updateInstitutionService = async (id: string, body: UpdateInstitutionDTO) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
         throw new BadRequestException('Invalid Institution ID format')
@@ -168,15 +152,11 @@ export const updateInstitutionService = async (id: string, body: UpdateInstituti
     }
 }
 
-/**
- * Get single institution
- */
 export const getInstitutionByIdService = async (id: string): Promise<IInstitution> => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
         throw new BadRequestException('Invalid Institution ID format')
     }
 
-    // Gunakan casting 'unknown' untuk menjembatani perbedaan tipe FlattenMaps
     const institution = await InstitutionModel.findById(id).select('-__v').lean().exec()
 
     if (!institution) {
@@ -186,9 +166,6 @@ export const getInstitutionByIdService = async (id: string): Promise<IInstitutio
     return institution as IInstitution
 }
 
-/**
- * Delete institution
- */
 export const deleteInstitutionService = async (id: string) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
         throw new BadRequestException('Invalid Institution ID format')

@@ -77,7 +77,7 @@ app.use(`${BASE_PATH}/auth/register`, authLimiter)
 app.use(`${BASE_PATH}/auth`, authRoutes)
 app.use(`${BASE_PATH}/user`, passportAuthenticateJWT, userRoutes)
 app.use(`${BASE_PATH}/company`, passportAuthenticateJWT, companyRoutes)
-// app.use(`${BASE_PATH}/member`, passportAuthenticateJWT, memberRoutes)
+
 app.use(`${BASE_PATH}/session`, passportAuthenticateJWT, sessionRoutes)
 app.use(`${BASE_PATH}/jobseeker`, passportAuthenticateJWT, jobseekerRoutes)
 app.use(`${BASE_PATH}/language`, passportAuthenticateJWT, languageRoutes)
@@ -87,6 +87,5 @@ app.use(`${BASE_PATH}/skill`, passportAuthenticateJWT, skillRoutes)
 app.use(errorHandler)
 
 app.listen(config.PORT, async () => {
-    console.log(`Server listening on port ${config.PORT} in ${config.NODE_ENV}`)
     await connectDatabase()
 })

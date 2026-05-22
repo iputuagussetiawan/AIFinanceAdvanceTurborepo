@@ -36,38 +36,33 @@ export const loginOrCreateAccountService = async (data: {
     const session = await mongoose.startSession()
     try {
         session.startTransaction()
-        console.log('Started Session...')
 
-        //check user on db
         let user = await UserModel.findOne({ email }).session(session)
 
-        //jika tidak ada user, maka buat user baru
         if (!user) {
-            //buat user baru
             user = new UserModel({
                 email,
-                firstName: firstName,
-                lastName: lastName,
+                name: `${firstName} ${lastName}`.trim(),
+                firstName,
+                lastName,
                 profilePicture: picture || null,
                 isEmailVerified: true,
             })
             await user.save({ session })
 
-            //buat akun baru
             const account = new AccountModel({
                 userId: user._id,
-                provider: provider,
-                providerId: providerId,
+                provider,
+                providerId,
             })
             await account.save({ session })
         } else {
-            // 4. Update existing user's lastLogin field
             user.lastLogin = new Date()
             await user.save({ session })
         }
+
         await session.commitTransaction()
         session.endSession()
-        console.log('End Session...')
         return { user }
     } catch (error) {
         await session.abortTransaction()
@@ -77,50 +72,35 @@ export const loginOrCreateAccountService = async (data: {
     }
 }
 
-/**
- * Service to handle new user registration and account creation
- */
 export const registerUserService = async (body: {
     email: string
     name: string
     password: string
 }) => {
     const { email, name, password } = body
-    // Create a Mongoose session for the transaction
     const session = await mongoose.startSession()
+    const [firstName, ...rest] = name.trim().split(' ')
+    const lastName = rest.join(' ')
+
     try {
-        // Start the atomic transaction
         session.startTransaction()
-        console.log('🏁 [TRANSACTION] Registration started...')
-        // 1. Search for existing user with the same email within the session
+
         const existingUser = await UserModel.findOne({ email }).session(session)
-        // 2. If a user is found, prevent duplicate registration
         if (existingUser) {
-            console.log(`⚠️[AUTH] Registration failed: Email ${email} already exists.`)
             throw new BadRequestException('Email already exists')
         }
-        // 3. Initialize a new User document (middleware handles password hashing)
-        const user = new UserModel({
-            email,
-            name,
-            password,
-        })
-        // 4. Save the user document as part of the transaction
+
+       const user = new UserModel({ email, firstName, lastName, password })
         await user.save({ session })
 
-        // 5. Initialize the associated Account (Auth Provider) for the user
         const account = new AccountModel({
             userId: user._id,
             provider: ProviderEnum.EMAIL,
             providerId: email,
         })
-        // 6. Save the account document as part of the transaction
         await account.save({ session })
 
-        const guestRole = await RoleModel.findOne({
-            name: Roles.GUEST,
-        }).session(session)
-
+        const guestRole = await RoleModel.findOne({ name: Roles.GUEST }).session(session)
         if (!guestRole) {
             throw new NotFoundException('Guest role not found')
         }
@@ -139,21 +119,13 @@ export const registerUserService = async (body: {
         })
 
         const verificationUrl = `${config.FRONTEND_ORIGIN}/confirm-account?code=${verification.code}`
-        await sendEmail({
-            to: user.email,
-            ...verifyEmailTemplate(verificationUrl),
-        })
-        console.log(`Verification URL (send this to user via email): ${verificationUrl}`)
-        // 7. Commit all changes to the database permanently
+        await sendEmail({ to: user.email, ...verifyEmailTemplate(verificationUrl) })
+
         await session.commitTransaction()
         session.endSession()
-        console.log('✅ [TRANSACTION] Registration successful and committed.')
-        return {
-            userId: user._id,
-        }
+        return { userId: user._id }
     } catch (error: any) {
         await session.abortTransaction()
-        console.error('❌ [TRANSACTION] Registration aborted due to error:', error.message)
         throw error
     } finally {
         session.endSession()
@@ -161,9 +133,8 @@ export const registerUserService = async (body: {
 }
 
 export const verifyEmailService = async (code: string) => {
-    // 1. Find the verification code document that matches the provided code, is of type EMAIL_VERIFICATION, and has not expired
     const validCode = await VerificationCodeModel.findOne({
-        code: code,
+        code,
         type: VerificationEnum.EMAIL_VERIFICATION,
         expiresAt: { $gt: new Date() },
     })
@@ -174,23 +145,16 @@ export const verifyEmailService = async (code: string) => {
 
     const updatedUser = await UserModel.findByIdAndUpdate(
         validCode.userId,
-        {
-            isEmailVerified: true,
-        },
+        { isEmailVerified: true },
         { new: true },
     )
 
     if (!updatedUser) {
-        throw new BadRequestException(
-            'Unable to verify email address',
-            ErrorCodeEnum.VALIDATION_ERROR,
-        )
+        throw new BadRequestException('Unable to verify email address', ErrorCodeEnum.VALIDATION_ERROR)
     }
 
     await validCode.deleteOne()
-    return {
-        user: updatedUser,
-    }
+    return { user: updatedUser }
 }
 
 export const verifyUserService = async ({
@@ -202,10 +166,7 @@ export const verifyUserService = async ({
     password: string
     provider?: string
 }) => {
-    //check account di database dengan pencocokan email
     const account = await AccountModel.findOne({ provider, providerId: email })
-
-    //jika account tidak ditemukan, maka tampilkan error
     if (!account) {
         throw new NotFoundException('Invalid email or password')
     }
@@ -215,9 +176,7 @@ export const verifyUserService = async ({
         throw new NotFoundException('User not found for the given account')
     }
 
-    //check password
     const isMatch = await user.comparePassword(password)
-    //jika password tidak cocok, maka tampilkan error
     if (!isMatch) {
         throw new UnauthorizedException('Invalid email or password')
     }
@@ -225,22 +184,16 @@ export const verifyUserService = async ({
 }
 
 export const verifyUserByIdService = async (userId: string) => {
-    const user = await UserModel.findById(userId, {
-        password: false,
-    })
+    const user = await UserModel.findById(userId, { password: false })
     return user || null
 }
 
 export const forgotPasswordService = async (email: string) => {
-    const user = await UserModel.findOne({
-        email: email,
-    })
-
+    const user = await UserModel.findOne({ email })
     if (!user) {
         throw new NotFoundException('User not found')
     }
 
-    //check mail rate limit is 2 emails per 3 or 10 min
     const timeAgo = threeMinutesAgo()
     const maxAttempts = 2
 
@@ -276,10 +229,7 @@ export const forgotPasswordService = async (email: string) => {
         throw new InternalServerException(`From Email :${error?.name} ${error?.message}`)
     }
 
-    return {
-        url: resetLink,
-        emailId: data.id,
-    }
+    return { url: resetLink, emailId: data.id }
 }
 
 export const resetPasswordService = async ({ password, verificationCode }: ResetPasswordDto) => {
@@ -299,7 +249,5 @@ export const resetPasswordService = async ({ password, verificationCode }: Reset
         throw new BadRequestException('Failed to reset password!')
     }
     await validCode.deleteOne()
-    return {
-        user: updatedUser,
-    }
+    return { user: updatedUser }
 }

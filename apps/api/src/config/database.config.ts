@@ -11,9 +11,7 @@ const connectDatabase = async () => {
             socketTimeoutMS: 45000,
             connectTimeoutMS: 10000,
         })
-        console.log('Connected to Mongo database')
     } catch (error) {
-        console.log('Error connecting to Mongo database')
         process.exit(1)
     }
 }

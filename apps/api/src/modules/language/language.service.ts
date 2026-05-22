@@ -113,7 +113,6 @@ export const createLanguageService = async (body: LanguageDTO) => {
         return language
     } catch (error: any) {
         await session.abortTransaction()
-        console.error('❌ [TRANSACTION] Language creation failed:', error.message)
         throw error
     } finally {
         session.endSession()
@@ -144,7 +143,6 @@ export const bulkCreateLanguageService = async (languages: LanguageDTO[]) => {
         }
     } catch (error: any) {
         await session.abortTransaction()
-        console.error('❌ [TRANSACTION] Bulk language insert aborted:', error.message)
         throw error
     } finally {
         session.endSession()
