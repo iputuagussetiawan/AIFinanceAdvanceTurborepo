@@ -1,0 +1,24 @@
+import type { ClientSession } from 'mongoose'
+
+import { CountryModel } from '../country/country.model'
+import { StateModel } from './state.model'
+import statesData from './data/states.json'
+
+export const seedStates = async (session: ClientSession) => {
+    console.log('🧹 Clearing existing states...')
+    await StateModel.deleteMany({}, { session })
+
+    const countries = await CountryModel.find({}, { _id: 1, code: 1 }, { session })
+    const countryMap = new Map(countries.map(c => [c.code, c._id]))
+
+    const resolved = statesData
+        .map(s => {
+            const countryId = countryMap.get(s.countryCode)
+            if (!countryId) return null
+            return { name: s.name, code: s.code, country: countryId, isActive: s.isActive }
+        })
+        .filter(Boolean)
+
+    await StateModel.insertMany(resolved, { session })
+    console.log(`✅ [Seeder] ${resolved.length} states seeded.`)
+}

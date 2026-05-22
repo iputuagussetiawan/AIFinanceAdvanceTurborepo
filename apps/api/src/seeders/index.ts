@@ -3,6 +3,9 @@ import 'dotenv/config'
 import mongoose from 'mongoose'
 
 import connectDatabase from '../config/database.config'
+import { seedCities } from '../modules/master/city/city.seeder'
+import { seedCountries } from '../modules/master/country/country.seeder'
+import { seedStates } from '../modules/master/state/state.seeder'
 import { seedRoles } from '../modules/role/role.seeder'
 
 const runSeeders = async () => {
@@ -14,7 +17,9 @@ const runSeeders = async () => {
         try {
             // Add all your seeders here
             await seedRoles(session)
-            // await seedUsers(session); // Example for future seeders
+            await seedCountries(session)
+            await seedStates(session)
+            await seedCities(session)
             await session.commitTransaction()
             console.log('✅ All seeders executed successfully!')
         } catch (error) {

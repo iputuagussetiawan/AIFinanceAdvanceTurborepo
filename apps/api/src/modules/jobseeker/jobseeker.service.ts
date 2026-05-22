@@ -58,6 +58,9 @@ export const JobseekerService = {
     getFullProfile: async (userId: string) => {
         const profile = await JobseekerModel.findOne({ userId })
             .populate('userId', 'firstName lastName email profilePicture phoneNumber address website')
+            .populate('country', 'name code dialCode flag')
+            .populate('state', 'name code')
+            .populate('city', 'name')
             .lean()
 
         if (!profile) throw new NotFoundException('Profile not found')
