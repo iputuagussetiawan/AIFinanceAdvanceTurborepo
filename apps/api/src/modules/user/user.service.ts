@@ -99,7 +99,7 @@ export const updateUserService = async (
     await user.save()
 
     return {
-        user: user.toObject(),
+        user: user.toJSON(),
         role: member.role,
         joinedAt: member.joinedAt,
     }
@@ -127,7 +127,7 @@ export const updateUserProfileService = async (userId: string, body: UpdateUserI
     await user.save()
 
     return {
-        user: user.toObject(),
+        user: user.toJSON(),
         role: member.role,
         joinedAt: member.joinedAt,
     }
@@ -155,7 +155,7 @@ export const updateUserPhotoProfileService = async (
     await user.save()
 
     return {
-        user: user.toObject(),
+        user: user.toJSON(),
         role: member.role,
         joinedAt: member.joinedAt,
     }

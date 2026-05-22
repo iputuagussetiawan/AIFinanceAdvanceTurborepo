@@ -133,7 +133,7 @@ export const loginController = asyncHandler(
                 return res.status(HTTPSTATUS.OK).json({
                     message: 'Logged in successfully',
                     user: {
-                        _id: user._id,
+                        id: user._id,
                         name: user.name,
                         email: user.email,
                         profilePicture: user.profilePicture,
