@@ -77,7 +77,6 @@ export const errorHandler: ErrorRequestHandler = (error, req, res, next): any =>
     // 4. Fallback for all other unexpected errors (e.g., Database connection issues)
     return res.status(HTTPSTATUS.INTERNAL_SERVER_ERROR).json({
         message: 'Internal Server Error',
-        // Show the error message if it exists, otherwise show a generic unknown error string
-        error: error?.message || 'Unknown error occurred',
+        error: process.env.NODE_ENV === 'production' ? 'An unexpected error occurred' : error?.message || 'Unknown error occurred',
     })
 }

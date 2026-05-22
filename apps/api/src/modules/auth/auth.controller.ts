@@ -4,7 +4,13 @@ import passport from 'passport'
 import { config } from '../../config/app.config'
 import { HTTPSTATUS } from '../../config/http.config'
 import { asyncHandler } from '../../middlewares/asyncHandler.middleware'
-import { signJwtToken } from '../../utils/jwt'
+import {
+    accessTokenSignOptions,
+    refreshTokenSignOptions,
+    signJwtToken,
+    verifyJwtToken,
+    type RefreshTPayload,
+} from '../../utils/jwt'
 import SessionModel from '../session/session.model'
 import {
     forgotPasswordService,
@@ -50,15 +56,25 @@ export const googleLoginCallback = async (req: Request, res: Response) => {
             },
         )
 
-        // 2. Generate your stateless JWT
-        // 3. Generate the JWT
-        const access_token = signJwtToken({ userId: user._id, sessionId: session._id })
-      
-        // 🍪 Cookie Configuration
+        const access_token = signJwtToken(
+            { userId: user._id, sessionId: session._id },
+            accessTokenSignOptions,
+        )
+        const refresh_token = signJwtToken(
+            { sessionId: session._id } as any,
+            refreshTokenSignOptions,
+        )
+
         res.cookie('accessToken', access_token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            maxAge: 24 * 60 * 60 * 1000, // 24 hours
+            maxAge: 15 * 60 * 1000, // 15 min
+            sameSite: 'lax',
+        })
+        res.cookie('refreshToken', refresh_token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
             sameSite: 'lax',
         })
 
@@ -134,12 +150,24 @@ export const loginController = asyncHandler(
                     },
                 )
 
-                // 3. Generate the JWT
-                const access_token = signJwtToken({ userId: user._id, sessionId: session._id })
+                const access_token = signJwtToken(
+                    { userId: user._id, sessionId: session._id },
+                    accessTokenSignOptions,
+                )
+                const refresh_token = signJwtToken(
+                    { sessionId: session._id } as any,
+                    refreshTokenSignOptions,
+                )
                 res.cookie('accessToken', access_token, {
                     httpOnly: true,
                     secure: process.env.NODE_ENV === 'production',
-                    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+                    maxAge: 15 * 60 * 1000, // 15 min
+                    sameSite: 'lax',
+                })
+                res.cookie('refreshToken', refresh_token, {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
                     sameSite: 'lax',
                 })
 
@@ -148,6 +176,8 @@ export const loginController = asyncHandler(
                 // 5. Return success (Notice we still return access_token for debugging,
 
                 // but the browser will primarily use the cookie)
+                // access_token + refresh_token included for Next.js Server Action consumption
+                // (server-to-server only — never stored client-side by the frontend)
                 return res.status(HTTPSTATUS.OK).json({
                     message: 'Logged in successfully',
                     user: {
@@ -161,7 +191,8 @@ export const loginController = asyncHandler(
                         updatedAt: user.updatedAt,
                         currentCompany: user.currentCompany,
                     },
-                    access_token, // Optional: useful if you want to store it in memory
+                    access_token,
+                    refresh_token,
                 })
             },
         )(req, res, next)
@@ -181,8 +212,14 @@ export const logOutController = asyncHandler(async (req: Request, res: Response)
         console.warn('⚠️ [AUTH] Logout called but no sessionId found in request.')
     }
 
-    // 3. Clear the Cookie
+    // 3. Clear cookies
     res.clearCookie('accessToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+    })
+    res.clearCookie('refreshToken', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -215,11 +252,46 @@ export const resetPasswordController = asyncHandler(
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            expires: new Date(0), // Instantly expires the cookie in the browser
-            path: '/', // Ensure it clears the cookie for the entire domain
+            expires: new Date(0),
+            path: '/',
         })
         return res.status(HTTPSTATUS.OK).json({
             message: 'Password reset successfully',
         })
     },
 )
+
+export const refreshTokenController = asyncHandler(async (req: Request, res: Response) => {
+    const token: string | undefined = req.cookies?.refreshToken
+
+    if (!token) {
+        return res.status(HTTPSTATUS.UNAUTHORIZED).json({ message: 'Refresh token missing' })
+    }
+
+    const result = verifyJwtToken<RefreshTPayload>(token, config.REFRESH_JWT_SECRET)
+
+    if ('error' in result) {
+        return res.status(HTTPSTATUS.UNAUTHORIZED).json({ message: 'Invalid or expired refresh token' })
+    }
+
+    const { sessionId } = result.payload
+    const session = await SessionModel.findById(sessionId)
+
+    if (!session || session.expiredAt < new Date()) {
+        return res.status(HTTPSTATUS.UNAUTHORIZED).json({ message: 'Session expired or revoked' })
+    }
+
+    const access_token = signJwtToken(
+        { userId: session.userId as any, sessionId: session._id },
+        accessTokenSignOptions,
+    )
+
+    res.cookie('accessToken', access_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 15 * 60 * 1000, // 15 min
+        sameSite: 'lax',
+    })
+
+    return res.status(HTTPSTATUS.OK).json({ message: 'Token refreshed successfully', access_token })
+})

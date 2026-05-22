@@ -14,6 +14,7 @@ const memberSchema = new Schema<MemberDocument>(
             type: Schema.Types.ObjectId,
             ref: 'User',
             required: true,
+            index: true,
         },
         role: {
             type: Schema.Types.ObjectId,

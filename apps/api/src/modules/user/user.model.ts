@@ -82,7 +82,7 @@ const userSchema = new Schema<UserDocument>(
             type: String,
             required: false,
         },
-        password: { type: String, select: true },
+        password: { type: String, select: false },
         profilePicture: {
             type: String,
             default: null,

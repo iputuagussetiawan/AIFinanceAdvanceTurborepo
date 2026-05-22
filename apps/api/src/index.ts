@@ -3,6 +3,8 @@ import 'dotenv/config'
 import session from 'cookie-session'
 import cors from 'cors'
 import express, { NextFunction, Request, Response } from 'express'
+import helmet from 'helmet'
+import rateLimit from 'express-rate-limit'
 import passport from 'passport'
 
 import { config } from './config/app.config'
@@ -29,18 +31,27 @@ import skillRoutes from './modules/skill/skill.route'
 import userRoutes from './modules/user/user.route'
 
 const app = express()
+app.use(helmet())
 app.use(cookieParser())
 const BASE_PATH = config.BASE_PATH
 
-// This middleware looks at incoming requests where the Content-Type is 'application/json'.
-// It parses the raw JSON string from the request body into a JavaScript object,
-// allowing you to access data via 'req.body' (e.g., req.body.username).
-app.use(express.json())
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    message: { message: 'Too many attempts, try again later' },
+    standardHeaders: true,
+    legacyHeaders: false,
+})
 
-// This middleware parses incoming requests with URL-encoded payloads (usually from HTML <form> tags).
-// The 'extended: true' option allows for parsing complex, nested objects using the 'qs' library
-// instead of the simpler 'querystring' library (extended: false).
-app.use(express.urlencoded({ extended: true }))
+const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 200,
+    standardHeaders: true,
+    legacyHeaders: false,
+})
+
+app.use(express.json({ limit: '1mb' }))
+app.use(express.urlencoded({ extended: true, limit: '1mb' }))
 
 app.use(passport.initialize())
 
@@ -49,9 +60,10 @@ app.use(
         origin: config.FRONTEND_ORIGIN,
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'x-csrf-token'],
     }),
 )
+app.use(globalLimiter)
 
 app.get(
     '/',
@@ -62,6 +74,9 @@ app.get(
     }),
 )
 
+app.use(`${BASE_PATH}/auth/login`, authLimiter)
+app.use(`${BASE_PATH}/auth/refresh`, authLimiter)
+app.use(`${BASE_PATH}/auth/register`, authLimiter)
 app.use(`${BASE_PATH}/auth`, authRoutes)
 app.use(`${BASE_PATH}/user`, passportAuthenticateJWT, userRoutes)
 app.use(`${BASE_PATH}/company`, passportAuthenticateJWT, companyRoutes)

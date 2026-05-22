@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { decodeJwt } from 'jose'
 
-import { AUTH_COOKIE_NAME, SIGNIN_URL } from '@/lib/constants'
+import { AUTH_COOKIE_NAME, REFRESH_COOKIE_NAME, SIGNIN_URL } from '@/lib/constants'
 
 import { authService } from '../services/auth-service'
 import type {
@@ -39,19 +39,21 @@ export async function handleLogin(data: SigninInputType) {
         // 1. Call the service layer (which uses your new LoginResponse interface)
         const response = await authService.login(data)
 
-        // 2. Extract the token and user data
-        const { access_token, user } = response
-        console.log(response)
-
-        // 3. Store the JWT in a secure HTTP-only cookie
-        // This ensures the token cannot be stolen via JavaScript (XSS)
+        const { access_token, refresh_token, user } = response
         const cookieStore = await cookies()
         cookieStore.set(AUTH_COOKIE_NAME, access_token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
             path: '/',
-            maxAge: 24 * 60 * 60 * 1000, // 24 hours
+            maxAge: 15 * 60, // 15 min in seconds
+        })
+        cookieStore.set(REFRESH_COOKIE_NAME, refresh_token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
         })
 
         // 4. Return success to the client-side form
@@ -176,5 +178,6 @@ export async function handleLogout() {
         }
     }
     cookieStore.delete(AUTH_COOKIE_NAME)
+    cookieStore.delete(REFRESH_COOKIE_NAME)
     redirect(SIGNIN_URL)
 }

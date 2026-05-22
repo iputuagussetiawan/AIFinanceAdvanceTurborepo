@@ -28,10 +28,11 @@ export const getAllSession = asyncHandler(async (req: Request, res: Response) =>
 
 export const getSession = asyncHandler(async (req: Request, res: Response) => {
     const sessionId = req?.sessionId
+    const userId = req.user?._id
     if (!sessionId) {
         throw new NotFoundException('Session ID not found. Please log in.')
     }
-    const { user } = await getSessionByIdService(sessionId)
+    const { user } = await getSessionByIdService(sessionId, userId)
     return res.status(HTTPSTATUS.OK).json({
         message: 'Session retrieved successfully',
         user,
