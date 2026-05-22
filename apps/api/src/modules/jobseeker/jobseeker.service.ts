@@ -27,11 +27,36 @@ export const saveJobseekerProfileService = async (
     try {
         session.startTransaction()
 
-        // 3. Upsert Logic: Update if exists, Create if not
+        // 3. Split DTO: User owns identity/contact, Jobseeker owns profile-specific fields
+        const {
+            firstName,
+            lastName,
+            phoneNumber,
+            address,
+            website,
+            ...jobseekerFields
+        } = body
+
+        await UserModel.findByIdAndUpdate(
+            userId,
+            {
+                $set: {
+                    firstName,
+                    lastName,
+                    phoneNumber,
+                    address,
+                    website,
+                    onboardingComplete: true,
+                },
+            },
+            { session, runValidators: true },
+        )
+
+        // 4. Upsert jobseeker-specific fields
         const profile = await JobseekerModel.findOneAndUpdate(
             { userId },
             {
-                ...body,
+                ...jobseekerFields,
                 userId,
                 onboardingComplete: true,
             },
@@ -41,13 +66,6 @@ export const saveJobseekerProfileService = async (
                 runValidators: true,
                 session,
             },
-        )
-
-        // 4. Mark onboarding complete on the User document
-        await UserModel.findByIdAndUpdate(
-            userId,
-            { $set: { onboardingComplete: true } },
-            { session },
         )
 
         //check owner role
@@ -100,7 +118,7 @@ export const saveJobseekerProfileService = async (
  */
 export const getFullJobseekerProfileService = async (userId: string) => {
     const profile = await JobseekerModel.findOne({ userId })
-        .populate('userId', 'name email avatar') // Get basic user info
+        .populate('userId', 'firstName lastName email profilePicture phoneNumber address website')
         .lean()
     if (!profile) {
         throw new NotFoundException('Profile not found')

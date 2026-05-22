@@ -29,11 +29,11 @@ import { RESUME_MODE, type ResumeMode } from '@/lib/constants'
 
 import { ResumeDrawer } from './drawer/ResumeDrawer'
 import BioForm from './forms/BioForm'
-import EducationForm from './forms/EducationForm'
 import PersonalInfoForm from './forms/PersonalInfoForm'
 import PhotoProfileForm from './forms/PhotoProfileForm'
 import UserSkillForm from '@/features/user-skill/components/UserSkillForm'
 import UserLanguageForm from '@/features/user-language/components/UserLanguageForm'
+import EducationForm from '@/features/education/components/forms/EducationForm'
 
 type MyResumeToolbarProps = {
     onPreview: () => void

@@ -33,8 +33,8 @@ import { Button } from '@/components/ui/button'
 import { UiFormDatePicker } from '@/components/ui/UiFormDatePicker'
 import { UiFormInput } from '@/components/ui/UiFormInput'
 import useAuth from '@/hooks/use-auth'
-
 import { SortableEducationCard } from '../SortableEducationCard'
+
 
 export default function EducationForm() {
     const queryClient = useQueryClient()
@@ -236,7 +236,7 @@ export default function EducationForm() {
                                         <UiFormDatePicker
                                             label="Start Date"
                                             name={`educations.${index}.startDate`}
-                                            control={control}
+                                            control={control as any}
                                             displayFormat={DateFormat.FULL_DISPLAY} // User sees: 19 April 2026
                                             error={errors.educations?.[index]?.startDate}
                                         />
@@ -244,7 +244,7 @@ export default function EducationForm() {
                                         <UiFormDatePicker
                                             label="End Date (Optional)"
                                             name={`educations.${index}.endDate`}
-                                            control={control}
+                                            control={control as any}
                                             displayFormat={DateFormat.FULL_DISPLAY} // User sees: 19 April 2026
                                             error={errors.educations?.[index]?.endDate}
                                         />
