@@ -3,17 +3,11 @@ import mongoose, { Document, Model, Schema } from 'mongoose'
 // 1. Define the Interface representing a document in MongoDB
 export interface JobseekerDocument extends Document {
     userId: mongoose.Types.ObjectId
-    additionalName?: string
-    pronouns?: string
     headline: string
     currentPosition: string
     industry: string
     country: string
     city: string
-    phoneType: string
-    birthday: Date
-    websiteType?: string
-    onboardingComplete: boolean
     createdAt: Date
     updatedAt: Date
 }
@@ -29,8 +23,6 @@ const JobseekerSchema = new Schema<JobseekerDocument>(
             unique: true,
             index: true,
         },
-        additionalName: { type: String, default: '' },
-        pronouns: { type: String, default: '' },
         headline: { type: String, required: true, trim: true },
 
         // --- Professional ---
@@ -40,14 +32,7 @@ const JobseekerSchema = new Schema<JobseekerDocument>(
         // --- Location ---
         country: { type: String, required: true, index: true },
         city: { type: String, required: true },
-        phoneType: { type: String, required: true },
 
-        // --- Dates & URLs ---
-        birthday: { type: Date, required: true },
-        websiteType: { type: String, default: '' },
-
-        // --- System Metadata ---
-        onboardingComplete: { type: Boolean, default: false },
     },
     {
         timestamps: true,

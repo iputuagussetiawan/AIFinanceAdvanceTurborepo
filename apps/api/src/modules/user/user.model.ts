@@ -19,6 +19,7 @@ export interface UserDocument extends Document {
     phoneNumber?: string // New: Added from image
     address?: string // New: Added from image
     website?: string
+    birthday?: Date
     bio?: string
     password?: string
     profilePicture: string | null
@@ -77,6 +78,10 @@ const userSchema = new Schema<UserDocument>(
             type: String,
             trim: true,
             default: '',
+        },
+        birthday: {
+            type: Date,
+            default: null,
         },
         bio: {
             type: String,

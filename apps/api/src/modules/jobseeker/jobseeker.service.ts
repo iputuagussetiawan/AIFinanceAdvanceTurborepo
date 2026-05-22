@@ -34,6 +34,7 @@ export const saveJobseekerProfileService = async (
             phoneNumber,
             address,
             website,
+            birthday,
             ...jobseekerFields
         } = body
 
@@ -46,6 +47,7 @@ export const saveJobseekerProfileService = async (
                     phoneNumber,
                     address,
                     website,
+                    birthday: birthday ? new Date(birthday) : null,
                     onboardingComplete: true,
                 },
             },
@@ -58,7 +60,6 @@ export const saveJobseekerProfileService = async (
             {
                 ...jobseekerFields,
                 userId,
-                onboardingComplete: true,
             },
             {
                 new: true,
