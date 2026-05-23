@@ -2,8 +2,10 @@
 
 import { useRef, useState } from 'react'
 import generatePDF, { Margin, Resolution, type Options } from 'react-to-pdf'
+import { useQuery } from '@tanstack/react-query'
 
 import type { ResumeMode } from '@/lib/constants'
+import { jobseekerService } from '@/features/jobseeker/services/jobseeker-service'
 
 import CVToolbar from './CVToolbar'
 import CVAbout from './template/v1/CVAbout'
@@ -53,8 +55,8 @@ const fixModernColors = (el: Element) => {
     Array.from(el.children).forEach(fixModernColors)
 }
 
-const pdfOptions = (method: 'save' | 'open'): Options => ({
-    filename: 'my-resume.pdf',
+const pdfOptions = (method: 'save' | 'open', filename: string): Options => ({
+    filename,
     method,
     resolution: Resolution.HIGH,
     page: { margin: Margin.NONE, format: 'A4', orientation: 'portrait' },
@@ -70,6 +72,19 @@ const CV = ({ mode = 'manage', onChange }: CVProps) => {
     const [isDownloading, setIsDownloading] = useState(false)
     const [isPreviewing, setIsPreviewing] = useState(false)
 
+    const { data } = useQuery({
+        queryKey: ['jobseekerProfile'],
+        queryFn: jobseekerService.getProfile,
+    })
+
+    const buildFilename = () => {
+        const user = (data?.profile as any)?.userId
+        const first = (user?.firstName ?? '').trim().toLowerCase().replace(/\s+/g, '-')
+        const last = (user?.lastName ?? '').trim().toLowerCase().replace(/\s+/g, '-')
+        const name = [first, last].filter(Boolean).join('-')
+        return name ? `${name}-resume.pdf` : 'resume.pdf'
+    }
+
     const handleDownload = () => {
         if (isDownloading) return
         setIsDownloading(true)
@@ -77,7 +92,7 @@ const CV = ({ mode = 'manage', onChange }: CVProps) => {
         setTimeout(() => {
             if (targetRef.current) {
                 fixModernColors(targetRef.current)
-                generatePDF(targetRef, pdfOptions('save'))
+                generatePDF(targetRef, pdfOptions('save', buildFilename()))
             }
             setTimeout(() => setIsDownloading(false), 1500)
         }, 250)
@@ -90,7 +105,7 @@ const CV = ({ mode = 'manage', onChange }: CVProps) => {
         setTimeout(() => {
             if (targetRef.current) {
                 fixModernColors(targetRef.current)
-                generatePDF(targetRef, pdfOptions('open'))
+                generatePDF(targetRef, pdfOptions('open', buildFilename()))
             }
             setTimeout(() => setIsPreviewing(false), 1500)
         }, 250)
