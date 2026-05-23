@@ -58,11 +58,11 @@ const fixModernColors = (el: Element) => {
 const pdfOptions = (method: 'save' | 'open', filename: string): Options => ({
     filename,
     method,
-    resolution: Resolution.HIGH,
+    resolution: Resolution.NORMAL,
     page: { margin: Margin.NONE, format: 'A4', orientation: 'portrait' },
-    canvas: { mimeType: 'image/png', qualityRatio: 1 },
+    canvas: { mimeType: 'image/jpeg', qualityRatio: 0.92 },
     overrides: {
-        pdf: { compress: false },
+        pdf: { compress: true },
         canvas: { useCORS: true, backgroundColor: '#ffffff' },
     },
 })
