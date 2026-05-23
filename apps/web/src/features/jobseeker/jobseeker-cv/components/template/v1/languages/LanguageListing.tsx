@@ -1,11 +1,16 @@
-import useAuth from '@/hooks/use-auth'
+import { useQuery } from '@tanstack/react-query'
+
+import { jobseekerService } from '@/features/jobseeker/services/jobseeker-service'
 import CVSectionTitle from '../CVSectionTitle'
 import LanguageItem from './LanguageItem'
 import LanguageSkeleton from './LanguageSkeleton'
 
 const LanguageListing = () => {
-    const { data, isLoading } = useAuth()
-    const languageList = data?.user?.languages || []
+    const { data, isLoading } = useQuery({
+        queryKey: ['jobseekerProfile'],
+        queryFn: jobseekerService.getProfile,
+    })
+    const languageList = (data?.profile as any)?.languages || []
 
     if (isLoading) return <LanguageSkeleton />
 

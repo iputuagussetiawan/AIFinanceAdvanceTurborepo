@@ -2,16 +2,21 @@
 
 import React from 'react'
 
+import { useQuery } from '@tanstack/react-query'
+
 import type { IExperience } from '@/features/jobseeker/jobseeker-experience/types/experience-type'
-import useAuth from '@/hooks/use-auth'
+import { jobseekerService } from '@/features/jobseeker/services/jobseeker-service'
 
 import CVSectionTitle from '../CVSectionTitle'
 import ExperienceItem from './ExperienceItem'
 import ExperienceSkeleton from './ExperienceSkeleton'
 
 const ExperienceListing = () => {
-    const { data, isLoading } = useAuth()
-    const experienceList: IExperience[] = data?.user.experiences || []
+    const { data, isLoading } = useQuery({
+        queryKey: ['jobseekerProfile'],
+        queryFn: jobseekerService.getProfile,
+    })
+    const experienceList: IExperience[] = (data?.profile as any)?.experiences || []
     return (
         <div>
             <CVSectionTitle title="Experience" />

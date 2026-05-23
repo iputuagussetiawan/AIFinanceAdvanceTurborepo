@@ -84,6 +84,10 @@ export const JobseekerService = {
             .populate('country', 'name code dialCode flag')
             .populate('state', 'name code')
             .populate('city', 'name')
+            .populate('languages.language', 'name description')
+            .populate('skills.skill', 'name category icon')
+            .populate('educations.institution', 'name type')
+            .populate('experiences.company', 'name logo')
             .lean()
 
         if (!profile) throw new NotFoundException('Profile not found')

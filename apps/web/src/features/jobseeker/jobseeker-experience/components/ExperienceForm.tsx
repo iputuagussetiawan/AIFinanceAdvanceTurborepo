@@ -17,14 +17,26 @@ import {
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Loader2, Plus, Save } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Briefcase, Loader2, Plus, Save } from 'lucide-react'
 import { Controller, FormProvider, useFieldArray, useForm } from 'react-hook-form' // ← added FormProvider
 import { toast } from 'sonner'
 
 import { CompanyAutoSuggest } from '@/features/master/company/components/CompanyAutoSuggest'
 import SkillAutoSuggest from '@/features/master/skill/components/SkillAutoSuggest' // ← uncommented
 import { RichTextEditor } from '@/components/editor'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogOverlay,
+    AlertDialogPortal,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -36,7 +48,7 @@ import {
 } from '@/components/ui/select'
 import { UiFormDatePicker } from '@/components/ui/UiFormDatePicker'
 import { UiFormInput } from '@/components/ui/UiFormInput'
-import useAuth from '@/hooks/use-auth'
+import { jobseekerService } from '@/features/jobseeker/services/jobseeker-service'
 
 import { experienceService } from '../services/experience-service'
 import {
@@ -55,8 +67,9 @@ const EMPLOYMENT_TYPES = [
     'Volunteer',
 ] as const
 
-export default function ExperienceForm() {
+export default function ExperienceForm({ onSuccess }: { onSuccess?: () => void }) {
     const queryClient = useQueryClient()
+    const [showConfirm, setShowConfirm] = React.useState(false)
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -67,8 +80,11 @@ export default function ExperienceForm() {
         }),
     )
 
-    const { data, isLoading } = useAuth()
-    const response: IExperience[] = data?.user.experiences || []
+    const { data, isLoading } = useQuery({
+        queryKey: ['jobseekerProfile'],
+        queryFn: jobseekerService.getProfile,
+    })
+    const response: IExperience[] = (data?.profile as any)?.experiences || []
 
     // ── useForm — same as before, just also passed to FormProvider below ──
     const methods = useForm<{ experiences: ExperienceDTO[] }>({
@@ -98,7 +114,7 @@ export default function ExperienceForm() {
                 .map((exp: IExperience) => ({
                     company:
                         typeof exp.company === 'object'
-                            ? (exp.company?._id ?? exp.company?.id ?? '')
+                            ? (exp.company?.id?.toString() ?? exp.company?._id?.toString() ?? '')
                             : (exp.company ?? ''),
                     companyName: exp.companyName,
                     location: exp.location,
@@ -119,7 +135,11 @@ export default function ExperienceForm() {
         mutationFn: (experiences: ExperienceDTO[]) => experienceService.updateAll(experiences),
         onSuccess: () => {
             toast.success('Experience history updated')
-            queryClient.invalidateQueries({ queryKey: ['authUser'] })
+            queryClient.invalidateQueries({ queryKey: ['jobseekerProfile'] })
+            setShowConfirm(true)
+        },
+        onError: (error: any) => {
+            toast.error(error?.response?.data?.message || error?.message || 'Failed to save experience')
         },
     })
 
@@ -159,8 +179,7 @@ export default function ExperienceForm() {
         )
 
     return (
-        // ── Wrap the whole form with FormProvider so SkillAutoSuggest
-        //    can access the form context via useFormContext() internally ──
+        <>
         <FormProvider {...methods}>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
                 {/* Header */}
@@ -169,26 +188,28 @@ export default function ExperienceForm() {
                         <h2 className="text-2xl font-bold">Experience</h2>
                         <p className="text-muted-foreground text-sm">Manage your work history</p>
                     </div>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() =>
-                            prepend({
-                                companyName: '',
-                                location: '',
-                                title: '',
-                                employmentType: 'Full-time',
-                                startDate: '',
-                                endDate: '',
-                                isCurrent: false,
-                                description: '',
-                                skills: [], // ← must be [] not ''
-                                orderPosition: 0,
-                            })
-                        }
-                    >
-                        <Plus className="mr-2 h-4 w-4" /> Add Experience
-                    </Button>
+                    {fields.length > 0 && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() =>
+                                prepend({
+                                    companyName: '',
+                                    location: '',
+                                    title: '',
+                                    employmentType: 'Full-time',
+                                    startDate: '',
+                                    endDate: '',
+                                    isCurrent: false,
+                                    description: '',
+                                    skills: [],
+                                    orderPosition: 0,
+                                })
+                            }
+                        >
+                            <Plus className="mr-2 h-4 w-4" /> Add Experience
+                        </Button>
+                    )}
                 </div>
 
                 {/* Sortable list */}
@@ -202,6 +223,34 @@ export default function ExperienceForm() {
                         strategy={verticalListSortingStrategy}
                     >
                         <div className="space-y-6">
+                            {fields.length === 0 && (
+                                <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed py-16 text-center">
+                                    <Briefcase className="text-muted-foreground mb-4 h-12 w-12" />
+                                    <p className="text-muted-foreground text-sm font-medium">No experience added yet</p>
+                                    <p className="text-muted-foreground mt-1 text-xs">Add your work history to strengthen your profile</p>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="mt-6"
+                                        onClick={() =>
+                                            prepend({
+                                                companyName: '',
+                                                location: '',
+                                                title: '',
+                                                employmentType: 'Full-time',
+                                                startDate: '',
+                                                endDate: '',
+                                                isCurrent: false,
+                                                description: '',
+                                                skills: [],
+                                                orderPosition: 0,
+                                            })
+                                        }
+                                    >
+                                        <Plus className="mr-2 h-4 w-4" /> Add Experience
+                                    </Button>
+                                </div>
+                            )}
                             {fields.map((field, index) => (
                                 <SortableExperienceCard
                                     key={field.id}
@@ -400,17 +449,42 @@ export default function ExperienceForm() {
                 </DndContext>
 
                 {/* Footer */}
-                <div className="bg-background sticky bottom-0 z-20 mt-auto flex justify-end border-t pt-4 pb-2">
-                    <Button type="submit" disabled={isPending} className="w-full px-8 md:w-auto">
-                        {isPending ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <Save className="mr-2 h-4 w-4" />
-                        )}
-                        Save Changes
-                    </Button>
-                </div>
+                {fields.length > 0 && (
+                    <div className="bg-background sticky bottom-0 z-20 mt-auto flex justify-end border-t pt-4 pb-2">
+                        <Button type="submit" disabled={isPending} className="w-full px-8 md:w-auto">
+                            {isPending ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Save className="mr-2 h-4 w-4" />
+                            )}
+                            Save Changes
+                        </Button>
+                    </div>
+                )}
             </form>
         </FormProvider>
+
+        <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+            <AlertDialogPortal>
+                <AlertDialogOverlay className="z-[1099]" />
+                <AlertDialogContent className="z-[1100]">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Experience saved!</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Do you want to keep managing your experience history?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => { setShowConfirm(false); onSuccess?.() }}>
+                            No, close
+                        </AlertDialogCancel>
+                        <AlertDialogAction onClick={() => setShowConfirm(false)}>
+                            Yes, keep editing
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialogPortal>
+        </AlertDialog>
+        </>
     )
 }

@@ -6,11 +6,10 @@ export const educationValidation = z
         institutionName: z.string().min(2, 'School name must be at least 2 characters'),
         degree: z.string().min(2, 'Degree must be at least 2 characters'),
         fieldOfStudy: z.string().min(2, 'Field of study must be at least 2 characters'),
-        startDate: z.string(),
-        endDate: z.string(),
+        startDate: z.string().min(1, 'Start date is required'),
+        endDate: z.string().optional().or(z.literal('')),
         grade: z.string().optional(),
-        activities: z.string().optional(),
-        description: z.string().optional(),
+        description: z.string().max(1000, 'Description is too long').optional(),
         orderPosition: z.number().int(),
     })
     .refine(

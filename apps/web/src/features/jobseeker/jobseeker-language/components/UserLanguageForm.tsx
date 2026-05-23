@@ -16,11 +16,23 @@ import {
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { AlertCircle, Loader2, Plus, Save } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { AlertCircle, Languages, Loader2, Plus, Save } from 'lucide-react'
 import { Controller, FormProvider, useFieldArray, useForm, useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
 
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogOverlay,
+    AlertDialogPortal,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -31,7 +43,7 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import useAuth from '@/hooks/use-auth'
+import { jobseekerService } from '@/features/jobseeker/services/jobseeker-service'
 import {
     JLPT_LEVELS,
     PROFICIENCY_LEVELS,
@@ -218,9 +230,13 @@ function LanguageFormRow({
 // UserLanguageForm
 // ─────────────────────────────────────────────
 
-export default function UserLanguageForm() {
+export default function UserLanguageForm({ onSuccess }: { onSuccess?: () => void }) {
     const queryClient = useQueryClient()
-    const { data: authData, isLoading: authLoading } = useAuth()
+    const [showConfirm, setShowConfirm] = React.useState(false)
+    const { data: authData, isLoading: authLoading } = useQuery({
+        queryKey: ['jobseekerProfile'],
+        queryFn: jobseekerService.getProfile,
+    })
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -240,9 +256,10 @@ export default function UserLanguageForm() {
     })
 
     React.useEffect(() => {
-        if (authData?.user?.languages) {
-            const formatted = [...authData.user.languages].map((l) => ({
-                language: l.language?.id || '',
+        const languages = (authData?.profile as any)?.languages
+        if (languages) {
+            const formatted = [...languages].map((l: any) => ({
+                language: l.language?.id?.toString() || l.language?._id?.toString() || '',
                 name: l.language?.name || '',
                 isCurrentLanguage: l.isCurrentLanguage ?? false,
                 proficiency: {
@@ -260,10 +277,11 @@ export default function UserLanguageForm() {
         mutationFn: (data: IBulkUserLanguages) => userLanguageService.updateAll(data),
         onSuccess: () => {
             toast.success('Languages updated successfully')
-            queryClient.invalidateQueries({ queryKey: ['authUser'] })
+            queryClient.invalidateQueries({ queryKey: ['jobseekerProfile'] })
+            setShowConfirm(true)
         },
-        onError: () => {
-            toast.error('Failed to update languages')
+        onError: (error: any) => {
+            toast.error(error?.response?.data?.message || error?.message || 'Failed to update languages')
         },
     })
 
@@ -301,6 +319,7 @@ export default function UserLanguageForm() {
         (typeof errors.languages?.message === 'string' ? errors.languages.message : undefined)
 
     return (
+        <>
         <FormProvider {...methods}>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 {/* Header */}
@@ -309,26 +328,28 @@ export default function UserLanguageForm() {
                         <h2 className="text-2xl font-bold">Languages</h2>
                         <p className="text-muted-foreground text-sm">Drag to reorder your languages</p>
                     </div>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                            prepend({
-                                language: '',
-                                name: '',
-                                isCurrentLanguage: false,
-                                proficiency: {
-                                    speaking: undefined,
-                                    listening: undefined,
-                                    writing: undefined,
-                                    jlptLevel: undefined,
-                                },
-                            })
-                        }
-                    >
-                        <Plus className="mr-2 h-4 w-4" /> Add Language
-                    </Button>
+                    {fields.length > 0 && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                                prepend({
+                                    language: '',
+                                    name: '',
+                                    isCurrentLanguage: false,
+                                    proficiency: {
+                                        speaking: undefined,
+                                        listening: undefined,
+                                        writing: undefined,
+                                        jlptLevel: undefined,
+                                    },
+                                })
+                            }
+                        >
+                            <Plus className="mr-2 h-4 w-4" /> Add Language
+                        </Button>
+                    )}
                 </div>
 
                 {/* Array-level errors */}
@@ -345,6 +366,33 @@ export default function UserLanguageForm() {
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <SortableContext items={fields.map((f) => f.id)} strategy={verticalListSortingStrategy}>
                         <div className="space-y-4">
+                            {fields.length === 0 && (
+                                <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed py-16 text-center">
+                                    <Languages className="text-muted-foreground mb-4 h-12 w-12" />
+                                    <p className="text-muted-foreground text-sm font-medium">No languages added yet</p>
+                                    <p className="text-muted-foreground mt-1 text-xs">Add languages you speak to strengthen your profile</p>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="mt-6"
+                                        onClick={() =>
+                                            prepend({
+                                                language: '',
+                                                name: '',
+                                                isCurrentLanguage: false,
+                                                proficiency: {
+                                                    speaking: undefined,
+                                                    listening: undefined,
+                                                    writing: undefined,
+                                                    jlptLevel: undefined,
+                                                },
+                                            })
+                                        }
+                                    >
+                                        <Plus className="mr-2 h-4 w-4" /> Add Language
+                                    </Button>
+                                </div>
+                            )}
                             {fields.map((field, index) => (
                                 <LanguageFormRow
                                     key={field.id}
@@ -359,16 +407,41 @@ export default function UserLanguageForm() {
                 </DndContext>
 
                 {/* Footer */}
-                <div className="bg-background sticky bottom-0 z-20 mt-auto flex justify-end border-t py-4">
-                    <Button type="submit" disabled={isPending || isSubmitting} className="w-full md:w-auto">
-                        {isPending
-                            ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            : <Save className="mr-2 h-4 w-4" />
-                        }
-                        Save Languages
-                    </Button>
-                </div>
+                {fields.length > 0 && (
+                    <div className="bg-background sticky bottom-0 z-20 mt-auto flex justify-end border-t py-4">
+                        <Button type="submit" disabled={isPending || isSubmitting} className="w-full md:w-auto">
+                            {isPending
+                                ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                : <Save className="mr-2 h-4 w-4" />
+                            }
+                            Save Languages
+                        </Button>
+                    </div>
+                )}
             </form>
         </FormProvider>
+
+        <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+            <AlertDialogPortal>
+                <AlertDialogOverlay className="z-[1099]" />
+                <AlertDialogContent className="z-[1100]">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Languages saved!</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Do you want to keep managing your languages?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => { setShowConfirm(false); onSuccess?.() }}>
+                            No, close
+                        </AlertDialogCancel>
+                        <AlertDialogAction onClick={() => setShowConfirm(false)}>
+                            Yes, keep editing
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialogPortal>
+        </AlertDialog>
+        </>
     )
 }

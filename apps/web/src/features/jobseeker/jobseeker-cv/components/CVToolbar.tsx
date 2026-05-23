@@ -260,7 +260,7 @@ export default function CVToolbar({
                 onOpenChange={setIsOpenEducationDrawer}
             >
                 <div className="grid gap-4">
-                    <EducationForm />
+                    <EducationForm onSuccess={() => setIsOpenEducationDrawer(false)} />
                 </div>
             </CVDrawer>
 
@@ -272,7 +272,7 @@ export default function CVToolbar({
                 onOpenChange={setIsOpenExperienceDrawer}
             >
                 <div className="grid gap-4">
-                    <ExperienceForm />
+                    <ExperienceForm onSuccess={() => setIsOpenExperienceDrawer(false)} />
                 </div>
             </CVDrawer>
             <CVDrawer
@@ -282,7 +282,7 @@ export default function CVToolbar({
                 open={isOpenSkillsDrawer}
                 onOpenChange={setIsOpenSkillsDrawer}
             >
-                <UserSkillForm />
+                <UserSkillForm onSuccess={() => setIsOpenSkillsDrawer(false)} />
             </CVDrawer>
 
             <CVDrawer
@@ -292,7 +292,7 @@ export default function CVToolbar({
                 open={isOpenLanguagesDrawer}
                 onOpenChange={setIsOpenLanguagesDrawer}
             >
-                <UserLanguageForm />
+                <UserLanguageForm onSuccess={() => setIsOpenLanguagesDrawer(false)} />
             </CVDrawer>
         </>
     )

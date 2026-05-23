@@ -18,7 +18,7 @@ import {
 } from '@dnd-kit/sortable'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Loader2, Plus, Save } from 'lucide-react'
+import { GraduationCap, Loader2, Plus, Save } from 'lucide-react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 
@@ -28,16 +28,29 @@ import {
     type EducationInputType,
     type IEducation,
 } from '@/features/jobseeker/jobseeker-education/types/education-type'
+import { jobseekerService } from '@/features/jobseeker/services/jobseeker-service'
 import { InstitutionAutoSuggest } from '@/features/master/institution/components/InstitutionAutoSuggest'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogOverlay,
+    AlertDialogPortal,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { UiFormDatePicker } from '@/components/ui/UiFormDatePicker'
 import { UiFormInput } from '@/components/ui/UiFormInput'
-import useAuth from '@/hooks/use-auth'
 import { SortableEducationCard } from '../SortableEducationCard'
 
 
-export default function EducationForm() {
+export default function EducationForm({ onSuccess }: { onSuccess?: () => void }) {
     const queryClient = useQueryClient()
+    const [showConfirm, setShowConfirm] = React.useState(false)
 
     // 1. Sensors for Touch/Mouse/Keyboard support
     const sensors = useSensors(
@@ -49,8 +62,11 @@ export default function EducationForm() {
         }),
     )
 
-    const { data, isLoading: isLoading } = useAuth()
-    const response: IEducation[] = data?.user.educations || []
+    const { data, isLoading } = useQuery({
+        queryKey: ['jobseekerProfile'],
+        queryFn: jobseekerService.getProfile,
+    })
+    const response: IEducation[] = (data?.profile as any)?.educations || []
     const {
         watch,
         register,
@@ -78,7 +94,7 @@ export default function EducationForm() {
                     endDate: edu.endDate ?? undefined,
                     institution:
                         typeof edu.institution === 'object'
-                            ? (edu.institution?._id ?? edu.institution?.id ?? '')
+                            ? (edu.institution?.id?.toString() ?? edu.institution?._id?.toString() ?? '')
                             : (edu.institution ?? ''),
                 }))
             reset({ educations: formatted })
@@ -89,7 +105,11 @@ export default function EducationForm() {
         mutationFn: (educations: EducationInputType[]) => educationService.updateAll(educations),
         onSuccess: () => {
             toast.success('Education history updated')
-            queryClient.invalidateQueries({ queryKey: ['authUser'] })
+            queryClient.invalidateQueries({ queryKey: ['jobseekerProfile'] })
+            setShowConfirm(true)
+        },
+        onError: (error: any) => {
+            toast.error(error?.response?.data?.message || error?.message || 'Failed to save education')
         },
     })
 
@@ -133,6 +153,7 @@ export default function EducationForm() {
         )
 
     return (
+        <>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             <div className="bg-background sticky top-0 z-20 flex items-center justify-between border-b pt-2 pb-4">
                 <div>
@@ -142,26 +163,27 @@ export default function EducationForm() {
 
                 {/* <pre>{JSON.stringify(response, null, 2)}</pre> */}
 
-                <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() =>
-                        prepend({
-                            institution: '',
-                            institutionName: '',
-                            degree: '',
-                            fieldOfStudy: '', // Added missing field
-                            startDate: '',
-                            endDate: '', // Or '' depending on your schema
-                            grade: '',
-                            activities: '',
-                            description: '',
-                            orderPosition: 0, // Default position for new entries
-                        })
-                    }
-                >
-                    <Plus className="mr-2 h-4 w-4" /> Add Education
-                </Button>
+                {fields.length > 0 && (
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() =>
+                            prepend({
+                                institution: '',
+                                institutionName: '',
+                                degree: '',
+                                fieldOfStudy: '',
+                                startDate: '',
+                                endDate: '',
+                                grade: '',
+                                description: '',
+                                orderPosition: 0,
+                            })
+                        }
+                    >
+                        <Plus className="mr-2 h-4 w-4" /> Add Education
+                    </Button>
+                )}
             </div>
 
             {/* 3. DndContext Wrapper */}
@@ -176,6 +198,33 @@ export default function EducationForm() {
                     strategy={verticalListSortingStrategy}
                 >
                     <div className="space-y-6">
+                        {fields.length === 0 && (
+                            <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed py-16 text-center">
+                                <GraduationCap className="text-muted-foreground mb-4 h-12 w-12" />
+                                <p className="text-muted-foreground text-sm font-medium">No education added yet</p>
+                                <p className="text-muted-foreground mt-1 text-xs">Add your academic history to strengthen your profile</p>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="mt-6"
+                                    onClick={() =>
+                                        prepend({
+                                            institution: '',
+                                            institutionName: '',
+                                            degree: '',
+                                            fieldOfStudy: '',
+                                            startDate: '',
+                                            endDate: '',
+                                            grade: '',
+                                            description: '',
+                                            orderPosition: 0,
+                                        })
+                                    }
+                                >
+                                    <Plus className="mr-2 h-4 w-4" /> Add Education
+                                </Button>
+                            </div>
+                        )}
                         {fields.map((field, index) => (
                             <SortableEducationCard
                                 key={field.id}
@@ -261,7 +310,7 @@ export default function EducationForm() {
                 </SortableContext>
             </DndContext>
 
-            <div className="bg-background sticky bottom-0 z-20 mt-auto flex justify-end border-t pt-4 pb-2">
+            {fields.length > 0 && <div className="bg-background sticky bottom-0 z-20 mt-auto flex justify-end border-t pt-4 pb-2">
                 <Button type="submit" disabled={isPending} className="w-full px-8 md:w-auto">
                     {isPending ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -270,7 +319,30 @@ export default function EducationForm() {
                     )}
                     Save Changes
                 </Button>
-            </div>
+            </div>}
         </form>
+
+        <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+            <AlertDialogPortal>
+                <AlertDialogOverlay className="z-[1099]" />
+                <AlertDialogContent className="z-[1100]">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Education saved!</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Do you want to keep managing your education history?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => { setShowConfirm(false); onSuccess?.() }}>
+                            No, close
+                        </AlertDialogCancel>
+                        <AlertDialogAction onClick={() => setShowConfirm(false)}>
+                            Yes, keep editing
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialogPortal>
+        </AlertDialog>
+        </>
     )
 }

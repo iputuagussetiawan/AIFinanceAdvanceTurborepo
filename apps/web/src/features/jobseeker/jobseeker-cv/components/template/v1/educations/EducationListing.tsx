@@ -1,13 +1,18 @@
+import { useQuery } from '@tanstack/react-query'
+
 import type { IEducation } from '@/features/jobseeker/jobseeker-education/types/education-type'
-import useAuth from '@/hooks/use-auth'
+import { jobseekerService } from '@/features/jobseeker/services/jobseeker-service'
 
 import CVSectionTitle from '../CVSectionTitle'
 import EducationItem from './EducationItem'
 import EducationSkeleton from './EducationSkeleton'
 
 const EducationListing = () => {
-    const { data, isLoading } = useAuth()
-    const educationList: IEducation[] = data?.user.educations || []
+    const { data, isLoading } = useQuery({
+        queryKey: ['jobseekerProfile'],
+        queryFn: jobseekerService.getProfile,
+    })
+    const educationList: IEducation[] = (data?.profile as any)?.educations || []
     return (
         <div className="mb-10">
             <CVSectionTitle title="Education" />
