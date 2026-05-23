@@ -70,7 +70,7 @@ export function CVDrawer({
                         </div>
                         {description && <DrawerDescription>{description}</DrawerDescription>}
                     </DrawerHeader>
-                    <div className="flex-1 overflow-y-auto px-6">{children}</div>
+                    <div className="flex-1 overflow-y-auto px-6 pt-4">{children}</div>
                 </div>
             </DrawerContent>
         </Drawer>
