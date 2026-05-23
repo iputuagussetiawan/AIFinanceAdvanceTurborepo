@@ -4,7 +4,7 @@ import React from 'react'
 import { GraduationCap, Plus, Trash2 } from 'lucide-react'
 import { useFieldArray, useFormContext } from 'react-hook-form'
 
-import { InstitutionAutoSuggest } from '@/features/institution/components/InstitutionAutoSuggest'
+import { InstitutionAutoSuggest } from '@/features/master/institution/components/InstitutionAutoSuggest'
 import type { JobseekerDTO } from '@/features/onboarding/types/jobseeker-type'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Briefcase, Check, GraduationCap, User } from 'lucide-react'
@@ -8,13 +8,12 @@ import { FormProvider, useForm, type Resolver } from 'react-hook-form'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
-import { educationService } from '@/features/education/services/education-service'
-import { experienceService } from '@/features/experience/services/experience-service'
-import { handleSaveJobseekerProfile } from '@/features/jobseeker/actions/jobseeker-action'
+import { educationService } from '@/features/jobseeker/jobseeker-education/services/education-service'
+import { experienceService } from '@/features/jobseeker/jobseeker-experience/services/experience-service'
+import { jobseekerService } from '@/features/jobseeker/services/jobseeker-service'
 import { OnboardingStepper } from '@/features/onboarding/components/onboarding-stepper'
 import { Button } from '@/components/ui/button'
 import { useFormPersist } from '@/hooks/use-form-persist'
-import useAuth from '@/hooks/use-auth'
 
 import { jobseekerValidation, type JobseekerDTO } from '../types/jobseeker-type'
 import { FormNavigation } from './jobseeker/onboarding-stepper-navigation'
@@ -37,23 +36,18 @@ const OnboardingJobseeker = () => {
     const [isSubmitted, setIsSubmitted] = useState(false)
 
     // 👇 1. Fetch authenticated user data
-    const { data: session, isLoading } = useAuth()
-
     const form = useForm<JobseekerDTO>({
         resolver: zodResolver(jobseekerValidation as any) as Resolver<JobseekerDTO>,
         mode: 'onTouched',
         defaultValues: {
-            firstName: '',
-            lastName: '',
-            phoneNumber:'',
-            address:'',
+            jobTitle: '',
             headline: '',
             currentPosition: '',
             industry: '',
             country: '',
+            state: '',
             city: '',
-            phoneType: '',
-            birthday: '',
+            openToWork: false,
             educations: [
                 {
                     institution: '',
@@ -74,14 +68,6 @@ const OnboardingJobseeker = () => {
 
     const { clearStorage } = useFormPersist(form, 'jobseeker-onboarding-data')
 
-    // Once session loads, patch firstName & lastName — must run AFTER useFormPersist
-    // so the session values win when cached data makes isLoading=false on first render
-    useEffect(() => {
-        if (isLoading || !session?.user) return
-        form.setValue('firstName', session.user.firstName ?? '')
-        form.setValue('lastName', session.user.lastName ?? '')
-    }, [isLoading, session, form])
-
     const queryClient = useQueryClient()
 
     const { mutate: submitOnboarding, isPending } = useMutation({
@@ -89,8 +75,7 @@ const OnboardingJobseeker = () => {
             // Must run sequentially — all three call UserModel.findById+save on the
             // same document. Parallel execution causes a Mongoose VersionError
             // because the first save increments __v before the others finish.
-            const profileResult = await handleSaveJobseekerProfile(data)
-            if (!profileResult.success) throw new Error(profileResult.error ?? 'Profile save failed')
+            await jobseekerService.saveProfile(data)
 
             await educationService.updateAll(data.educations)
 
@@ -112,16 +97,12 @@ const OnboardingJobseeker = () => {
     const stepConfig = {
         1: {
             fields: [
-                'firstName',
-                'lastName',
                 'headline',
                 'currentPosition',
                 'industry',
                 'country',
+                'state',
                 'city',
-                'phoneNumber',
-                'address',
-                'birthday',
             ],
         },
         2: { fields: ['educations'] },
@@ -188,8 +169,7 @@ const OnboardingJobseeker = () => {
                             exit={{ opacity: 0, x: -10 }}
                             transition={{ duration: 0.2 }}
                         >
-                            {/* 👇 3. Pass isLoading so fields disable while session fetches */}
-                            {currentStep === 1 && <PersonalInfo isAuthLoading={isLoading} />}
+                            {currentStep === 1 && <PersonalInfo />}
                             {currentStep === 2 && <EducationInfo />}
                             {currentStep === 3 && <ExperienceInfo />}
                             {currentStep === 4 && <ReviewStep />}

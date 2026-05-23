@@ -4,15 +4,16 @@ import React from 'react'
 import { format } from 'date-fns'
 import {
     Briefcase,
-    Globe,
     GraduationCap,
     LucideIcon,
     MapPin,
+    Tag,
+    ToggleLeft,
     UserCircle,
 } from 'lucide-react'
 import { useFormContext } from 'react-hook-form'
 
-import { useSkill } from '@/features/skill/hooks/use-skill'
+import { useSkill } from '@/features/master/skill/hooks/use-skill'
 import type { JobseekerDTO } from '@/features/onboarding/types/jobseeker-type'
 
 const FALLBACK_ICON = '/images/icon/microsoft-copilot.svg'
@@ -60,25 +61,25 @@ const ReviewStep = () => {
             {/* --- Personal & Contact Section --- */}
             <section className="space-y-3">
                 <h3 className="text-primary text-sm font-bold tracking-widest uppercase">
-                    Personal Details
+                    Professional Details
                 </h3>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <SummaryBox
-                        icon={UserCircle}
-                        label="Full Name"
-                        value={`${values.firstName} ${values.lastName}`}
-                    />
-                    <SummaryBox icon={Briefcase} label="Headline" value={values.headline} />
+                    <SummaryBox icon={UserCircle} label="Headline" value={values.headline} />
+                    <SummaryBox icon={Briefcase} label="Current Position" value={values.currentPosition} />
+                    <SummaryBox icon={Tag} label="Industry" value={values.industry} />
                     <SummaryBox
                         icon={MapPin}
                         label="Location"
-                        value={`${values.city}, ${values.country}`}
+                        value={[values.city, values.state, values.country].filter(Boolean).join(' • ')}
                     />
                     <SummaryBox
-                        icon={Globe}
-                        label="Website"
-                        value={values.website || 'No website provided'}
+                        icon={ToggleLeft}
+                        label="Open to Work"
+                        value={values.openToWork ? 'Yes' : 'No'}
                     />
+                    {values.jobTitle && (
+                        <SummaryBox icon={Briefcase} label="Job Title" value={values.jobTitle} />
+                    )}
                 </div>
             </section>
 
