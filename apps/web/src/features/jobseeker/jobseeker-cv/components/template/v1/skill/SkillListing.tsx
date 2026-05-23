@@ -19,8 +19,8 @@ const SkillListing = () => {
             {isLoading ? (
                 <SkillSkeleton />
             ) : skillList.length > 0 ? (
-                skillList.map((skill: IUserSkillResponse) => (
-                    <SkillItem key={skill.id} skill={skill} />
+                skillList.map((skill: IUserSkillResponse, i: number) => (
+                    <SkillItem key={skill.id || (skill as any)._id?.toString() || i} skill={skill} />
                 ))
             ) : (
                 <p className="text-[9px] text-gray-400 italic">No skills added.</p>

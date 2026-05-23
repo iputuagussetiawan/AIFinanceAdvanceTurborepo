@@ -21,6 +21,50 @@ interface CVProps {
     onChange?: (newData: ResumeData) => void
 }
 
+const MODERN_COLOR_FNS = ['oklch(', 'oklab(', 'lab(', 'lch(', 'color-mix(', 'light-dark(']
+
+const toRgb = (color: string): string => {
+    try {
+        const c = document.createElement('canvas')
+        c.width = c.height = 1
+        const ctx = c.getContext('2d')!
+        ctx.fillStyle = color
+        ctx.fillRect(0, 0, 1, 1)
+        const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data
+        return a === 255 ? `rgb(${r},${g},${b})` : `rgba(${r},${g},${b},${+(a / 255).toFixed(3)})`
+    } catch {
+        return 'rgb(0,0,0)'
+    }
+}
+
+const fixModernColors = (el: Element) => {
+    const computed = window.getComputedStyle(el)
+    const htmlEl = el as HTMLElement
+    const props = [
+        'color', 'backgroundColor', 'borderTopColor', 'borderRightColor',
+        'borderBottomColor', 'borderLeftColor', 'outlineColor',
+    ] as const
+    props.forEach(prop => {
+        const val = computed[prop]
+        if (val && MODERN_COLOR_FNS.some(fn => val.includes(fn))) {
+            htmlEl.style[prop] = toRgb(val)
+        }
+    })
+    Array.from(el.children).forEach(fixModernColors)
+}
+
+const pdfOptions = (method: 'save' | 'open'): Options => ({
+    filename: 'my-resume.pdf',
+    method,
+    resolution: Resolution.HIGH,
+    page: { margin: Margin.NONE, format: 'A4', orientation: 'portrait' },
+    canvas: { mimeType: 'image/png', qualityRatio: 1 },
+    overrides: {
+        pdf: { compress: false },
+        canvas: { useCORS: true, backgroundColor: '#ffffff' },
+    },
+})
+
 const CV = ({ mode = 'manage', onChange }: CVProps) => {
     const targetRef = useRef<HTMLDivElement>(null)
     const [isDownloading, setIsDownloading] = useState(false)
@@ -29,74 +73,26 @@ const CV = ({ mode = 'manage', onChange }: CVProps) => {
     const handleDownload = () => {
         if (isDownloading) return
         setIsDownloading(true)
-        const options: Options = {
-            filename: 'my-resume.pdf',
-            method: 'save',
-            resolution: Resolution.HIGH,
-            page: {
-                margin: Margin.NONE,
-                format: 'A4',
-                orientation: 'portrait',
-            },
-            canvas: {
-                mimeType: 'image/png',
-                qualityRatio: 1,
-            },
-            overrides: {
-                pdf: {
-                    compress: false,
-                },
-                canvas: {
-                    useCORS: true,
-                    backgroundColor: '#ffffff',
-                },
-            },
-        }
 
         setTimeout(() => {
             if (targetRef.current) {
-                generatePDF(targetRef, options)
+                fixModernColors(targetRef.current)
+                generatePDF(targetRef, pdfOptions('save'))
             }
-            setTimeout(() => {
-                setIsDownloading(false)
-            }, 1500)
+            setTimeout(() => setIsDownloading(false), 1500)
         }, 250)
     }
 
     const handlePreview = () => {
         if (isPreviewing) return
         setIsPreviewing(true)
-        const options: Options = {
-            filename: 'my-resume.pdf',
-            method: 'open',
-            resolution: Resolution.HIGH,
-            page: {
-                margin: Margin.NONE,
-                format: 'A4',
-                orientation: 'portrait',
-            },
-            canvas: {
-                mimeType: 'image/png',
-                qualityRatio: 1,
-            },
-            overrides: {
-                pdf: {
-                    compress: false,
-                },
-                canvas: {
-                    useCORS: true,
-                    backgroundColor: '#ffffff',
-                },
-            },
-        }
 
         setTimeout(() => {
             if (targetRef.current) {
-                generatePDF(targetRef, options)
+                fixModernColors(targetRef.current)
+                generatePDF(targetRef, pdfOptions('open'))
             }
-            setTimeout(() => {
-                setIsPreviewing(false)
-            }, 1500)
+            setTimeout(() => setIsPreviewing(false), 1500)
         }, 250)
     }
 

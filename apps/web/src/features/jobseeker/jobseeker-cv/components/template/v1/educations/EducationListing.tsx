@@ -19,7 +19,7 @@ const EducationListing = () => {
             {isLoading ? (
                 <EducationSkeleton />
             ) : educationList.length > 0 ? (
-                educationList.map((edu: IEducation) => <EducationItem key={edu.id} edu={edu} />)
+                educationList.map((edu: any, i: number) => <EducationItem key={edu.id || edu._id?.toString() || i} edu={edu} />)
             ) : (
                 <p className="text-[9px] text-gray-400 italic">No education history added.</p>
             )}

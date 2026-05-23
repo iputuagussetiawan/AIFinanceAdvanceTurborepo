@@ -23,8 +23,8 @@ const ExperienceListing = () => {
             {isLoading ? (
                 <ExperienceSkeleton />
             ) : experienceList.length > 0 ? (
-                experienceList.map((exp: IExperience) => (
-                    <ExperienceItem key={exp.id} experience={exp} />
+                experienceList.map((exp: any, i: number) => (
+                    <ExperienceItem key={exp.id || exp._id?.toString() || i} experience={exp} />
                 ))
             ) : (
                 <p className="text-[9px] text-gray-400 italic">No experience history added.</p>

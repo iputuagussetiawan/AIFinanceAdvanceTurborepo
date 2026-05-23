@@ -20,9 +20,9 @@ const LanguageListing = () => {
         <div>
             <CVSectionTitle title="Languages" />
             <div className="space-y-1.5">
-                {languageList.map((language) => (
+                {languageList.map((language: any, i: number) => (
                     <LanguageItem
-                        key={language.id}
+                        key={language.id || language._id?.toString() || i}
                         language={language}
                     />
                 ))}
