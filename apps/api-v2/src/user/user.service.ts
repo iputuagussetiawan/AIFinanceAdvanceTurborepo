@@ -6,6 +6,7 @@ import { DRIZZLE } from '../database/drizzle.provider'
 import * as schema from '../database/schema'
 import { users } from '../database/schema/users.schema'
 import { RoleService } from '../role/role.service'
+import { SessionService } from '../session/session.service'
 import { NotFoundException } from '../common/exceptions/app-error'
 
 @Injectable()
@@ -13,9 +14,10 @@ export class UserService {
     constructor(
         @Inject(DRIZZLE) private db: NodePgDatabase<typeof schema>,
         private roleService: RoleService,
+        private sessionService: SessionService,
     ) {}
 
-    async getMe(userId: string) {
+    async getMe(userId: string, sessionId: string) {
         const [user] = await this.db
             .select({
                 id: users.id,
@@ -38,11 +40,16 @@ export class UserService {
 
         const userRoles = await this.roleService.getUserRoles(userId)
         const permissions = await this.roleService.getUserPermissions(userId)
+        const allSessions = await this.sessionService.getUserSessions(userId, sessionId)
+        const currentSession = allSessions.find((s) => s.isCurrent) ?? null
+        const otherSessions = allSessions.filter((s) => !s.isCurrent)
 
         return {
             ...user,
             role: userRoles[0]?.name ?? null,
             permissions,
+            currentSession,
+            sessions: otherSessions,
         }
     }
 }

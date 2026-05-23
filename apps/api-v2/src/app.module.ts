@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module'
 import { RoleModule } from './role/role.module'
 import { PermissionModule } from './permission/permission.module'
 import { UserModule } from './user/user.module'
+import { SessionModule } from './session/session.module'
 
 @Module({
     imports: [
@@ -19,6 +20,7 @@ import { UserModule } from './user/user.module'
         RoleModule,
         PermissionModule,
         UserModule,
+        SessionModule,
     ],
     controllers: [AppController],
     providers: [AppService],

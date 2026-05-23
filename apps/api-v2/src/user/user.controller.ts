@@ -12,6 +12,6 @@ export class UserController {
     @Get('me')
     getMe(@Req() req: Request) {
         const user = req.user as any
-        return this.userService.getMe(user.userId)
+        return this.userService.getMe(user.userId, user.sessionId)
     }
 }

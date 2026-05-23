@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { NodePgDatabase } from 'drizzle-orm/node-postgres'
-import { eq, and, gt, count } from 'drizzle-orm'
+import { eq, and, gt, count, sql } from 'drizzle-orm'
 import * as bcrypt from 'bcrypt'
 import * as crypto from 'crypto'
 
@@ -38,32 +38,39 @@ export class AuthService {
     ) {}
 
     signAccessToken(payload: { userId: string; sessionId: string }) {
-        return this.jwtService.sign(payload, {
-            secret: process.env.JWT_SECRET || 'jwt-secret',
-            expiresIn: '15m',
-        })
+        const secret = process.env.JWT_SECRET
+        if (!secret) throw new Error('JWT_SECRET is not set')
+        return this.jwtService.sign(payload, { secret, expiresIn: '15m' })
     }
 
     signRefreshToken(payload: { sessionId: string }) {
-        return this.jwtService.sign(payload, {
-            secret: process.env.JWT_REFRESH_SECRET || 'jwt-refresh-secret',
-            expiresIn: '30d',
-        })
+        const secret = process.env.JWT_REFRESH_SECRET
+        if (!secret) throw new Error('JWT_REFRESH_SECRET is not set')
+        return this.jwtService.sign(payload, { secret, expiresIn: '30d' })
     }
 
-    async upsertSession(userId: string, userAgent: string | undefined) {
+    async upsertSession(
+        userId: string,
+        userAgent: string | undefined,
+        ip?: string,
+        deviceInfo?: { deviceType: string; browser: string; os: string },
+    ) {
         const expiredAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+
+        const uaCondition = userAgent
+            ? eq(sessions.userAgent, userAgent)
+            : sql`${sessions.userAgent} IS NULL`
 
         const existing = await this.db
             .select()
             .from(sessions)
-            .where(and(eq(sessions.userId, userId), eq(sessions.userAgent, userAgent ?? '')))
+            .where(and(eq(sessions.userId, userId), uaCondition))
             .limit(1)
 
         if (existing.length) {
             const [updated] = await this.db
                 .update(sessions)
-                .set({ updatedAt: new Date(), expiredAt })
+                .set({ updatedAt: new Date(), expiredAt, ip, ...deviceInfo })
                 .where(eq(sessions.id, existing[0].id))
                 .returning()
             return updated
@@ -71,7 +78,7 @@ export class AuthService {
 
         const [created] = await this.db
             .insert(sessions)
-            .values({ userId, userAgent, expiredAt })
+            .values({ userId, userAgent, ip, ...deviceInfo, expiredAt })
             .returning()
         return created
     }
@@ -178,7 +185,7 @@ export class AuthService {
             const [created] = await this.db
                 .insert(users)
                 .values({
-                    email: email ?? '',
+                    email: email ?? `${provider}.${providerId}@noemail.local`,
                     firstName,
                     lastName,
                     profilePicture: picture,
@@ -205,7 +212,7 @@ export class AuthService {
             .where(eq(users.email, email))
             .limit(1)
 
-        if (!user) throw new NotFoundException('User not found')
+        if (!user) return { message: 'Password reset email sent' }
 
         const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000)
         const [{ recentCount }] = await this.db
@@ -270,7 +277,7 @@ export class AuthService {
         let payload: { sessionId: string }
         try {
             payload = this.jwtService.verify(token, {
-                secret: process.env.JWT_REFRESH_SECRET || 'jwt-refresh-secret',
+                secret: process.env.JWT_REFRESH_SECRET,
             })
         } catch {
             throw new UnauthorizedException('Invalid or expired refresh token')
