@@ -69,7 +69,7 @@ export class RoleService {
         const rows = await this.db
             .select({ permission: permissions })
             .from(rolePermissions)
-            .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+            .innerJoin(permissions as any, eq(rolePermissions.permissionId, permissions.id))
             .where(eq(rolePermissions.roleId, roleId))
         return rows.map((r) => r.permission)
     }
@@ -102,7 +102,7 @@ export class RoleService {
         const rows = await this.db
             .select({ role: roles })
             .from(userRoles)
-            .innerJoin(roles, eq(userRoles.roleId, roles.id))
+            .innerJoin(roles as any, eq(userRoles.roleId, roles.id))
             .where(eq(userRoles.userId, userId))
         return rows.map((r) => r.role)
     }
@@ -119,7 +119,7 @@ export class RoleService {
         const rows = await this.db
             .select({ name: permissions.name })
             .from(rolePermissions)
-            .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+            .innerJoin(permissions as any, eq(rolePermissions.permissionId, permissions.id))
             .where(inArray(rolePermissions.roleId, roleIds))
 
         return [...new Set(rows.map((r) => r.name))]
