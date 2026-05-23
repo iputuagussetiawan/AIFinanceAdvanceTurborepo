@@ -6,6 +6,8 @@ import { AppService } from './app.service'
 import { DatabaseModule } from './database/database.module'
 import { MailModule } from './mail/mail.module'
 import { AuthModule } from './auth/auth.module'
+import { RoleModule } from './role/role.module'
+import { PermissionModule } from './permission/permission.module'
 
 @Module({
     imports: [
@@ -13,6 +15,8 @@ import { AuthModule } from './auth/auth.module'
         DatabaseModule,
         MailModule,
         AuthModule,
+        RoleModule,
+        PermissionModule,
     ],
     controllers: [AppController],
     providers: [AppService],

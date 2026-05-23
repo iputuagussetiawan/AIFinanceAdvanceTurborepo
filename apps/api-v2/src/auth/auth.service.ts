@@ -11,6 +11,7 @@ import { users } from '../database/schema/users.schema'
 import { sessions } from '../database/schema/sessions.schema'
 import { verificationCodes, VerificationTypeEnum } from '../database/schema/verification-codes.schema'
 import { MailService } from '../mail/mail.service'
+import { RoleService } from '../role/role.service'
 import {
     BadRequestException,
     NotFoundException,
@@ -33,6 +34,7 @@ export class AuthService {
         @Inject(DRIZZLE) private db: NodePgDatabase<typeof schema>,
         private jwtService: JwtService,
         private mailService: MailService,
+        private roleService: RoleService,
     ) {}
 
     signAccessToken(payload: { userId: string; sessionId: string }) {
@@ -91,8 +93,8 @@ export class AuthService {
     }
 
     async register(dto: RegisterDto) {
-        const [firstName, ...rest] = (dto.firstName || dto.name).trim().split(' ')
-        const lastName = dto.lastName || rest.join(' ')
+        const firstName = dto.firstName.trim()
+        const lastName = dto.lastName.trim()
 
         const [existing] = await this.db
             .select({ id: users.id })
@@ -126,6 +128,9 @@ export class AuthService {
 
         const verificationUrl = `${process.env.FRONTEND_ORIGIN}/confirm-account?code=${code}`
         await this.mailService.sendVerificationEmail(user.email, verificationUrl)
+
+        const jobseekerRole = await this.roleService.findByName('jobseeker')
+        if (jobseekerRole) await this.roleService.assignRoleToUser(user.id, jobseekerRole.id)
 
         return { userId: user.id }
     }

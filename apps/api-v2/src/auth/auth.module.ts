@@ -7,11 +7,13 @@ import { AuthController } from './auth.controller'
 import { LocalStrategy } from './strategies/local.strategy'
 import { JwtStrategy } from './strategies/jwt.strategy'
 import { GoogleStrategy } from './strategies/google.strategy'
+import { RoleModule } from '../role/role.module'
 
 @Module({
     imports: [
         PassportModule,
         JwtModule.register({}),
+        RoleModule,
     ],
     providers: [AuthService, LocalStrategy, JwtStrategy, GoogleStrategy],
     controllers: [AuthController],
