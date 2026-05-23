@@ -7,9 +7,10 @@ import { createCitySchema, updateCitySchema } from './city.validation'
 
 export const CityController = {
     searchCities: asyncHandler(async (req: Request, res: Response) => {
-        const search = req.query.search as string | undefined
-        const stateId = req.query.stateId as string | undefined
-        const countryId = req.query.countryId as string | undefined
+        const toStr = (v: any) => Array.isArray(v) ? (v.find(Boolean) as string | undefined) : (v as string | undefined)
+        const search = toStr(req.query.search)
+        const stateId = toStr(req.query.stateId)
+        const countryId = toStr(req.query.countryId)
         const data = await CityService.searchCities(search, stateId, countryId)
 
         return res.status(HTTPSTATUS.OK).json({ message: 'Cities retrieved successfully', data })

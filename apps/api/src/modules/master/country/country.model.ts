@@ -1,13 +1,19 @@
-import { model, Schema, type Document, type Types } from 'mongoose'
+import { model, Schema, type Document } from 'mongoose'
 
-import type { ICountry } from './country.validation'
-
-export interface CountryDocument extends Omit<ICountry, '_id'>, Document {
-    _id: Types.ObjectId
+export interface CountryDocument extends Document<string> {
+    _id: string
+    name: string
+    code: string
+    dialCode?: string
+    flag?: string
+    isActive: boolean
+    createdAt: Date
+    updatedAt: Date
 }
 
 const countrySchema = new Schema<CountryDocument>(
     {
+        _id: { type: String },
         name: {
             type: String,
             required: [true, 'Country name is required'],

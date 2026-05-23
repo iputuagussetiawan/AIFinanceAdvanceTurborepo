@@ -71,7 +71,11 @@ export const CityService = {
     },
 
     getCities: async (query: any = {}) => {
-        const { page = 1, limit = 10, search = '', stateId = '', countryId = '' } = query
+        const coerce = (v: any) => Array.isArray(v) ? (v.find(Boolean) ?? '') : (v ?? '')
+        const search = coerce(query.search)
+        const stateId = coerce(query.stateId)
+        const countryId = coerce(query.countryId)
+        const { page = 1, limit = 10 } = query
         const skip = (Number(page) - 1) * Number(limit)
 
         const filter: any = { isActive: true }

@@ -1,10 +1,10 @@
-import { model, Schema, Types, type Document } from 'mongoose'
+import { model, Schema, type Document } from 'mongoose'
 
-export interface StateDocument extends Document {
-    _id: Types.ObjectId
+export interface StateDocument extends Document<string> {
+    _id: string
     name: string
     code: string
-    country: Types.ObjectId
+    country: string
     isActive: boolean
     createdAt: Date
     updatedAt: Date
@@ -12,6 +12,7 @@ export interface StateDocument extends Document {
 
 const stateSchema = new Schema<StateDocument>(
     {
+        _id: { type: String },
         name: {
             type: String,
             required: [true, 'State name is required'],
@@ -27,7 +28,7 @@ const stateSchema = new Schema<StateDocument>(
             uppercase: true,
         },
         country: {
-            type: Schema.Types.ObjectId,
+            type: String,
             ref: 'Country',
             required: [true, 'Country is required'],
         },
@@ -50,7 +51,7 @@ const stateSchema = new Schema<StateDocument>(
     },
 )
 
-stateSchema.index({ name: 1, country: 1 }, { unique: true })
+stateSchema.index({ country: 1 })
 stateSchema.index({ code: 1, country: 1 })
 
 export const StateModel = model<StateDocument>('State', stateSchema)

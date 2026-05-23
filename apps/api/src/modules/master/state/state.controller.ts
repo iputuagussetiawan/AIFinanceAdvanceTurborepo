@@ -7,8 +7,10 @@ import { createStateSchema, updateStateSchema } from './state.validation'
 
 export const StateController = {
     searchStates: asyncHandler(async (req: Request, res: Response) => {
-        const search = req.query.search as string | undefined
-        const countryId = req.query.countryId as string | undefined
+        const rawSearch = req.query.search
+        const rawCountryId = req.query.countryId
+        const search = Array.isArray(rawSearch) ? (rawSearch.find(Boolean) as string | undefined) : (rawSearch as string | undefined)
+        const countryId = Array.isArray(rawCountryId) ? (rawCountryId.find(Boolean) as string | undefined) : (rawCountryId as string | undefined)
         const data = await StateService.searchStates(search, countryId)
 
         return res.status(HTTPSTATUS.OK).json({ message: 'States retrieved successfully', data })

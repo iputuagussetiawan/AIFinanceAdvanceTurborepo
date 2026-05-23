@@ -14,9 +14,9 @@ export interface JobseekerDocument extends Document {
     headline: string
     currentPosition: string
     industry: string
-    country: mongoose.Types.ObjectId
-    state: mongoose.Types.ObjectId
-    city: mongoose.Types.ObjectId
+    country: string
+    state: string
+    city: string
     openToWork: boolean
     languages?: IJobseekerLanguage[]
     educations?: IJobseekerEducation[]
@@ -39,9 +39,9 @@ const JobseekerSchema = new Schema<JobseekerDocument>(
         headline: { type: String, required: true, trim: true },
         currentPosition: { type: String, required: true, trim: true },
         industry: { type: String, required: true, index: true },
-        country: { type: Schema.Types.ObjectId, ref: 'Country', required: true, index: true },
-        state: { type: Schema.Types.ObjectId, ref: 'State', required: true },
-        city: { type: Schema.Types.ObjectId, ref: 'City', required: true },
+        country: { type: String, ref: 'Country', required: true, index: true },
+        state: { type: String, ref: 'State', required: true },
+        city: { type: String, ref: 'City', required: true },
         openToWork: { type: Boolean, default: false },
         languages: { type: [jobseekerLanguageSchema], default: [] },
         educations: { type: [jobseekerEducationSchema], default: [] },

@@ -62,7 +62,11 @@ export const StateService = {
     },
 
     getStates: async (query: any = {}) => {
-        const { page = 1, limit = 10, search = '', countryId = '' } = query
+        const rawSearch = query.search
+        const rawCountryId = query.countryId
+        const search = Array.isArray(rawSearch) ? (rawSearch.find(Boolean) ?? '') : (rawSearch ?? '')
+        const countryId = Array.isArray(rawCountryId) ? (rawCountryId.find(Boolean) ?? '') : (rawCountryId ?? '')
+        const { page = 1, limit = 10 } = query
         const skip = (Number(page) - 1) * Number(limit)
 
         const filter: any = { isActive: true }

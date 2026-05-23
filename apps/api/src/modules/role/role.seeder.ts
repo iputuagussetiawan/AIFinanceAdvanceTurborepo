@@ -1,11 +1,9 @@
-import { ClientSession } from 'mongoose'
-
 import { RolePermissions } from './role-permission.util'
 import RoleModel from './roles-permission.model'
 
-export const seedRoles = async (session: ClientSession) => {
+export const seedRoles = async () => {
     console.log('🧹 Clearing existing roles...')
-    await RoleModel.deleteMany({}, { session })
+    await RoleModel.deleteMany({})
 
     for (const roleName in RolePermissions) {
         const role = roleName as keyof typeof RolePermissions
@@ -16,7 +14,7 @@ export const seedRoles = async (session: ClientSession) => {
             permissions: permissions,
         })
 
-        await newRole.save({ session })
+        await newRole.save()
         console.log(`🌱 [Seeder] Role "${role}" added.`)
     }
 }
