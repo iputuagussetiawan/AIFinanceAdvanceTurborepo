@@ -46,8 +46,8 @@ import VerificationCodeModel from './verification.model'
 import {
     getCurrentUserService,
     updateUserService,
-    updateUserPhotoProfileService,
-    updateUserProfileService,
+    updatePhotoService,
+    updateProfileService,
 } from './user.service'
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -245,9 +245,9 @@ describe('updateUserService', () => {
     })
 })
 
-// ─── updateUserProfileService ───────────────────────────────────────────────
+// ─── updateProfileService ───────────────────────────────────────────────
 
-describe('updateUserProfileService', () => {
+describe('updateProfileService', () => {
     beforeEach(() => jest.clearAllMocks())
 
     it('updates only provided fields, leaves others unchanged', async () => {
@@ -265,7 +265,7 @@ describe('updateUserProfileService', () => {
             populate: jest.fn().mockResolvedValue(makeMember()),
         })
 
-        await updateUserProfileService('user_1', { firstName: 'JANE', bio: 'new bio' } as any)
+        await updateProfileService('user_1', { firstName: 'JANE', bio: 'new bio' } as any)
 
         expect(user.firstName).toBe('JANE')
         expect(user.bio).toBe('new bio')
@@ -280,13 +280,13 @@ describe('updateUserProfileService', () => {
             populate: jest.fn().mockResolvedValue(makeMember()),
         })
 
-        await expect(updateUserProfileService('user_1', {} as any)).rejects.toThrow('User not found')
+        await expect(updateProfileService('user_1', {} as any)).rejects.toThrow('User not found')
     })
 })
 
-// ─── updateUserPhotoProfileService ─────────────────────────────────────────
+// ─── updatePhotoService ─────────────────────────────────────────
 
-describe('updateUserPhotoProfileService', () => {
+describe('updatePhotoService', () => {
     beforeEach(() => jest.clearAllMocks())
 
     it('sets new profile picture and deletes old one from cloudinary', async () => {
@@ -299,7 +299,7 @@ describe('updateUserPhotoProfileService', () => {
         })
 
         const file = { path: 'https://res.cloudinary.com/demo/image/upload/new.png' } as any
-        await updateUserPhotoProfileService('user_1', file)
+        await updatePhotoService('user_1', file)
 
         expect(cloudinary.uploader.destroy).toHaveBeenCalledWith('folder/old', { invalidate: true })
         expect(user.profilePicture).toBe(file.path)
@@ -313,7 +313,7 @@ describe('updateUserPhotoProfileService', () => {
             populate: jest.fn().mockResolvedValue(makeMember()),
         })
 
-        await updateUserPhotoProfileService('user_1', undefined)
+        await updatePhotoService('user_1', undefined)
 
         expect(cloudinary.uploader.destroy).not.toHaveBeenCalled()
         expect(user.profilePicture).toBe('https://res.cloudinary.com/demo/image/upload/existing.png')
@@ -325,7 +325,7 @@ describe('updateUserPhotoProfileService', () => {
             populate: jest.fn().mockResolvedValue(makeMember()),
         })
 
-        await expect(updateUserPhotoProfileService('user_1')).rejects.toThrow('User not found')
+        await expect(updatePhotoService('user_1')).rejects.toThrow('User not found')
     })
 })
 
@@ -350,7 +350,7 @@ describe('Cloudinary public ID extraction', () => {
         })
 
         const file = { path: 'https://res.cloudinary.com/demo/image/upload/new.jpg' } as any
-        await updateUserPhotoProfileService('user_1', file)
+        await updatePhotoService('user_1', file)
 
         if (expectedPublicId && url.includes('cloudinary')) {
             expect(cloudinary.uploader.destroy).toHaveBeenCalledWith(

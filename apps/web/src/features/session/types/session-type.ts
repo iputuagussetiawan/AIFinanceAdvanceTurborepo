@@ -38,6 +38,7 @@ export interface IUser {
     phoneNumber: string
     address: string
     website: string
+    birthday?: string | null
     profilePicture: string | null
     bio: string
 

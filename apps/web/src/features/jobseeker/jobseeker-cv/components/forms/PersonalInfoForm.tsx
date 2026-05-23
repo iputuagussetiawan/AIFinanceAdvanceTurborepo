@@ -30,7 +30,6 @@ export default function PersonalInfoForm() {
         defaultValues: {
             firstName: user?.firstName ?? '',
             lastName: user?.lastName ?? '',
-            jobTitle: user?.jobTitle ?? '',
             address: user?.address ?? '',
             phoneNumber: user?.phoneNumber ?? '',
             email: user?.email ?? '',
@@ -43,7 +42,6 @@ export default function PersonalInfoForm() {
             reset({
                 firstName: user.firstName,
                 lastName: user.lastName,
-                jobTitle: user.jobTitle,
                 address: user.address,
                 phoneNumber: user.phoneNumber,
                 email: user.email,
@@ -92,17 +90,6 @@ export default function PersonalInfoForm() {
                             isSubmitting={isPending}
                             {...register('lastName')}
                         />
-                        <div className="pt-4">
-                            <UiFormInput
-                                id="jobTitle"
-                                label="Job Title"
-                                placeholder="JOB TITLE"
-                                className="border-none py-6 text-lg font-medium tracking-[0.3em] text-gray-600 uppercase focus-visible:ring-0"
-                                error={errors.jobTitle}
-                                isSubmitting={isPending}
-                                {...register('jobTitle')}
-                            />
-                        </div>
                     </div>
 
                     {/* RIGHT SIDE: Contact Info + Yellow Bar */}

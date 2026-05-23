@@ -1,15 +1,11 @@
 import { v2 as cloudinary } from 'cloudinary'
 
-import { config } from '../../config/app.config'
-import { VerificationEnum } from '../../enums/verification-code.enum'
-import { sendEmail } from '../../mailers/mailer'
-import { verifyEmailTemplate } from '../../mailers/templates/template'
 import { BadRequestException, NotFoundException } from '../../utils/appError'
-import { fortyFiveMinutesFromNow } from '../../utils/date-time'
 import MemberModel from '../member/member.model'
 import UserModel from './user.model'
 import type { UpdateUserInputType } from './user.validation'
-import VerificationCodeModel from './verification.model'
+
+// ─── Private Helpers ─────────────────────────────────────────────────────────
 
 function extractCloudinaryPublicId(url: string): string | null {
     const match = url.match(/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/)
@@ -24,21 +20,17 @@ async function deleteCloudinaryImage(url: string) {
     } catch {}
 }
 
-async function handleEmailChange(user: any, newEmail: string) {
-    const existingEmail = await UserModel.findOne({ email: newEmail })
-    if (existingEmail) throw new BadRequestException('Email already in use')
-
-    user.email = newEmail
-    user.isEmailVerified = false
-
-    const verification = await VerificationCodeModel.create({
-        userId: user._id,
-        type: VerificationEnum.EMAIL_VERIFICATION,
-        expiresAt: fortyFiveMinutesFromNow(),
-    })
-    const verificationUrl = `${config.FRONTEND_ORIGIN}/confirm-account?code=${verification.code}`
-    await sendEmail({ to: newEmail, ...verifyEmailTemplate(verificationUrl) })
+async function findUserAndMember(userId: string) {
+    const [user, member] = await Promise.all([
+        UserModel.findById(userId),
+        MemberModel.findOne({ userId }).populate('role'),
+    ])
+    if (!user) throw new NotFoundException('User not found')
+    if (!member) throw new BadRequestException('User or Member record not found')
+    return { user, member }
 }
+
+// ─── Service ─────────────────────────────────────────────────────────────────
 
 export const UserService = {
     getCurrentUser: async (userId: string) => {
@@ -48,47 +40,12 @@ export const UserService = {
 
         if (!member) throw new BadRequestException('User or Member record not found')
 
-        const memberObj = member.toJSON()
-        return { user: memberObj.userId, role: memberObj.role, joinedAt: memberObj.joinedAt, id: memberObj.id }
+        const { userId: user, role, joinedAt } = member.toJSON()
+        return { user, role, joinedAt }
     },
 
-    updateUser: async (userId: string, body: UpdateUserInputType, profilePic?: Express.Multer.File) => {
-        const [user, member] = await Promise.all([
-            UserModel.findById(userId),
-            MemberModel.findOne({ userId }).populate('role'),
-        ])
-
-        if (!user) throw new NotFoundException('User not found')
-        if (!member) throw new BadRequestException('User or Member record not found')
-
-        if (body.email && body.email !== user.email) await handleEmailChange(user, body.email)
-
-        if (profilePic) {
-            if (user.profilePicture?.includes('cloudinary')) await deleteCloudinaryImage(user.profilePicture)
-            user.profilePicture = profilePic.path
-        }
-
-        if (body.firstName !== undefined) user.firstName = body.firstName
-        if (body.lastName !== undefined) user.lastName = body.lastName
-        if (body.bio !== undefined) user.bio = body.bio
-        if (body.phoneNumber !== undefined) user.phoneNumber = body.phoneNumber
-        if (body.address !== undefined) user.address = body.address
-        if (body.website !== undefined) user.website = body.website
-        if (body.birthday !== undefined) user.birthday = body.birthday ? new Date(body.birthday) : undefined
-        if (body.password) user.password = body.password
-
-        await user.save()
-        return { user: user.toJSON(), role: member.role, joinedAt: member.joinedAt }
-    },
-
-    updateUserProfile: async (userId: string, body: UpdateUserInputType) => {
-        const [user, member] = await Promise.all([
-            UserModel.findById(userId),
-            MemberModel.findOne({ userId }).populate('role'),
-        ])
-
-        if (!user) throw new NotFoundException('User not found')
-        if (!member) throw new BadRequestException('User or Member record not found')
+    updateProfile: async (userId: string, body: UpdateUserInputType) => {
+        const { user, member } = await findUserAndMember(userId)
 
         const { firstName, lastName, bio, phoneNumber, address, website, birthday } = body
         if (firstName !== undefined) user.firstName = firstName
@@ -103,17 +60,13 @@ export const UserService = {
         return { user: user.toJSON(), role: member.role, joinedAt: member.joinedAt }
     },
 
-    updateUserPhotoProfile: async (userId: string, profilePic?: Express.Multer.File) => {
-        const [user, member] = await Promise.all([
-            UserModel.findById(userId),
-            MemberModel.findOne({ userId }).populate('role'),
-        ])
-
-        if (!user) throw new NotFoundException('User not found')
-        if (!member) throw new BadRequestException('User or Member record not found')
+    updatePhoto: async (userId: string, profilePic?: Express.Multer.File) => {
+        const { user, member } = await findUserAndMember(userId)
 
         if (profilePic) {
-            if (user.profilePicture?.includes('cloudinary')) await deleteCloudinaryImage(user.profilePicture)
+            if (user.profilePicture?.includes('cloudinary')) {
+                await deleteCloudinaryImage(user.profilePicture)
+            }
             user.profilePicture = profilePic.path
         }
 

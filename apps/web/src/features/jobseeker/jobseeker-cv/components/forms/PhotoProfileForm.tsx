@@ -18,7 +18,7 @@ const PhotoProfileForm = () => {
 
     // 1. Define the Mutation
     const { mutate: updatePhotoProfile, isPending } = useMutation({
-        mutationFn: (formData: FormData) => userService.updatePhotoProfile(formData),
+        mutationFn: (formData: FormData) => userService.updatePhoto(formData),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['authUser'] })
             toast.success('Profile picture updated successfully!', { position: 'top-center' })
