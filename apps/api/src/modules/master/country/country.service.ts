@@ -69,7 +69,9 @@ export const CountryService = {
     },
 
     getCountries: async (query: any = {}) => {
-        const { page = 1, limit = 10, search = '' } = query
+        const raw = query.search
+        const search = Array.isArray(raw) ? (raw.find(Boolean) ?? '') : (raw ?? '')
+        const { page = 1, limit = 10 } = query
         const skip = (Number(page) - 1) * Number(limit)
 
         const filter: any = { isActive: true }

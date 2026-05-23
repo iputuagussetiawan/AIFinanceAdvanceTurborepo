@@ -1,6 +1,9 @@
 import mongoose from 'mongoose'
 
 import { BadRequestException, NotFoundException } from '../../utils/appError'
+import { CountryModel } from '../master/country/country.model'
+import { StateModel } from '../master/state/state.model'
+import { CityModel } from '../master/city/city.model'
 import MemberModel from '../member/member.model'
 import { Roles } from '../role/role.enum'
 import RoleModel from '../role/roles-permission.model'
@@ -8,10 +11,30 @@ import UserModel from '../user/user.model'
 import JobseekerModel from './jobseeker.model'
 import type { JobseekerPersonalInfoDTO } from './jobseeker.validation'
 
+const validateLocation = async (countryId: string, stateId: string, cityId: string) => {
+    const [country, state, city] = await Promise.all([
+        CountryModel.findById(countryId),
+        StateModel.findById(stateId),
+        CityModel.findById(cityId),
+    ])
+
+    if (!country) throw new BadRequestException('Invalid country')
+    if (!state) throw new BadRequestException('Invalid state')
+    if (!city) throw new BadRequestException('Invalid city')
+
+    if (state.country.toString() !== countryId)
+        throw new BadRequestException('State does not belong to the selected country')
+
+    if (city.country.toString() !== countryId || city.state.toString() !== stateId)
+        throw new BadRequestException('City does not belong to the selected state')
+}
+
 export const JobseekerService = {
     saveProfile: async (userId: string, body: JobseekerPersonalInfoDTO) => {
         const user = await UserModel.findById(userId)
         if (!user) throw new NotFoundException('User not found')
+
+        await validateLocation(body.country, body.state, body.city)
 
         const session = await mongoose.startSession()
 

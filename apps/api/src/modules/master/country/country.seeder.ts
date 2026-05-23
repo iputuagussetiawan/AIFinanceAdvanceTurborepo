@@ -4,11 +4,18 @@ import countriesData from './data/countries.json'
 import { CountryModel } from './country.model'
 
 export const seedCountries = async (session: ClientSession) => {
-    console.log('🧹 Clearing existing countries...')
-    await CountryModel.deleteMany({}, { session })
+    console.log('🌱 Upserting countries...')
 
-    console.log(`🌱 Seeding ${countriesData.length} countries...`)
-    await CountryModel.insertMany(countriesData, { session })
+    await CountryModel.bulkWrite(
+        countriesData.map(c => ({
+            updateOne: {
+                filter: { code: c.code },
+                update: { $set: { name: c.name, dialCode: c.dialCode, flag: c.flag, isActive: c.isActive } },
+                upsert: true,
+            },
+        })),
+        { session },
+    )
 
-    console.log(`✅ [Seeder] ${countriesData.length} countries seeded.`)
+    console.log(`✅ [Seeder] ${countriesData.length} countries upserted.`)
 }

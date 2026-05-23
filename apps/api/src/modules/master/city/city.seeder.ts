@@ -6,8 +6,7 @@ import { CityModel } from './city.model'
 import citiesData from './data/cities.json'
 
 export const seedCities = async (session: ClientSession) => {
-    console.log('🧹 Clearing existing cities...')
-    await CityModel.deleteMany({}, { session })
+    console.log('🌱 Upserting cities...')
 
     const [countries, states] = await Promise.all([
         CountryModel.find({}, { _id: 1, code: 1 }, { session }),
@@ -15,7 +14,6 @@ export const seedCities = async (session: ClientSession) => {
     ])
 
     const countryMap = new Map(countries.map(c => [c.code, c._id]))
-
     const idToCode = new Map([...countryMap.entries()].map(([code, id]) => [id.toString(), code]))
     const stateMap = new Map(
         states.map(s => {
@@ -31,8 +29,18 @@ export const seedCities = async (session: ClientSession) => {
             if (!countryId || !stateId) return null
             return { name: c.name, state: stateId, country: countryId, isActive: c.isActive }
         })
-        .filter(Boolean)
+        .filter((c): c is NonNullable<typeof c> => c !== null)
 
-    await CityModel.insertMany(resolved, { session })
-    console.log(`✅ [Seeder] ${resolved.length} cities seeded.`)
+    await CityModel.bulkWrite(
+        resolved.map(c => ({
+            updateOne: {
+                filter: { name: c.name, state: c.state, country: c.country },
+                update: { $set: { isActive: c.isActive } },
+                upsert: true,
+            },
+        })),
+        { session },
+    )
+
+    console.log(`✅ [Seeder] ${resolved.length} cities upserted.`)
 }

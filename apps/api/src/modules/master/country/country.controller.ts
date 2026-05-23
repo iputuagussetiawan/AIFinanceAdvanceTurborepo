@@ -7,7 +7,8 @@ import { createCountrySchema, updateCountrySchema } from './country.validation'
 
 export const CountryController = {
     searchCountries: asyncHandler(async (req: Request, res: Response) => {
-        const search = req.query.search as string | undefined
+        const raw = req.query.search
+        const search = Array.isArray(raw) ? (raw.find(Boolean) as string | undefined) : (raw as string | undefined)
         const data = await CountryService.searchCountries(search)
 
         return res.status(HTTPSTATUS.OK).json({ message: 'Countries retrieved successfully', data })
