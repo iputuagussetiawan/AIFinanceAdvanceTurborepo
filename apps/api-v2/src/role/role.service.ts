@@ -4,7 +4,7 @@ import { eq, inArray } from 'drizzle-orm'
 
 import { DRIZZLE } from '../database/drizzle.provider'
 import * as schema from '../database/schema'
-import { roles } from '../database/schema/roles.schema'
+import { roles, type Role } from '../database/schema/roles.schema'
 import { rolePermissions } from '../database/schema/role-permissions.schema'
 import { userRoles } from '../database/schema/user-roles.schema'
 import { permissions } from '../database/schema/permissions.schema'
@@ -98,7 +98,7 @@ export class RoleService {
         return { message: 'Role removed from user' }
     }
 
-    async getUserRoles(userId: string) {
+    async getUserRoles(userId: string): Promise<Role[]> {
         const rows = await this.db
             .select({ role: roles })
             .from(userRoles)

@@ -8,6 +8,7 @@ import { MailModule } from './mail/mail.module'
 import { AuthModule } from './auth/auth.module'
 import { RoleModule } from './role/role.module'
 import { PermissionModule } from './permission/permission.module'
+import { UserModule } from './user/user.module'
 
 @Module({
     imports: [
@@ -17,6 +18,7 @@ import { PermissionModule } from './permission/permission.module'
         AuthModule,
         RoleModule,
         PermissionModule,
+        UserModule,
     ],
     controllers: [AppController],
     providers: [AppService],
