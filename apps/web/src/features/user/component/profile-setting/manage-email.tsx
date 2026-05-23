@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { UiFormInput } from '@/components/ui/UiFormInput'
 
-import { handleUpdateProfile } from '../../actions/user'
+import { userService } from '../../services/user-service'
 import { updateUserProfileValidation, type UpdateUserProfileDTO } from '../../types/user-type'
 
 interface ProfileSettingsProps {
@@ -36,12 +36,7 @@ export default function ManageEmail({ user, onSuccess }: ProfileSettingsProps) {
         if (!values.email || values.email === user.email) return
         setIsLoading(true)
         try {
-            const formData = new FormData()
-            formData.append('email', values.email)
-            await handleUpdateProfile(formData) // Your Server Action
-
-            await new Promise((resolve) => setTimeout(resolve, 1500))
-
+            await userService.updateProfile({ email: values.email })
             toast.success('Email updated! Please verify your new address.')
 
             // ✅ Close the dialog after success

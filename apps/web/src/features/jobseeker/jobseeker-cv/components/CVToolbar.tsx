@@ -253,7 +253,7 @@ export default function CVToolbar({
                 </div>
             </CVDrawer>
             <CVDrawer
-                className="sm:min-w-[1400px]"
+                className="sm:min-w-350"
                 direction="right"
                 title="Education"
                 open={isOpenEducationDrawer}
@@ -265,7 +265,7 @@ export default function CVToolbar({
             </CVDrawer>
 
             <CVDrawer
-                className="sm:min-w-[1400px]"
+                className="sm:min-w-350"
                 direction="right"
                 title="Experience"
                 open={isOpenExperienceDrawer}
@@ -276,7 +276,7 @@ export default function CVToolbar({
                 </div>
             </CVDrawer>
             <CVDrawer
-                className="sm:min-w-[800px]"
+                className="sm:min-w-200"
                 direction="right"
                 title="Skills"
                 open={isOpenSkillsDrawer}
@@ -286,7 +286,7 @@ export default function CVToolbar({
             </CVDrawer>
 
             <CVDrawer
-                className="sm:min-w-[1000px]"
+                className="sm:min-w-250"
                 direction="right"
                 title="Languages"
                 open={isOpenLanguagesDrawer}
