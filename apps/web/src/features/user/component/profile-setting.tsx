@@ -31,6 +31,9 @@ import { userService } from '../services/user-service'
 import { profileSettingSchema, type ProfileSettingDTO } from '../types/user-type'
 import ManageEmail from './profile-setting/manage-email'
 
+const MAX_FILE_SIZE = 2 * 1024 * 1024
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+
 interface ProfileSettingsProps {
     user: IUser
 }
@@ -79,12 +82,23 @@ export default function ProfileSettings({ user }: ProfileSettingsProps) {
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
-        if (file) {
-            const reader = new FileReader()
-            reader.onloadend = () => setPreviewImage(reader.result as string)
-            reader.readAsDataURL(file)
-            form.setValue('firstName', form.getValues('firstName'), { shouldDirty: true })
+        if (!file) return
+
+        if (file.size > MAX_FILE_SIZE) {
+            toast.error('Max image size is 2MB.')
+            e.target.value = ''
+            return
         }
+        if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+            toast.error('Only .jpg, .jpeg, .png and .webp formats are supported.')
+            e.target.value = ''
+            return
+        }
+
+        const reader = new FileReader()
+        reader.onloadend = () => setPreviewImage(reader.result as string)
+        reader.readAsDataURL(file)
+        form.setValue('firstName', form.getValues('firstName'), { shouldDirty: true })
     }
 
     function onSubmit(values: ProfileSettingDTO) {
