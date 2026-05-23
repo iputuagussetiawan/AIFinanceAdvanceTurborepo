@@ -10,7 +10,7 @@ import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/co
 import { UiFormInput } from '@/components/ui/UiFormInput'
 
 import { handleUpdateProfile } from '../../actions/user'
-import { updateProfileValidation, type UpdateProfileDTO } from '../../types/user-type'
+import { updateUserProfileValidation, type UpdateUserProfileDTO } from '../../types/user-type'
 
 interface ProfileSettingsProps {
     user: IUser
@@ -24,14 +24,15 @@ export default function ManageEmail({ user, onSuccess }: ProfileSettingsProps) {
         handleSubmit,
         reset,
         formState: { errors, isDirty }, // Destructure formState for cleaner code
-    } = useForm<UpdateProfileDTO>({
-        resolver: zodResolver(updateProfileValidation),
+    } = useForm<UpdateUserProfileDTO>({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        resolver: zodResolver(updateUserProfileValidation as any),
         defaultValues: {
             email: user.email,
         },
     })
 
-    const onSubmit = async (values: UpdateProfileDTO) => {
+    const onSubmit = async (values: UpdateUserProfileDTO) => {
         if (!values.email || values.email === user.email) return
         setIsLoading(true)
         try {

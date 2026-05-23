@@ -2,8 +2,6 @@ import { z } from 'zod'
 
 import type { IRole } from '@/features/role/types/role-type'
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024
-const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 
 export const userProfileValidation = z.object({
     firstName: z.string().min(1, 'First name is required').max(50, 'First name is too long').trim(),
@@ -55,22 +53,3 @@ export interface IUserResponse {
     joinedAt?: string
 }
 
-// Reuses firstName/lastName from userProfileValidation to avoid duplication
-export const profileValidation = userProfileValidation
-    .pick({ firstName: true, lastName: true })
-    .partial()
-    .extend({
-        profilePicture: z
-            .custom<File | undefined>()
-            .refine((file) => !file || file.size <= MAX_FILE_SIZE, 'Max image size is 2MB.')
-            .refine(
-                (file) => !file || ACCEPTED_IMAGE_TYPES.includes(file.type),
-                'Only .jpg, .jpeg, .png and .webp formats are supported.',
-            )
-            .optional()
-            .nullable(),
-    })
-
-export const updateProfileValidation = profileValidation.partial()
-export type profileDTO = z.infer<typeof profileValidation>
-export type UpdateProfileDTO = z.infer<typeof updateProfileValidation>
