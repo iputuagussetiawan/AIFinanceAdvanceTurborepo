@@ -10,6 +10,7 @@ import {
     HttpStatus,
 } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiCookieAuth, ApiBody } from '@nestjs/swagger'
 import { Request, Response } from 'express'
 
 import { AuthService } from './auth.service'
@@ -34,12 +35,16 @@ function clearAuthCookies(res: Response) {
     res.clearCookie('refreshToken', { httpOnly: true, secure: IS_PROD, sameSite: 'lax', path: '/' })
 }
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
     constructor(private authService: AuthService) {}
 
     @Post('register')
     @HttpCode(HttpStatus.CREATED)
+    @ApiOperation({ summary: 'Register new user' })
+    @ApiResponse({ status: 201, description: 'User created successfully' })
+    @ApiResponse({ status: 400, description: 'Validation error or email already exists' })
     async register(@Body() dto: RegisterDto) {
         await this.authService.register(dto)
         return { message: 'User created successfully' }
@@ -47,6 +52,9 @@ export class AuthController {
 
     @Post('verify/email')
     @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Verify email with OTP code' })
+    @ApiResponse({ status: 200, description: 'Email verified' })
+    @ApiResponse({ status: 400, description: 'Invalid or expired code' })
     async verifyEmail(@Body() dto: VerifyEmailDto) {
         return this.authService.verifyEmail(dto.code)
     }
@@ -54,6 +62,10 @@ export class AuthController {
     @Post('login')
     @UseGuards(LocalAuthGuard)
     @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Login with email and password' })
+    @ApiBody({ schema: { properties: { email: { type: 'string' }, password: { type: 'string' } }, required: ['email', 'password'] } })
+    @ApiResponse({ status: 200, description: 'Logged in, sets httpOnly cookies' })
+    @ApiResponse({ status: 401, description: 'Invalid credentials' })
     async login(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
         const user = req.user as any
         const session = await this.authService.upsertSession(user.id, req.headers['user-agent'])
@@ -78,6 +90,10 @@ export class AuthController {
 
     @Post('refresh')
     @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Refresh access token using refresh cookie' })
+    @ApiCookieAuth('accessToken')
+    @ApiResponse({ status: 200, description: 'New access token issued' })
+    @ApiResponse({ status: 401, description: 'Refresh token missing or invalid' })
     async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
         const token: string | undefined = req.cookies?.refreshToken
         if (!token) {
@@ -92,6 +108,9 @@ export class AuthController {
     @Post('logout')
     @UseGuards(JwtAuthGuard)
     @HttpCode(HttpStatus.OK)
+    @ApiBearerAuth('access-token')
+    @ApiOperation({ summary: 'Logout and clear auth cookies' })
+    @ApiResponse({ status: 200, description: 'Logged out' })
     async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
         const user = req.user as any
         if (user?.sessionId) await this.authService.deleteSession(user.sessionId)
@@ -101,12 +120,17 @@ export class AuthController {
 
     @Post('password/forgot')
     @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Send password reset email' })
+    @ApiResponse({ status: 200, description: 'Reset email sent if account exists' })
     async forgotPassword(@Body() dto: ForgotPasswordDto) {
         return this.authService.forgotPassword(dto.email)
     }
 
     @Post('password/reset')
     @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Reset password with token' })
+    @ApiResponse({ status: 200, description: 'Password reset successful' })
+    @ApiResponse({ status: 400, description: 'Invalid or expired token' })
     async resetPassword(@Body() dto: ResetPasswordDto, @Res({ passthrough: true }) res: Response) {
         const result = await this.authService.resetPassword(dto)
         res.clearCookie('accessToken', { httpOnly: true, secure: IS_PROD, sameSite: 'lax', path: '/' })
@@ -115,10 +139,14 @@ export class AuthController {
 
     @Get('google')
     @UseGuards(AuthGuard('google'))
+    @ApiOperation({ summary: 'Initiate Google OAuth login (redirects to Google)' })
+    @ApiResponse({ status: 302, description: 'Redirect to Google consent screen' })
     googleLogin() {}
 
     @Get('google/callback')
     @UseGuards(AuthGuard('google'))
+    @ApiOperation({ summary: 'Google OAuth callback (handled by Google)' })
+    @ApiResponse({ status: 302, description: 'Redirect to frontend after OAuth' })
     async googleCallback(@Req() req: Request, @Res() res: Response) {
         try {
             const user = req.user as any
