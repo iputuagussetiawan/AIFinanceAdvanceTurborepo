@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
+import * as bcrypt from 'bcrypt'
 import { NodePgDatabase } from 'drizzle-orm/node-postgres'
 import { eq } from 'drizzle-orm'
 
@@ -7,8 +8,9 @@ import * as schema from '../database/schema'
 import { users } from '../database/schema/users.schema'
 import { RoleService } from '../role/role.service'
 import { CloudinaryService } from '../cloudinary/cloudinary.service'
-import { NotFoundException } from '../common/exceptions/app-error'
+import { BadRequestException, NotFoundException } from '../common/exceptions/app-error'
 import { UpdateProfileDto } from './dto/update-profile.dto'
+import { UpdatePasswordDto } from './dto/update-password.dto'
 
 @Injectable()
 export class UserService {
@@ -103,5 +105,35 @@ export class UserService {
             })
 
         return { message: 'Avatar updated', user: updated }
+    }
+
+    async updatePassword(userId: string, dto: UpdatePasswordDto) {
+        if (dto.newPassword !== dto.confirmPassword) {
+            throw new BadRequestException('Passwords do not match')
+        }
+
+        const [user] = await this.db
+            .select({ id: users.id, password: users.password, provider: users.provider })
+            .from(users)
+            .where(eq(users.id, userId))
+            .limit(1)
+
+        if (!user) throw new NotFoundException('User not found')
+
+        if (user.provider !== 'email' || !user.password) {
+            throw new BadRequestException('Password update is only available for email accounts')
+        }
+
+        const isMatch = await bcrypt.compare(dto.currentPassword, user.password)
+        if (!isMatch) throw new BadRequestException('Current password is incorrect')
+
+        const hashed = await bcrypt.hash(dto.newPassword, 10)
+
+        await this.db
+            .update(users)
+            .set({ password: hashed, updatedAt: new Date() })
+            .where(eq(users.id, userId))
+
+        return { message: 'Password updated successfully' }
     }
 }
