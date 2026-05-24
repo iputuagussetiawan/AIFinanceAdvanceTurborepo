@@ -2,9 +2,10 @@ import { z } from 'zod'
 
 export const signupValidation = z
     .object({
-        name: z.string().min(2, 'Name must be at least 2 characters'),
+        firstName: z.string().min(1, 'First name is required').max(50),
+        lastName: z.string().min(1, 'Last name is required').max(50),
         email: z.string().email({ message: 'Please enter a valid email address' }),
-        password: z.string().min(8, 'Password must be at least 2 characters'),
+        password: z.string().min(8, 'Password must be at least 8 characters'),
         confirmPassword: z.string(),
     })
     .refine((data) => data.password === data.confirmPassword, {
@@ -36,28 +37,25 @@ export type IResetPasswordInputType = {
 }
 
 export interface IUserProfile {
-    _id: string // 🗝️ Backend uses MongoDB style _id
-    name: string
+    _id: string
+    firstName: string
+    lastName: string
     email: string
-    profilePicture: string // Cloudinary URL
+    profilePicture: string | null
     isActive: boolean
     lastLogin: string | null
-    onboardingComplete: boolean
-    createdAt: string // ISO Date String
-    updatedAt: string // ISO Date String
+    createdAt: string
+    updatedAt: string
 }
 
 export interface IUserResponse {
     message: string
     user: IUserProfile
-    access_token: string
 }
 
-// 🗝️ Also define the full API Response structure
 export interface ILoginResponse {
     message: string
     user: IUserProfile
-    access_token: string
 }
 
 export interface IVerifyInputType {

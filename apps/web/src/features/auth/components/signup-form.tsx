@@ -29,9 +29,10 @@ export function SignupForm({ className, ...props }: React.ComponentProps<'form'>
         setError,
         formState: { errors },
     } = useForm<SignupInputType>({
-        resolver: zodResolver(signupValidation),
+        resolver: zodResolver(signupValidation as any),
         defaultValues: {
-            name: '',
+            firstName: '',
+            lastName: '',
             email: '',
             password: '',
             confirmPassword: '',
@@ -116,14 +117,24 @@ export function SignupForm({ className, ...props }: React.ComponentProps<'form'>
                     </p>
                 </div>
 
-                {/* Full Name */}
+                {/* First Name */}
                 <UiFormInput
-                    label="Full Name"
-                    id="name"
-                    placeholder="John Doe"
+                    label="First Name"
+                    id="firstName"
+                    placeholder="John"
                     isSubmitting={isPending}
-                    error={errors.name}
-                    {...register('name')}
+                    error={errors.firstName}
+                    {...register('firstName')}
+                />
+
+                {/* Last Name */}
+                <UiFormInput
+                    label="Last Name"
+                    id="lastName"
+                    placeholder="Doe"
+                    isSubmitting={isPending}
+                    error={errors.lastName}
+                    {...register('lastName')}
                 />
 
                 {/* Email */}
