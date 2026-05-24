@@ -68,7 +68,8 @@ export class AuthController {
     @ApiResponse({ status: 401, description: 'Invalid credentials' })
     async login(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
         const user = req.user as any
-        const session = await this.authService.upsertSession(user.id, req.headers['user-agent'])
+        const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? req.socket.remoteAddress
+        const session = await this.authService.upsertSession(user.id, req.headers['user-agent'], ip)
         const accessToken = this.authService.signAccessToken({ userId: user.id, sessionId: session.id })
         const refreshToken = this.authService.signRefreshToken({ sessionId: session.id })
 
@@ -150,7 +151,8 @@ export class AuthController {
     async googleCallback(@Req() req: Request, @Res() res: Response) {
         try {
             const user = req.user as any
-            const session = await this.authService.upsertSession(user.id, req.headers['user-agent'])
+            const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? req.socket.remoteAddress
+            const session = await this.authService.upsertSession(user.id, req.headers['user-agent'], ip)
             const accessToken = this.authService.signAccessToken({ userId: user.id, sessionId: session.id })
             const refreshToken = this.authService.signRefreshToken({ sessionId: session.id })
 

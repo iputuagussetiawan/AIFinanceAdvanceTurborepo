@@ -51,7 +51,7 @@ export class AuthService {
         })
     }
 
-    async upsertSession(userId: string, userAgent: string | undefined) {
+    async upsertSession(userId: string, userAgent: string | undefined, ipAddress?: string) {
         const expiredAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
 
         const existing = await this.db
@@ -63,7 +63,7 @@ export class AuthService {
         if (existing.length) {
             const [updated] = await this.db
                 .update(sessions)
-                .set({ updatedAt: new Date(), expiredAt })
+                .set({ updatedAt: new Date(), expiredAt, ipAddress: ipAddress ?? existing[0].ipAddress })
                 .where(eq(sessions.id, existing[0].id))
                 .returning()
             return updated
@@ -71,7 +71,7 @@ export class AuthService {
 
         const [created] = await this.db
             .insert(sessions)
-            .values({ userId, userAgent, expiredAt })
+            .values({ userId, userAgent, ipAddress, expiredAt })
             .returning()
         return created
     }

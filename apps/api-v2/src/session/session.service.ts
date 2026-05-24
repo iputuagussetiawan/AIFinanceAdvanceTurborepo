@@ -37,6 +37,8 @@ export class SessionService {
         return rows.map((s) => ({
             id: s.id,
             isCurrent: s.id === currentSessionId,
+            ipAddress: s.ipAddress ?? null,
+            userAgent: s.userAgent ?? null,
             expiredAt: s.expiredAt,
             lastActiveAt: s.updatedAt,
             createdAt: s.createdAt,
@@ -59,6 +61,25 @@ export class SessionService {
         await this.db.delete(sessions).where(eq(sessions.id, sessionId))
 
         return { message: 'Session revoked' }
+    }
+
+    async getOtherSessions(userId: string, currentSessionId: string) {
+        const rows = await this.db
+            .select()
+            .from(sessions)
+            .where(and(eq(sessions.userId, userId), ne(sessions.id, currentSessionId)))
+            .orderBy(sessions.updatedAt)
+
+        return rows.map((s) => ({
+            id: s.id,
+            isCurrent: false,
+            ipAddress: s.ipAddress ?? null,
+            userAgent: s.userAgent ?? null,
+            expiredAt: s.expiredAt,
+            lastActiveAt: s.updatedAt,
+            createdAt: s.createdAt,
+            ...this.parseDevice(s.userAgent),
+        }))
     }
 
     async revokeOtherSessions(userId: string, currentSessionId: string) {

@@ -30,12 +30,12 @@ export class UserController {
     constructor(private userService: UserService) {}
 
     @Get('me')
-    @ApiOperation({ summary: 'Get current user profile with roles and permissions' })
+    @ApiOperation({ summary: 'Get current user profile with roles, permissions and sessions' })
     @ApiResponse({ status: 200, description: 'User profile' })
     @ApiResponse({ status: 401, description: 'Unauthorized' })
     getMe(@Req() req: Request) {
         const user = req.user as any
-        return this.userService.getMe(user.userId)
+        return this.userService.getMe(user.userId, user.sessionId)
     }
 
     @Patch('profile')

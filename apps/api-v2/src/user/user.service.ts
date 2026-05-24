@@ -8,6 +8,7 @@ import * as schema from '../database/schema'
 import { users } from '../database/schema/users.schema'
 import { RoleService } from '../role/role.service'
 import { CloudinaryService } from '../cloudinary/cloudinary.service'
+import { SessionService } from '../session/session.service'
 import { BadRequestException, NotFoundException } from '../common/exceptions/app-error'
 import { UpdateProfileDto } from './dto/update-profile.dto'
 import { UpdatePasswordDto } from './dto/update-password.dto'
@@ -18,9 +19,10 @@ export class UserService {
         @Inject(DRIZZLE) private db: NodePgDatabase<typeof schema>,
         private roleService: RoleService,
         private cloudinaryService: CloudinaryService,
+        private sessionService: SessionService,
     ) {}
 
-    async getMe(userId: string) {
+    async getMe(userId: string, sessionId: string) {
         const [user] = await this.db
             .select({
                 id: users.id,
@@ -43,11 +45,13 @@ export class UserService {
 
         const userRoles = await this.roleService.getUserRoles(userId)
         const permissions = await this.roleService.getUserPermissions(userId)
+        const sessions = await this.sessionService.getSessions(userId, sessionId)
 
         return {
             ...user,
             role: userRoles[0]?.name ?? null,
             permissions,
+            sessions,
         }
     }
 

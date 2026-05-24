@@ -20,6 +20,14 @@ export class SessionController {
         return this.sessionService.getSessions(user.userId, user.sessionId)
     }
 
+    @Get('others')
+    @ApiOperation({ summary: 'Get all sessions except current' })
+    @ApiResponse({ status: 200, description: 'List of other active sessions' })
+    getOtherSessions(@Req() req: Request) {
+        const user = req.user as any
+        return this.sessionService.getOtherSessions(user.userId, user.sessionId)
+    }
+
     @Delete('others')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Revoke all sessions except current' })
