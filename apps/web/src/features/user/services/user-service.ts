@@ -11,14 +11,14 @@ export const userService = {
 
     updateProfile: (data: UpdateUserProfileDTO) =>
         api.API<IUserResponse>('/api/user/profile', {
-            method: 'PUT',
+            method: 'PATCH',
             body: JSON.stringify(data),
             cache: 'no-store',
         }),
 
     updatePhoto: (formData: FormData) =>
         api.API<IUserResponse>('/api/user/photo', {
-            method: 'PUT',
+            method: 'PATCH',
             body: formData,
             cache: 'no-store',
         }),
