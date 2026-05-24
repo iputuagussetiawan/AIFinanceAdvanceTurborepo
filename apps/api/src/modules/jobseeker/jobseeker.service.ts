@@ -5,7 +5,6 @@ import { CountryModel } from '../master/country/country.model'
 import { StateModel } from '../master/state/state.model'
 import { CityModel } from '../master/city/city.model'
 import MemberModel from '../member/member.model'
-import { Roles } from '../role/role.enum'
 import RoleModel from '../role/roles-permission.model'
 import UserModel from '../user/user.model'
 import JobseekerModel from './jobseeker.model'
@@ -53,7 +52,7 @@ export const JobseekerService = {
                 { new: true, upsert: true, runValidators: true, session },
             )
 
-            const jobseekerRole = await RoleModel.findOne({ name: Roles.JOBSEEKER }).session(session)
+            const jobseekerRole = await RoleModel.findOne({ name: 'JOBSEEKER' }).session(session)
             if (!jobseekerRole) throw new NotFoundException('Jobseeker role not found')
 
             await MemberModel.findOneAndUpdate(

@@ -17,11 +17,10 @@ import {
 import { hashValue } from '../../utils/bcrypt'
 import { anHourFromNow, fortyFiveMinutesFromNow, threeMinutesAgo } from '../../utils/date-time'
 import MemberModel from '../member/member.model'
-import { Roles } from '../role/role.enum'
 import RoleModel from '../role/roles-permission.model'
-import AccountModel from '../user/account.model'
+import AccountModel from './account.model'
 import UserModel from '../user/user.model'
-import VerificationCodeModel from '../user/verification.model'
+import VerificationCodeModel from './verification.model'
 import type { ResetPasswordDto } from './auth.validation'
 
 export const AuthService = {
@@ -91,7 +90,7 @@ export const AuthService = {
             })
             await account.save({ session })
 
-            const guestRole = await RoleModel.findOne({ name: Roles.GUEST }).session(session)
+            const guestRole = await RoleModel.findOne({ name: 'GUEST' }).session(session)
             if (!guestRole) throw new NotFoundException('Guest role not found')
 
             const member = new MemberModel({ userId: user._id, role: guestRole._id, joinedAt: new Date() })
