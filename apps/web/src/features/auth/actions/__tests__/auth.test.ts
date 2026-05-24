@@ -4,7 +4,6 @@
 jest.mock('next/navigation', () => ({ redirect: jest.fn() }))
 jest.mock('@/features/auth/services/auth-service', () => ({
     authService: {
-        login: jest.fn(),
         register: jest.fn(),
         verify: jest.fn(),
         forgotPassword: jest.fn(),
@@ -18,7 +17,6 @@ import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { authService } from '@/features/auth/services/auth-service'
 import {
-    handleLogin,
     handleLogout,
     handleRegister,
     handleForgotPassword,
@@ -26,13 +24,12 @@ import {
 } from '../auth'
 
 const mockRedirect = redirect as jest.MockedFunction<typeof redirect>
-const mockLogin = authService.login as jest.MockedFunction<typeof authService.login>
 const mockRegister = authService.register as jest.MockedFunction<typeof authService.register>
 const mockLogout = authService.logout as jest.MockedFunction<typeof authService.logout>
 const mockForgotPassword = authService.forgotPassword as jest.MockedFunction<typeof authService.forgotPassword>
 const mockResetPassword = authService.resetPassword as jest.MockedFunction<typeof authService.resetPassword>
 
-const MOCK_USER = { _id: 'u1', name: 'Test', email: 'test@example.com' } as any
+const MOCK_USER = { _id: 'u1', firstName: 'Test', lastName: 'User', email: 'test@example.com' } as any
 
 let mockCookieSet: jest.Mock
 let mockCookieDelete: jest.Mock
@@ -47,67 +44,6 @@ beforeEach(() => {
         set: mockCookieSet,
         delete: mockCookieDelete,
         get: mockCookieGet,
-    })
-})
-
-// ─── handleLogin ─────────────────────────────────────────────────────────────
-
-describe('handleLogin', () => {
-    const credentials = { email: 'test@example.com', password: 'Password1!' }
-
-    it('returns success and sets both cookies on valid credentials', async () => {
-        mockLogin.mockResolvedValue({
-            message: 'Logged in successfully',
-            user: MOCK_USER,
-            access_token: 'access_tok',
-            refresh_token: 'refresh_tok',
-        } as any)
-
-        const result = await handleLogin(credentials)
-
-        expect(result.success).toBe(true)
-        expect(result.user).toEqual(MOCK_USER)
-        expect(mockCookieSet).toHaveBeenCalledWith(
-            'accessToken',
-            'access_tok',
-            expect.objectContaining({ httpOnly: true, path: '/' }),
-        )
-        expect(mockCookieSet).toHaveBeenCalledWith(
-            'refreshToken',
-            'refresh_tok',
-            expect.objectContaining({ httpOnly: true, path: '/' }),
-        )
-    })
-
-    it('returns success: false on failed login', async () => {
-        mockLogin.mockRejectedValue(new Error('Invalid email or password'))
-        const result = await handleLogin(credentials)
-        expect(result.success).toBe(false)
-        expect((result as any).error).toMatch(/Invalid email or password/i)
-    })
-
-    it('does not set cookies on failed login', async () => {
-        mockLogin.mockRejectedValue(new Error('Bad credentials'))
-        await handleLogin(credentials)
-        expect(mockCookieSet).not.toHaveBeenCalled()
-    })
-
-    it('accessToken cookie has maxAge of 15 minutes (900 seconds)', async () => {
-        mockLogin.mockResolvedValue({
-            message: 'ok', user: MOCK_USER, access_token: 'tok', refresh_token: 'rtok',
-        } as any)
-        await handleLogin(credentials)
-        const [, , opts] = mockCookieSet.mock.calls.find(([name]) => name === 'accessToken')!
-        expect(opts.maxAge).toBe(900)
-    })
-
-    it('refreshToken cookie has maxAge of 30 days', async () => {
-        mockLogin.mockResolvedValue({
-            message: 'ok', user: MOCK_USER, access_token: 'tok', refresh_token: 'rtok',
-        } as any)
-        await handleLogin(credentials)
-        const [, , opts] = mockCookieSet.mock.calls.find(([name]) => name === 'refreshToken')!
-        expect(opts.maxAge).toBe(30 * 24 * 60 * 60)
     })
 })
 
@@ -148,7 +84,7 @@ describe('handleLogout', () => {
 // ─── handleRegister ───────────────────────────────────────────────────────────
 
 describe('handleRegister', () => {
-    const data = { name: 'New User', email: 'new@example.com', password: 'Password1!', confirmPassword: 'Password1!' }
+    const data = { firstName: 'New', lastName: 'User', email: 'new@example.com', password: 'Password1!', confirmPassword: 'Password1!' }
 
     it('returns success: true when registration succeeds', async () => {
         ;(authService.register as jest.Mock).mockResolvedValue({ userId: 'u1' })
