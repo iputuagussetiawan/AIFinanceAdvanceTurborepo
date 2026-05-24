@@ -67,11 +67,9 @@ export const AuthService = {
         }
     },
 
-    registerUser: async (body: { email: string; name: string; password: string }) => {
-        const { email, name, password } = body
+    registerUser: async (body: { email: string; firstName: string; lastName: string; password: string }) => {
+        const { email, firstName, lastName, password } = body
         const session = await mongoose.startSession()
-        const [firstName, ...rest] = name.trim().split(' ')
-        const lastName = rest.join(' ')
 
         try {
             session.startTransaction()
