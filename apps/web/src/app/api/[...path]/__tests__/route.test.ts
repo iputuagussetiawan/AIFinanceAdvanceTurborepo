@@ -55,7 +55,7 @@ function mockFetch(body: unknown, status = 200, headers: Record<string, string> 
 describe('CSRF validation', () => {
     it('allows GET requests without CSRF token', async () => {
         mockFetch({ data: 'ok' })
-        const req = makeRequest('/api/user/current', 'GET')
+        const req = makeRequest('/api/user/me', 'GET')
         const res = await GET(req)
         expect(res.status).not.toBe(403)
         expect(global.fetch).toHaveBeenCalled()
@@ -129,10 +129,10 @@ describe('CSRF validation', () => {
 describe('proxy URL building', () => {
     it('strips /api/ prefix and appends to BACKEND_URL', async () => {
         mockFetch({ ok: true })
-        const req = makeRequest('/api/user/current', 'GET')
+        const req = makeRequest('/api/user/me', 'GET')
         await GET(req)
         expect(global.fetch).toHaveBeenCalledWith(
-            expect.stringContaining('/user/current'),
+            expect.stringContaining('/user/me'),
             expect.any(Object),
         )
     })
@@ -172,7 +172,7 @@ describe('silent token refresh on 401', () => {
                 body: JSON.stringify({ data: 'retried' }),
             })
 
-        const req = makeRequest('/api/user/current', 'GET', {
+        const req = makeRequest('/api/user/me', 'GET', {
             cookies: { refreshToken: REFRESH_TOKEN },
         })
         const res = await GET(req)
@@ -194,7 +194,7 @@ describe('silent token refresh on 401', () => {
             body: null,
         })
 
-        const req = makeRequest('/api/user/current', 'GET')
+        const req = makeRequest('/api/user/me', 'GET')
         const res = await GET(req)
 
         expect(res.status).toBe(401)
@@ -210,7 +210,7 @@ describe('silent token refresh on 401', () => {
                 ok: false, status: 401, json: jest.fn().mockResolvedValue({}),
             })
 
-        const req = makeRequest('/api/user/current', 'GET', {
+        const req = makeRequest('/api/user/me', 'GET', {
             cookies: { refreshToken: REFRESH_TOKEN },
         })
         const res = await GET(req)

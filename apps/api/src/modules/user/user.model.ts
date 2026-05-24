@@ -32,14 +32,12 @@ const userSchema = new Schema<UserDocument>(
             type: String,
             required: false,
             trim: true,
-            uppercase: true,
             default: '',
         },
         lastName: {
             type: String,
             required: false,
             trim: true,
-            uppercase: true,
             default: '',
         },
         email: {

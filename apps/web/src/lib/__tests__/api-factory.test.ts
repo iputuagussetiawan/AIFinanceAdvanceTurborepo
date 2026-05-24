@@ -64,9 +64,9 @@ describe('client-side CSRF header', () => {
 describe('URL building', () => {
     it('builds correct full URL from endpoint', async () => {
         mockFetch({ data: true })
-        await api.API('/api/user/current')
+        await api.API('/api/user/me')
         expect(global.fetch).toHaveBeenCalledWith(
-            `${BASE}/api/user/current`,
+            `${BASE}/api/user/me`,
             expect.any(Object),
         )
     })

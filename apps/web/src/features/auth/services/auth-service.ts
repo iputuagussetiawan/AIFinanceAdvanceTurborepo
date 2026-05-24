@@ -48,9 +48,9 @@ export const authService = {
             cache: 'no-store', // Always get fresh data
         }),
     getMe: () =>
-        api.API<IUserResponse>('/api/user/current', {
+        api.API<IUserResponse>('/api/user/me', {
             method: 'GET',
-            cache: 'no-store', // Always get fresh data
+            cache: 'no-store',
         }),
 
     logout: () =>

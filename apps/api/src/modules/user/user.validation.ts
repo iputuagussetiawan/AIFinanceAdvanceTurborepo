@@ -19,5 +19,5 @@ export const userObject = z.object({
     bio: z.string().max(600, 'Bio must be less than 600 characters').trim().optional().or(z.literal('')),
 })
 
-export const updateUserSchema = userObject.partial()
+export const updateUserSchema = userObject.omit({ email: true, password: true }).partial()
 export type UpdateUserInputType = z.infer<typeof updateUserSchema>

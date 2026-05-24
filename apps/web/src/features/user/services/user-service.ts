@@ -4,20 +4,20 @@ import type { IUserResponse, UpdateUserProfileDTO } from '../types/user-type'
 
 export const userService = {
     getMe: () =>
-        api.API<IUserResponse>('/api/user/current', {
+        api.API<IUserResponse>('/api/user/me', {
             method: 'GET',
             cache: 'no-store',
         }),
 
     updateProfile: (data: UpdateUserProfileDTO) =>
-        api.API<IUserResponse>('/api/user/update-profile', {
+        api.API<IUserResponse>('/api/user/profile', {
             method: 'PUT',
             body: JSON.stringify(data),
             cache: 'no-store',
         }),
 
     updatePhoto: (formData: FormData) =>
-        api.API<IUserResponse>('/api/user/update-photo', {
+        api.API<IUserResponse>('/api/user/photo', {
             method: 'PUT',
             body: formData,
             cache: 'no-store',

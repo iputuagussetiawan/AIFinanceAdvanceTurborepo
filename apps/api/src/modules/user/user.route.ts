@@ -5,8 +5,8 @@ import { UserController } from './user.controller'
 
 const userRoutes = Router()
 
-userRoutes.get('/current', UserController.getCurrentUser)
-userRoutes.put('/update-profile', UserController.updateProfile)
-userRoutes.put('/update-photo', upload.single('profilePicture'), UserController.updatePhoto)
+userRoutes.get('/me', UserController.getCurrentUser)
+userRoutes.put('/profile', UserController.updateProfile)
+userRoutes.put('/photo', upload.single('profilePicture'), UserController.updatePhoto)
 
 export default userRoutes
