@@ -1,75 +1,54 @@
 'use client'
 
-import React from 'react'
-import { useFormContext } from 'react-hook-form'
+import { useState } from 'react'
+import { useFormContext, useController } from 'react-hook-form'
 
 import type { JobseekerDTO } from '@/features/onboarding/types/jobseeker-type'
 import { UiFormInput } from '@/components/ui/UiFormInput'
-import { UiFormSearchSelect } from '@/components/ui/UiFormSearchSelect'
+import { Switch } from '@/components/ui/switch'
+import { CountryAutoSuggest } from '@/features/master/country/components/CountryAutoSuggest'
+import { StateAutoSuggest } from '@/features/master/state/components/StateAutoSuggest'
+import { CityAutoSuggest } from '@/features/master/city/components/CityAutoSuggest'
 
-const countryOptions = [
-    { label: 'Indonesia', value: 'id' },
-    { label: 'United States', value: 'us' },
-    { label: 'Japan', value: 'jp' },
-]
+const PersonalInfo = () => {
+    const [countryDisplay, setCountryDisplay] = useState('')
+    const [stateDisplay, setStateDisplay] = useState('')
+    const [cityDisplay, setCityDisplay] = useState('')
 
-const phoneTypeOptions = [
-    { label: 'Mobile', value: 'Mobile' },
-    { label: 'Home', value: 'Home' },
-    { label: 'Work', value: 'Work' },
-]
-
-// 👇 Accept isAuthLoading from parent
-interface PersonalInfoProps {
-    isAuthLoading?: boolean
-}
-
-const PersonalInfo = ({ isAuthLoading = false }: PersonalInfoProps) => {
     const {
         register,
+        control,
+        setValue,
         formState: { errors, isSubmitting },
     } = useFormContext<JobseekerDTO>()
+
+    const { field: countryField } = useController({ name: 'country', control })
+    const { field: stateField } = useController({ name: 'state', control })
+    const { field: cityField } = useController({ name: 'city', control })
+    const { field: openToWorkField } = useController({ name: 'openToWork', control })
 
     return (
         <div className="space-y-8">
             <div>
-                <h2 className="text-xl font-semibold">Personal Information</h2>
+                <h2 className="text-xl font-semibold">Professional Profile</h2>
                 <p className="text-muted-foreground text-sm">
-                    Set up your credentials and contact details.
+                    Set up your professional details and location.
                 </p>
             </div>
 
-            {/* Name Section */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <UiFormInput
-                    {...register('firstName')}
-                    label="First Name"
-                    placeholder="Jane"
-                    error={errors.firstName}
-                    isSubmitting={isSubmitting || isAuthLoading}
-                />
-                <UiFormInput
-                    {...register('lastName')}
-                    label="Last Name"
-                    placeholder="Doe"
-                    error={errors.lastName}
-                    isSubmitting={isSubmitting || isAuthLoading}
-                />
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <UiFormInput
-                    {...register('additionalName')}
-                    label="Additional Name (Optional)"
-                    placeholder="Middle name or nickname"
-                    error={errors.additionalName}
+                    {...register('jobTitle')}
+                    label="Job Title (Optional)"
+                    placeholder="e.g. Senior Software Engineer"
+                    error={errors.jobTitle}
                     isSubmitting={isSubmitting}
                 />
                 <UiFormInput
-                    {...register('pronouns')}
-                    label="Pronouns (Optional)"
-                    placeholder="e.g. she/her"
-                    error={errors.pronouns}
+                    {...register('currentPosition')}
+                    label="Current Position"
+                    placeholder="e.g. Software Engineer"
+                    error={errors.currentPosition}
                     isSubmitting={isSubmitting}
                 />
             </div>
@@ -82,81 +61,64 @@ const PersonalInfo = ({ isAuthLoading = false }: PersonalInfoProps) => {
                 isSubmitting={isSubmitting}
             />
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <UiFormInput
-                    {...register('currentPosition')}
-                    label="Current Position"
-                    placeholder="e.g. Software Engineer"
-                    error={errors.currentPosition}
-                    isSubmitting={isSubmitting}
-                />
-                <UiFormInput
-                    {...register('industry')}
-                    label="Industry"
-                    placeholder="e.g. Technology"
-                    error={errors.industry}
-                    isSubmitting={isSubmitting}
-                />
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <UiFormSearchSelect
-                    name="country"
-                    label="Country"
-                    options={countryOptions}
-                    error={errors.country}
-                    isSubmitting={isSubmitting}
-                />
-                <UiFormInput
-                    {...register('city')}
-                    label="City"
-                    placeholder="e.g. Jakarta"
-                    error={errors.city}
-                    isSubmitting={isSubmitting}
-                />
-            </div>
-
             <UiFormInput
-                {...register('address')}
-                label="Address"
-                placeholder="Full residential address"
-                error={errors.address}
+                {...register('industry')}
+                label="Industry"
+                placeholder="e.g. Technology"
+                error={errors.industry}
                 isSubmitting={isSubmitting}
             />
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <div className="md:col-span-2">
-                    <UiFormInput
-                        {...register('phoneNumber')}
-                        label="Phone Number"
-                        placeholder="+62..."
-                        error={errors.phoneNumber}
-                        isSubmitting={isSubmitting}
-                    />
-                </div>
-                <UiFormSearchSelect
-                    name="phoneType"
-                    label="Type"
-                    options={phoneTypeOptions}
-                    error={errors.phoneType}
-                    isSubmitting={isSubmitting}
+                <CountryAutoSuggest
+                    value={countryDisplay}
+                    error={errors.country}
+                    onValueChange={setCountryDisplay}
+                    onSelect={(item) => {
+                        countryField.onChange(item.id)
+                        setCountryDisplay(item.name)
+                        setValue('state', '')
+                        setValue('city', '')
+                        setStateDisplay('')
+                        setCityDisplay('')
+                    }}
+                />
+                <StateAutoSuggest
+                    value={stateDisplay}
+                    countryId={countryField.value || undefined}
+                    error={errors.state}
+                    onValueChange={setStateDisplay}
+                    onSelect={(item) => {
+                        stateField.onChange(item.id)
+                        setStateDisplay(item.name)
+                        setValue('city', '')
+                        setCityDisplay('')
+                    }}
+                />
+                <CityAutoSuggest
+                    value={cityDisplay}
+                    stateId={stateField.value || undefined}
+                    countryId={countryField.value || undefined}
+                    error={errors.city}
+                    onValueChange={setCityDisplay}
+                    onSelect={(item) => {
+                        cityField.onChange(item.id)
+                        setCityDisplay(item.name)
+                    }}
                 />
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <UiFormInput
-                    {...register('birthday')}
-                    type="date"
-                    label="Birthday"
-                    error={errors.birthday}
-                    isSubmitting={isSubmitting}
-                />
-                <UiFormInput
-                    {...register('website')}
-                    label="Website (Optional)"
-                    placeholder="https://yourportfolio.com"
-                    error={errors.website}
-                    isSubmitting={isSubmitting}
+            <div className="flex items-center justify-between rounded-lg border p-4">
+                <div>
+                    <p className="text-sm font-medium">Open to Work</p>
+                    <p className="text-muted-foreground text-xs">
+                        Let recruiters know you're available
+                    </p>
+                </div>
+                <Switch
+                    checked={!!openToWorkField.value}
+                    onCheckedChange={openToWorkField.onChange}
+                    disabled={isSubmitting}
                 />
             </div>
         </div>

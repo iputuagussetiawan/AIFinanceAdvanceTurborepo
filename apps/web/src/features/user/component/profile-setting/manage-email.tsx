@@ -9,8 +9,8 @@ import { Button } from '@/components/ui/button'
 import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { UiFormInput } from '@/components/ui/UiFormInput'
 
-import { handleUpdateProfile } from '../../actions/user'
-import { updateProfileValidation, type UpdateProfileDTO } from '../../types/user-type'
+import { userService } from '../../services/user-service'
+import { updateUserProfileValidation, type UpdateUserProfileDTO } from '../../types/user-type'
 
 interface ProfileSettingsProps {
     user: IUser
@@ -24,23 +24,19 @@ export default function ManageEmail({ user, onSuccess }: ProfileSettingsProps) {
         handleSubmit,
         reset,
         formState: { errors, isDirty }, // Destructure formState for cleaner code
-    } = useForm<UpdateProfileDTO>({
-        resolver: zodResolver(updateProfileValidation),
+    } = useForm<UpdateUserProfileDTO>({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        resolver: zodResolver(updateUserProfileValidation as any),
         defaultValues: {
             email: user.email,
         },
     })
 
-    const onSubmit = async (values: UpdateProfileDTO) => {
+    const onSubmit = async (values: UpdateUserProfileDTO) => {
         if (!values.email || values.email === user.email) return
         setIsLoading(true)
         try {
-            const formData = new FormData()
-            formData.append('email', values.email)
-            await handleUpdateProfile(formData) // Your Server Action
-
-            await new Promise((resolve) => setTimeout(resolve, 1500))
-
+            await userService.updateProfile({ email: values.email })
             toast.success('Email updated! Please verify your new address.')
 
             // ✅ Close the dialog after success

@@ -1,18 +1,19 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Briefcase, Check, GraduationCap, User } from 'lucide-react'
 import { FormProvider, useForm, type Resolver } from 'react-hook-form'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 
-import { handleCreateEducation } from '@/features/education/actions/education-action'
-import { handleCreateExperience } from '@/features/experience/actions/experience-action'
-import { handleSaveJobseekerProfile } from '@/features/jobseeker/actions/jobseeker-action'
+import { educationService } from '@/features/jobseeker/jobseeker-education/services/education-service'
+import { experienceService } from '@/features/jobseeker/jobseeker-experience/services/experience-service'
+import { jobseekerService } from '@/features/jobseeker/services/jobseeker-service'
 import { OnboardingStepper } from '@/features/onboarding/components/onboarding-stepper'
 import { Button } from '@/components/ui/button'
 import { useFormPersist } from '@/hooks/use-form-persist'
-import useAuth from '@/hooks/use-auth'
 
 import { jobseekerValidation, type JobseekerDTO } from '../types/jobseeker-type'
 import { FormNavigation } from './jobseeker/onboarding-stepper-navigation'
@@ -35,30 +36,26 @@ const OnboardingJobseeker = () => {
     const [isSubmitted, setIsSubmitted] = useState(false)
 
     // 👇 1. Fetch authenticated user data
-    const { data: session, isLoading } = useAuth()
-
     const form = useForm<JobseekerDTO>({
         resolver: zodResolver(jobseekerValidation as any) as Resolver<JobseekerDTO>,
         mode: 'onTouched',
         defaultValues: {
-            firstName: '',
-            lastName: '',
+            jobTitle: '',
             headline: '',
             currentPosition: '',
             industry: '',
             country: '',
+            state: '',
             city: '',
-            phoneNumber: '',
-            phoneType: '',
-            address: '',
-            birthday: '',
+            openToWork: false,
             educations: [
                 {
-                    schoolName: '',
+                    institution: '',
+                    institutionName: '',
                     degree: '',
                     fieldOfStudy: '',
-                    startDate: '' as unknown as Date,
-                    endDate: '' as unknown as Date,
+                    startDate: '',
+                    endDate: '',
                     grade: '',
                     activities: '',
                     description: '',
@@ -69,38 +66,43 @@ const OnboardingJobseeker = () => {
         },
     })
 
-    // 👇 2. Once session loads, patch firstName & lastName into the form
-    useEffect(() => {
-        if (isLoading || !session?.user) return
-
-        form.reset(
-            {
-                firstName: session.user.firstName ?? '',
-                lastName: session.user.lastName ?? '',
-            },
-            {
-                keepValues: true,  // keeps all other fields untouched
-                keepErrors: false,
-                keepDirty: false,
-            }
-        )
-    }, [isLoading, session, form.reset])
-
     const { clearStorage } = useFormPersist(form, 'jobseeker-onboarding-data')
+
+    const queryClient = useQueryClient()
+
+    const { mutate: submitOnboarding, isPending } = useMutation({
+        mutationFn: async (data: JobseekerDTO) => {
+            // Must run sequentially — all three call UserModel.findById+save on the
+            // same document. Parallel execution causes a Mongoose VersionError
+            // because the first save increments __v before the others finish.
+            await jobseekerService.saveProfile(data)
+
+            await educationService.updateAll(data.educations)
+
+            if (data.experiences.length > 0) {
+                await experienceService.updateAll(data.experiences)
+            }
+        },
+        onSuccess: () => {
+            clearStorage()
+            queryClient.invalidateQueries({ queryKey: ['authUser'] })
+            setIsSubmitted(true)
+            toast.success('Profile created successfully!')
+        },
+        onError: (error: Error) => {
+            toast.error(error.message || 'Submission failed. Please try again.')
+        },
+    })
 
     const stepConfig = {
         1: {
             fields: [
-                'firstName',
-                'lastName',
                 'headline',
                 'currentPosition',
                 'industry',
                 'country',
+                'state',
                 'city',
-                'phoneNumber',
-                'address',
-                'birthday',
             ],
         },
         2: { fields: ['educations'] },
@@ -118,25 +120,9 @@ const OnboardingJobseeker = () => {
 
     const prev = () => setCurrentStep((s) => Math.max(s - 1, 1))
 
-    const onSubmit = async (data: JobseekerDTO) => {
+    const onSubmit = (data: JobseekerDTO) => {
         if (currentStep !== totalSteps) return
-
-        try {
-            console.log('Final Submission:', data)
-            const result = await handleSaveJobseekerProfile(data)
-            const resultEducation = await handleCreateEducation(data.educations[0])
-            const resultExperience = await handleCreateExperience(data.experiences[0])
-
-            if (result.success && resultEducation.success && resultExperience.success) {
-                clearStorage()
-                setIsSubmitted(true)
-            } else {
-                console.error('Server Logic Error:', result.error)
-                alert(result.error)
-            }
-        } catch (error) {
-            console.error('Submission failed', error)
-        }
+        submitOnboarding(data)
     }
 
     // Success View
@@ -183,8 +169,7 @@ const OnboardingJobseeker = () => {
                             exit={{ opacity: 0, x: -10 }}
                             transition={{ duration: 0.2 }}
                         >
-                            {/* 👇 3. Pass isLoading so fields disable while session fetches */}
-                            {currentStep === 1 && <PersonalInfo isAuthLoading={isLoading} />}
+                            {currentStep === 1 && <PersonalInfo />}
                             {currentStep === 2 && <EducationInfo />}
                             {currentStep === 3 && <ExperienceInfo />}
                             {currentStep === 4 && <ReviewStep />}
@@ -195,7 +180,7 @@ const OnboardingJobseeker = () => {
                         totalSteps={totalSteps}
                         prev={prev}
                         next={next}
-                        isSubmitting={form.formState.isSubmitting}
+                        isSubmitting={isPending}
                     />
                 </form>
             </FormProvider>

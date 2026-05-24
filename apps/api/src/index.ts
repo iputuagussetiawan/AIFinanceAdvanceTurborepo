@@ -19,15 +19,15 @@ import cookieParser from 'cookie-parser'
 
 import { passportAuthenticateJWT } from './config/passport.config'
 import authRoutes from './modules/auth/auth.route'
-import companyRoutes from './modules/company/company.route'
-import educationRoutes from './modules/education/education.route'
-import experienceRoutes from './modules/experience/experience.route'
-import institutionRoutes from './modules/institution/institution.route'
+import cityRoutes from './modules/master/city/city.route'
+import companyRoutes from './modules/master/company/company.route'
+import countryRoutes from './modules/master/country/country.route'
+import stateRoutes from './modules/master/state/state.route'
+import institutionRoutes from './modules/master/institution/institution.route'
 import jobseekerRoutes from './modules/jobseeker/jobseeker.route'
-import languageRoutes from './modules/language/language.route'
-// import memberRoutes from './modules/member/member.route'
+import languageRoutes from './modules/master/language/language.route'
 import sessionRoutes from './modules/session/session.route'
-import skillRoutes from './modules/skill/skill.route'
+import skillRoutes from './modules/master/skill/skill.route'
 import userRoutes from './modules/user/user.route'
 
 const app = express()
@@ -78,20 +78,21 @@ app.use(`${BASE_PATH}/auth/login`, authLimiter)
 app.use(`${BASE_PATH}/auth/refresh`, authLimiter)
 app.use(`${BASE_PATH}/auth/register`, authLimiter)
 app.use(`${BASE_PATH}/auth`, authRoutes)
-app.use(`${BASE_PATH}/user`, passportAuthenticateJWT, userRoutes)
-app.use(`${BASE_PATH}/company`, passportAuthenticateJWT, companyRoutes)
-// app.use(`${BASE_PATH}/member`, passportAuthenticateJWT, memberRoutes)
 app.use(`${BASE_PATH}/session`, passportAuthenticateJWT, sessionRoutes)
-app.use(`${BASE_PATH}/education`, passportAuthenticateJWT, educationRoutes)
-app.use(`${BASE_PATH}/experience`, passportAuthenticateJWT, experienceRoutes)
+
+app.use(`${BASE_PATH}/user`, passportAuthenticateJWT, userRoutes)
 app.use(`${BASE_PATH}/jobseeker`, passportAuthenticateJWT, jobseekerRoutes)
+
 app.use(`${BASE_PATH}/language`, passportAuthenticateJWT, languageRoutes)
 app.use(`${BASE_PATH}/institution`, passportAuthenticateJWT, institutionRoutes)
 app.use(`${BASE_PATH}/skill`, passportAuthenticateJWT, skillRoutes)
+app.use(`${BASE_PATH}/country`, passportAuthenticateJWT, countryRoutes)
+app.use(`${BASE_PATH}/state`, passportAuthenticateJWT, stateRoutes)
+app.use(`${BASE_PATH}/city`, passportAuthenticateJWT, cityRoutes)
+app.use(`${BASE_PATH}/company`, passportAuthenticateJWT, companyRoutes)
 
 app.use(errorHandler)
 
 app.listen(config.PORT, async () => {
-    console.log(`Server listening on port ${config.PORT} in ${config.NODE_ENV}`)
     await connectDatabase()
 })

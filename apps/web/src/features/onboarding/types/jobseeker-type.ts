@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
-import { educationValidation } from '@/features/education/types/education-type'
-import { experienceValidation } from '@/features/experience/types/experience-type'
+import { educationValidation } from '@/features/jobseeker/jobseeker-education/types/education-type'
+import { experienceValidation } from '@/features/jobseeker/jobseeker-experience/types/experience-type'
 import { jobseekerPersonalInfoValidation } from '@/features/jobseeker/types/jobseeker-type'
 
 // Create a unified schema for the multi-step form

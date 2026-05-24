@@ -4,33 +4,39 @@ import React from 'react'
 import { GraduationCap, Plus, Trash2 } from 'lucide-react'
 import { useFieldArray, useFormContext } from 'react-hook-form'
 
+import { InstitutionAutoSuggest } from '@/features/master/institution/components/InstitutionAutoSuggest'
 import type { JobseekerDTO } from '@/features/onboarding/types/jobseeker-type'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { UiFormDatePicker } from '@/components/ui/UiFormDatePicker'
 import { UiFormInput } from '@/components/ui/UiFormInput'
+import { DateFormat } from '@/types/date'
 
 const EducationInfo = () => {
     const {
         register,
         control,
+        watch,
+        setValue,
         formState: { errors, isSubmitting },
     } = useFormContext<JobseekerDTO>()
 
     const { fields, append, remove } = useFieldArray({
         control,
-        name: 'educations', // Matches the key in your jobseekerValidation schema
+        name: 'educations',
     })
 
     const addEducation = () => {
         append({
-            schoolName: '',
+            institution: '',
+            institutionName: '',
             degree: '',
             fieldOfStudy: '',
-            // Assertion to bypass Date/String mismatch in default state
-            startDate: '' as unknown as Date,
-            endDate: '' as unknown as Date,
+            startDate: '',
+            endDate: '',
             grade: '',
+            activities: '',
             description: '',
             orderPosition: fields.length,
         })
@@ -62,7 +68,6 @@ const EducationInfo = () => {
                         key={field.id}
                         className="bg-card relative space-y-4 rounded-xl border p-6 shadow-sm transition-all"
                     >
-                        {/* Remove Button */}
                         <Button
                             type="button"
                             variant="ghost"
@@ -78,17 +83,32 @@ const EducationInfo = () => {
                             <span className="font-medium">Education #{index + 1}</span>
                         </div>
 
-                        {/* School Name */}
-                        <UiFormInput
-                            {...register(`educations.${index}.schoolName`)}
-                            label="School / University"
-                            placeholder="e.g. Harvard University"
-                            error={errors.educations?.[index]?.schoolName}
-                            isSubmitting={isSubmitting}
+                        {/* Hidden institution ObjectId reference */}
+                        <input type="hidden" {...register(`educations.${index}.institution`)} />
+
+                        {/* School name with auto-suggest + institution ref */}
+                        <InstitutionAutoSuggest
+                            value={watch(`educations.${index}.institutionName`) ?? ''}
+                            error={errors.educations?.[index]?.institutionName}
+                            onValueChange={(val) => {
+                                setValue(`educations.${index}.institutionName`, val, {
+                                    shouldValidate: true,
+                                })
+                                setValue(`educations.${index}.institution`, '', {
+                                    shouldValidate: true,
+                                })
+                            }}
+                            onSelect={(val) => {
+                                setValue(`educations.${index}.institutionName`, val.name, {
+                                    shouldValidate: true,
+                                })
+                                setValue(`educations.${index}.institution`, val.id, {
+                                    shouldValidate: true,
+                                })
+                            }}
                         />
 
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            {/* Degree */}
                             <UiFormInput
                                 {...register(`educations.${index}.degree`)}
                                 label="Degree"
@@ -96,7 +116,6 @@ const EducationInfo = () => {
                                 error={errors.educations?.[index]?.degree}
                                 isSubmitting={isSubmitting}
                             />
-                            {/* Field of Study */}
                             <UiFormInput
                                 {...register(`educations.${index}.fieldOfStudy`)}
                                 label="Field of Study"
@@ -106,40 +125,46 @@ const EducationInfo = () => {
                             />
                         </div>
 
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            {/* Dates */}
-                            <UiFormInput
-                                {...register(`educations.${index}.startDate`)}
+                        <div className="grid grid-cols-2 gap-4">
+                            <UiFormDatePicker
                                 label="Start Date"
-                                type="date"
+                                name={`educations.${index}.startDate`}
+                                control={control as any}
+                                displayFormat={DateFormat.FULL_DISPLAY}
                                 error={errors.educations?.[index]?.startDate}
-                                isSubmitting={isSubmitting}
                             />
-                            <UiFormInput
-                                {...register(`educations.${index}.endDate`)}
+                            <UiFormDatePicker
                                 label="End Date (Expected)"
-                                type="date"
+                                name={`educations.${index}.endDate`}
+                                control={control as any}
+                                displayFormat={DateFormat.FULL_DISPLAY}
                                 error={errors.educations?.[index]?.endDate}
-                                isSubmitting={isSubmitting}
                             />
                         </div>
 
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <UiFormInput
-                                {...register(`educations.${index}.grade`)}
-                                label="Grade / GPA (Optional)"
-                                placeholder="e.g. 3.8/4.0"
-                                error={errors.educations?.[index]?.grade}
-                                isSubmitting={isSubmitting}
+                        <UiFormInput
+                            {...register(`educations.${index}.grade`)}
+                            label="Grade / GPA (Optional)"
+                            placeholder="e.g. 3.8 / 4.0"
+                            error={errors.educations?.[index]?.grade}
+                            isSubmitting={isSubmitting}
+                        />
+
+                        <div className="space-y-2">
+                            <Label>Activities (Optional)</Label>
+                            <Textarea
+                                {...register(`educations.${index}.activities`)}
+                                placeholder="e.g. Student council, coding club, sports team..."
+                                className="min-h-20"
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <Label>Description</Label>
+                            <Label>Description (Optional)</Label>
                             <Textarea
                                 {...register(`educations.${index}.description`)}
                                 placeholder="Briefly describe your thesis, honors, or key courses..."
-                                className="min-h-25"
+                                className="min-h-24"
                             />
                         </div>
                     </div>

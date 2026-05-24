@@ -1,11 +1,11 @@
 import React from 'react'
 
-import MyResume from '@/features/my-resume/components/MyResume'
+import CV from '@/features/jobseeker/jobseeker-cv/components/CV'
 
 const PageManageCV = () => {
     return (
         <div>
-            <MyResume mode="manage" />
+            <CV mode="manage" />
         </div>
     )
 }

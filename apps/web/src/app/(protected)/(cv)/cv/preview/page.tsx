@@ -1,9 +1,9 @@
-import MyResume from '@/features/my-resume/components/MyResume'
+import CV from '@/features/jobseeker/jobseeker-cv/components/CV'
 
 const PreviewCVPage = () => {
     return (
         <div>
-            <MyResume mode="preview" />
+            <CV mode="preview" />
         </div>
     )
 }

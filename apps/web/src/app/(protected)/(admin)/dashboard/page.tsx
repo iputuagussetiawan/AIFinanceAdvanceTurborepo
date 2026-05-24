@@ -1,7 +1,6 @@
 
-import LanguageSelector from '@/features/language/components/LanguageSelector'
-import SkillForm from '@/features/language/components/SkillForm'
-import { getCurrentUser } from '@/features/user/actions/user'
+import LanguageSelector from '@/features/master/language/components/LanguageSelector'
+import SkillForm from '@/features/master/language/components/SkillForm'
 
 export default async function DashboardPage() {
     return (

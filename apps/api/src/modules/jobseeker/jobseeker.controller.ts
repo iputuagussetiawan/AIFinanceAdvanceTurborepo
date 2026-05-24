@@ -3,47 +3,28 @@ import type { Request, Response } from 'express'
 import { HTTPSTATUS } from '../../config/http.config'
 import { asyncHandler } from '../../middlewares/asyncHandler.middleware'
 import { BadRequestException } from '../../utils/appError'
-import { getFullJobseekerProfileService, saveJobseekerProfileService } from './jobseeker.service'
+import { JobseekerService } from './jobseeker.service'
 import { jobseekerPersonalInfoValidation } from './jobseeker.validation'
 
-/**
- * Controller to Create or Update the Jobseeker Profile
- */
-export const saveJobseekerProfileController = asyncHandler(async (req: Request, res: Response) => {
-    // 1. Validate req.body against Jobseeker schema
-    const body = jobseekerPersonalInfoValidation.parse(req.body)
+export const JobseekerController = {
+    saveProfile: asyncHandler(async (req: Request, res: Response) => {
+        const body = jobseekerPersonalInfoValidation.parse(req.body)
+        const userId = req.user?._id as string
 
-    // 2. Extract userId from authenticated request
-    const userId = req.user?._id as string
+        if (!userId) throw new BadRequestException('User not authenticated')
 
-    if (!userId) {
-        throw new BadRequestException('User not authenticated')
-    }
+        const { profile } = await JobseekerService.saveProfile(userId, body)
 
-    // 3. Call the service to Upsert (Update or Create) the profile
-    const { profile } = await saveJobseekerProfileService(userId, body)
+        return res.status(HTTPSTATUS.OK).json({ message: 'Jobseeker profile updated successfully', profile })
+    }),
 
-    // 4. Return response
-    return res.status(HTTPSTATUS.OK).json({
-        message: 'Jobseeker profile updated successfully',
-        profile,
-    })
-})
+    getProfile: asyncHandler(async (req: Request, res: Response) => {
+        const userId = req.user?._id as string
 
-/**
- * Controller to Fetch the complete Jobseeker Profile
- */
-export const getJobseekerProfileController = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user?._id as string
+        if (!userId) throw new BadRequestException('User not authenticated')
 
-    if (!userId) {
-        throw new BadRequestException('User not authenticated')
-    }
+        const { profile } = await JobseekerService.getFullProfile(userId)
 
-    const { profile } = await getFullJobseekerProfileService(userId)
-
-    return res.status(HTTPSTATUS.OK).json({
-        message: 'Profile fetched successfully',
-        profile,
-    })
-})
+        return res.status(HTTPSTATUS.OK).json({ message: 'Profile fetched successfully', profile })
+    }),
+}

@@ -1,41 +1,61 @@
 'use client'
 
 import React from 'react'
+import { DateFormat } from '@/types/date'
 import { Briefcase, Plus, Trash2 } from 'lucide-react'
-import { useFieldArray, useFormContext } from 'react-hook-form'
+import { Controller, useFieldArray, useFormContext } from 'react-hook-form'
 
+import { CompanyAutoSuggest } from '@/features/master/company/components/CompanyAutoSuggest'
+import SkillAutoSuggest from '@/features/master/skill/components/SkillAutoSuggest'
 import type { JobseekerDTO } from '@/features/onboarding/types/jobseeker-type'
+import { RichTextEditor } from '@/components/editor'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
+import { UiFormDatePicker } from '@/components/ui/UiFormDatePicker'
 import { UiFormInput } from '@/components/ui/UiFormInput'
+
+const EMPLOYMENT_TYPES = [
+    'Full-time',
+    'Part-time',
+    'Contract',
+    'Freelance',
+    'Internship',
+    'Volunteer',
+] as const
 
 const ExperienceInfo = () => {
     const {
         register,
         control,
         watch,
+        setValue,
         formState: { errors, isSubmitting },
     } = useFormContext<JobseekerDTO>()
 
     const { fields, append, remove } = useFieldArray({
         control,
-        name: 'experiences', // Matches the array key in your main schema
+        name: 'experiences',
     })
 
     const addExperience = () => {
         append({
-            title: '',
             company: '',
+            companyName: '',
+            title: '',
             employmentType: 'Full-time',
             location: '',
-            locationType: 'On-site',
+            startDate: '',
+            endDate: '',
             isCurrent: false,
-            // Assert string as Date to fix the TS error for default empty state
-            startDate: '' as unknown as Date,
-            endDate: '' as unknown as Date,
             description: '',
+            skills: [],
             orderPosition: fields.length,
         })
     }
@@ -62,7 +82,6 @@ const ExperienceInfo = () => {
 
             <div className="space-y-8">
                 {fields.map((field, index) => {
-                    // Watch "isCurrent" to disable End Date if true
                     const isCurrent = watch(`experiences.${index}.isCurrent`)
 
                     return (
@@ -70,7 +89,6 @@ const ExperienceInfo = () => {
                             key={field.id}
                             className="bg-card relative space-y-4 rounded-xl border p-6 shadow-sm"
                         >
-                            {/* Remove Button */}
                             <Button
                                 type="button"
                                 variant="ghost"
@@ -86,79 +104,152 @@ const ExperienceInfo = () => {
                                 <span className="font-medium">Experience #{index + 1}</span>
                             </div>
 
+                            {/* Hidden company ObjectId reference */}
+                            <input type="hidden" {...register(`experiences.${index}.company`)} />
+                            <input type="hidden" {...register(`experiences.${index}.orderPosition`)} />
+
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                {/* Company name with auto-suggest */}
+                                <CompanyAutoSuggest
+                                    value={watch(`experiences.${index}.companyName`) ?? ''}
+                                    error={errors.experiences?.[index]?.companyName}
+                                    onValueChange={(val) => {
+                                        setValue(`experiences.${index}.companyName`, val, {
+                                            shouldValidate: true,
+                                        })
+                                        setValue(`experiences.${index}.company`, '', {
+                                            shouldValidate: true,
+                                        })
+                                    }}
+                                    onSelect={(val) => {
+                                        setValue(`experiences.${index}.companyName`, val.name, {
+                                            shouldValidate: true,
+                                        })
+                                        setValue(`experiences.${index}.company`, val.id, {
+                                            shouldValidate: true,
+                                        })
+                                    }}
+                                />
+
+                                {/* Job Title */}
                                 <UiFormInput
-                                    {...register(`experiences.${index}.title`)}
                                     label="Job Title"
                                     placeholder="e.g. Software Engineer"
+                                    {...register(`experiences.${index}.title`)}
                                     error={errors.experiences?.[index]?.title}
                                     isSubmitting={isSubmitting}
                                 />
-                                <UiFormInput
-                                    {...register(`experiences.${index}.company`)}
-                                    label="Company"
-                                    placeholder="e.g. Acme Inc"
-                                    error={errors.experiences?.[index]?.company}
-                                    isSubmitting={isSubmitting}
-                                />
-                            </div>
 
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                {/* Employment Type */}
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium">Employment Type</label>
+                                    <Select
+                                        value={watch(`experiences.${index}.employmentType`) ?? ''}
+                                        onValueChange={(val) =>
+                                            setValue(`experiences.${index}.employmentType`, val, {
+                                                shouldValidate: true,
+                                            })
+                                        }
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select type" />
+                                        </SelectTrigger>
+                                        <SelectContent className="z-[9999]">
+                                            {EMPLOYMENT_TYPES.map((type) => (
+                                                <SelectItem key={type} value={type}>
+                                                    {type}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    {errors.experiences?.[index]?.employmentType && (
+                                        <p className="text-destructive text-xs">
+                                            {errors.experiences[index].employmentType?.message}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Location */}
                                 <UiFormInput
-                                    {...register(`experiences.${index}.employmentType`)}
-                                    label="Employment Type"
-                                    placeholder="e.g. Full-time"
-                                    error={errors.experiences?.[index]?.employmentType}
-                                    isSubmitting={isSubmitting}
-                                />
-                                <UiFormInput
-                                    {...register(`experiences.${index}.location`)}
                                     label="Location"
-                                    placeholder="e.g. New York, NY"
+                                    placeholder="e.g. Jakarta, Indonesia"
+                                    {...register(`experiences.${index}.location`)}
                                     error={errors.experiences?.[index]?.location}
                                     isSubmitting={isSubmitting}
                                 />
                             </div>
 
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <UiFormInput
-                                    {...register(`experiences.${index}.startDate`)}
+                            {/* Dates */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <UiFormDatePicker
                                     label="Start Date"
-                                    type="date"
+                                    name={`experiences.${index}.startDate`}
+                                    control={control as any}
+                                    displayFormat={DateFormat.FULL_DISPLAY}
                                     error={errors.experiences?.[index]?.startDate}
-                                    isSubmitting={isSubmitting}
                                 />
-                                <UiFormInput
-                                    {...register(`experiences.${index}.endDate`)}
+                                <UiFormDatePicker
                                     label="End Date"
-                                    type="date"
-                                    disabled={isCurrent}
+                                    name={`experiences.${index}.endDate`}
+                                    control={control as any}
+                                    displayFormat={DateFormat.FULL_DISPLAY}
                                     error={errors.experiences?.[index]?.endDate}
-                                    isSubmitting={isSubmitting}
                                 />
                             </div>
 
-                            <div className="flex items-center space-x-2 py-2">
+                            {/* Is Current */}
+                            <div className="flex items-center gap-2">
                                 <Checkbox
                                     id={`isCurrent-${index}`}
-                                    {...register(`experiences.${index}.isCurrent`)}
+                                    checked={isCurrent ?? false}
+                                    onCheckedChange={(checked) => {
+                                        setValue(`experiences.${index}.isCurrent`, !!checked, {
+                                            shouldValidate: true,
+                                        })
+                                        if (checked) {
+                                            setValue(`experiences.${index}.endDate`, '', {
+                                                shouldValidate: true,
+                                            })
+                                        }
+                                    }}
                                 />
-                                <Label
+                                <label
                                     htmlFor={`isCurrent-${index}`}
-                                    className="cursor-pointer text-sm"
+                                    className="cursor-pointer text-sm font-medium"
                                 >
-                                    I am currently working in this role
-                                </Label>
+                                    I currently work here
+                                </label>
                             </div>
 
+                            {/* Description — rich text */}
                             <div className="space-y-2">
-                                <Label>Description</Label>
-                                <Textarea
-                                    {...register(`experiences.${index}.description`)}
-                                    placeholder="Briefly describe your responsibilities..."
-                                    className="min-h-25"
+                                <label className="text-muted-foreground block text-xs font-semibold tracking-wider uppercase">
+                                    Job Description
+                                </label>
+                                <Controller
+                                    name={`experiences.${index}.description`}
+                                    control={control}
+                                    render={({ field }) => (
+                                        <RichTextEditor
+                                            initialContent={field.value}
+                                            onChange={field.onChange}
+                                            error={!!errors.experiences?.[index]?.description}
+                                        />
+                                    )}
                                 />
+                                {errors.experiences?.[index]?.description && (
+                                    <p className="text-destructive text-xs">
+                                        {errors.experiences[index].description?.message}
+                                    </p>
+                                )}
                             </div>
+
+                            {/* Skills */}
+                            <SkillAutoSuggest
+                                name={`experiences.${index}.skills`}
+                                label="Skills"
+                                isSubmitting={isSubmitting}
+                            />
                         </div>
                     )
                 })}

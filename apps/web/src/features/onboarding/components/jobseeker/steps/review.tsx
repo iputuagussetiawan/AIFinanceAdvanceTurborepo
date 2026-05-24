@@ -1,24 +1,43 @@
 'use client'
 
 import React from 'react'
-import { format } from 'date-fns' // Recommended for clean date formatting
+import { format } from 'date-fns'
 import {
     Briefcase,
-    Calendar,
-    Check,
-    Globe,
     GraduationCap,
     LucideIcon,
     MapPin,
+    Tag,
+    ToggleLeft,
     UserCircle,
 } from 'lucide-react'
 import { useFormContext } from 'react-hook-form'
 
-import type { JobseekerInputType } from '@/features/onboarding/types/jobseeker-type'
+import { useSkill } from '@/features/master/skill/hooks/use-skill'
+import type { JobseekerDTO } from '@/features/onboarding/types/jobseeker-type'
+
+const FALLBACK_ICON = '/images/icon/microsoft-copilot.svg'
+
+const SkillIcon = ({ src, alt }: { src: string; alt: string }) => (
+    <img
+        src={src}
+        alt={alt}
+        className="h-3.5 w-3.5 object-contain"
+        onError={(e) => {
+            e.currentTarget.src = FALLBACK_ICON
+        }}
+    />
+)
 
 const ReviewStep = () => {
-    const { getValues } = useFormContext<JobseekerInputType>()
+    const { getValues } = useFormContext<JobseekerDTO>()
     const values = getValues()
+
+    const { skills } = useSkill('')
+    const skillMap = React.useMemo(
+        () => new Map(skills.map((s) => [s.id, s])),
+        [skills],
+    )
 
     // Helper to format date strings/objects safely
     const formatDate = (date: any) => {
@@ -42,25 +61,25 @@ const ReviewStep = () => {
             {/* --- Personal & Contact Section --- */}
             <section className="space-y-3">
                 <h3 className="text-primary text-sm font-bold tracking-widest uppercase">
-                    Personal Details
+                    Professional Details
                 </h3>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <SummaryBox
-                        icon={UserCircle}
-                        label="Full Name"
-                        value={`${values.firstName} ${values.lastName}`}
-                    />
-                    <SummaryBox icon={Briefcase} label="Headline" value={values.headline} />
+                    <SummaryBox icon={UserCircle} label="Headline" value={values.headline} />
+                    <SummaryBox icon={Briefcase} label="Current Position" value={values.currentPosition} />
+                    <SummaryBox icon={Tag} label="Industry" value={values.industry} />
                     <SummaryBox
                         icon={MapPin}
                         label="Location"
-                        value={`${values.city}, ${values.country}`}
+                        value={[values.city, values.state, values.country].filter(Boolean).join(' • ')}
                     />
                     <SummaryBox
-                        icon={Globe}
-                        label="Website"
-                        value={values.website || 'No website provided'}
+                        icon={ToggleLeft}
+                        label="Open to Work"
+                        value={values.openToWork ? 'Yes' : 'No'}
                     />
+                    {values.jobTitle && (
+                        <SummaryBox icon={Briefcase} label="Job Title" value={values.jobTitle} />
+                    )}
                 </div>
             </section>
 
@@ -80,7 +99,7 @@ const ReviewStep = () => {
                                     <GraduationCap className="text-primary h-5 w-5" />
                                 </div>
                                 <div>
-                                    <h4 className="text-sm font-bold">{edu.schoolName}</h4>
+                                    <h4 className="text-sm font-bold">{edu.institutionName}</h4>
                                     <p className="text-muted-foreground text-sm">
                                         {edu.degree} in {edu.fieldOfStudy}
                                     </p>
@@ -88,6 +107,11 @@ const ReviewStep = () => {
                                         {formatDate(edu.startDate)} —{' '}
                                         {edu.endDate ? formatDate(edu.endDate) : 'Present'}
                                     </p>
+                                    {edu.grade && (
+                                        <p className="text-muted-foreground mt-0.5 text-xs">
+                                            GPA: {edu.grade}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         ))
@@ -122,12 +146,33 @@ const ReviewStep = () => {
                                         </span>
                                     </div>
                                     <p className="text-muted-foreground text-sm">
-                                        {exp.company} • {exp.location}
+                                        {exp.companyName} • {exp.location}
                                     </p>
                                     <p className="text-muted-foreground mt-1 text-xs font-medium italic">
                                         {formatDate(exp.startDate)} —{' '}
                                         {exp.isCurrent ? 'Present' : formatDate(exp.endDate)}
                                     </p>
+                                    {exp.skills && exp.skills.length > 0 && (
+                                        <div className="mt-2 flex flex-wrap gap-1.5">
+                                            {exp.skills.map((skillId) => {
+                                                const skill = skillMap.get(skillId)
+                                                return (
+                                                    <span
+                                                        key={skillId}
+                                                        className="bg-primary/10 text-primary flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium"
+                                                    >
+                                                        {skill?.icon && (
+                                                            <SkillIcon
+                                                                src={skill.icon}
+                                                                alt={skill.name}
+                                                            />
+                                                        )}
+                                                        {skill?.name ?? skillId}
+                                                    </span>
+                                                )
+                                            })}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ))

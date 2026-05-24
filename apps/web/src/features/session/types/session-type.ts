@@ -1,7 +1,7 @@
-import type { IEducation } from '@/features/education/types/education-type'
-import type { IExperience } from '@/features/experience/types/experience-type'
-import type { IUserLanguageResponse } from '@/features/user-language/types/user-language-type'
-import type { IUserSkill, IUserSkillResponse } from '@/features/user-skill/types/userskill-type'
+import type { IEducation } from '@/features/jobseeker/jobseeker-education/types/education-type'
+import type { IExperience } from '@/features/jobseeker/jobseeker-experience/types/experience-type'
+import type { IUserLanguageResponse } from '@/features/jobseeker/jobseeker-language/types/user-language-type'
+import type { IUserSkill, IUserSkillResponse } from '@/features/jobseeker/jobseeker-skill/types/userskill-type'
 
 export interface ISession {
     _id: string
@@ -38,6 +38,7 @@ export interface IUser {
     phoneNumber: string
     address: string
     website: string
+    birthday?: string | null
     profilePicture: string | null
     bio: string
 

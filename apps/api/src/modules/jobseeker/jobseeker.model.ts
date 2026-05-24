@@ -1,81 +1,68 @@
-import mongoose, { Document, Model, Schema } from 'mongoose'
+import mongoose, { Document, Model, Schema, type Types } from 'mongoose'
 
-// 1. Define the Interface representing a document in MongoDB
+import { JobseekerSkillSchema } from './jobseeker-skills/jobseeker-skill.model'
+import { jobseekerEducationSchema } from './jobseeker-educations/jobseeker-education.model'
+import type { IJobseekerEducation } from './jobseeker-educations/jobseeker-education.validation'
+import { jobseekerExperienceSchema } from './jobseeker-experiences/jobseeker-experience.model'
+import type { IJobseekerExperience } from './jobseeker-experiences/jobseeker-experience.validation'
+import { jobseekerLanguageSchema } from './jobseeker-languages/jobseeker-language.model'
+import type { IJobseekerLanguage } from './jobseeker-languages/jobseeker-language.validation'
+
 export interface JobseekerDocument extends Document {
     userId: mongoose.Types.ObjectId
-    firstName: string
-    lastName: string
-    additionalName?: string
-    pronouns?: string
+    jobTitle?: string
     headline: string
     currentPosition: string
     industry: string
     country: string
+    state: string
     city: string
-    phoneNumber: string
-    phoneType: string
-    address: string
-    birthday: Date
-    website?: string
-    websiteType?: string
-    onboardingComplete: boolean
+    openToWork: boolean
+    languages?: IJobseekerLanguage[]
+    educations?: IJobseekerEducation[]
+    experiences?: IJobseekerExperience[]
+    skills?: Types.ObjectId[]
     createdAt: Date
     updatedAt: Date
 }
 
-// 2. Define the Schema
 const JobseekerSchema = new Schema<JobseekerDocument>(
     {
-        // --- Identity ---
         userId: {
             type: Schema.Types.ObjectId,
             ref: 'User',
             required: [true, 'User ID is required'],
-            unique: true, // A user should only have one jobseeker profile
+            unique: true,
             index: true,
         },
-        firstName: { type: String, required: true, trim: true },
-        lastName: { type: String, required: true, trim: true },
-        additionalName: { type: String, default: '' },
-        pronouns: { type: String, default: '' },
+        jobTitle: { type: String, trim: true, default: '' },
         headline: { type: String, required: true, trim: true },
-
-        // --- Professional ---
         currentPosition: { type: String, required: true, trim: true },
         industry: { type: String, required: true, index: true },
-
-        // --- Location & Contact ---
-        country: { type: String, required: true, index: true },
-        city: { type: String, required: true },
-        phoneNumber: { type: String, required: true },
-        phoneType: { type: String, required: true },
-        address: { type: String, required: true },
-
-        // --- Dates & URLs ---
-        birthday: { type: Date, required: true },
-        website: { type: String, default: '' },
-        websiteType: { type: String, default: '' },
-
-        // --- System Metadata ---
-        onboardingComplete: { type: Boolean, default: false },
+        country: { type: String, ref: 'Country', required: true, index: true },
+        state: { type: String, ref: 'State', required: true },
+        city: { type: String, ref: 'City', required: true },
+        openToWork: { type: Boolean, default: false },
+        languages: { type: [jobseekerLanguageSchema], default: [] },
+        educations: { type: [jobseekerEducationSchema], default: [] },
+        experiences: { type: [jobseekerExperienceSchema], default: [] },
+        skills: { type: [JobseekerSkillSchema], default: [] },
     },
     {
+        _id: true,
         timestamps: true,
-        // Ensures virtuals (like the fullName helper below) are included in JSON responses
-        toJSON: { virtuals: true },
+        toJSON: {
+            virtuals: true,
+            transform: (_doc, ret) => {
+                delete (ret as any)._id
+                delete (ret as any).__v
+                return ret
+            },
+        },
         toObject: { virtuals: true },
     },
 )
 
-/**
- * VIRTUALS
- * These are helper fields that don't store in the DB but are useful in the UI.
- */
-JobseekerSchema.virtual('fullName').get(function () {
-    return `${this.firstName} ${this.lastName}`
-})
-
-// 3. Create and Export the Model
 const JobseekerModel: Model<JobseekerDocument> =
     mongoose.models.Jobseeker || mongoose.model<JobseekerDocument>('Jobseeker', JobseekerSchema)
 
