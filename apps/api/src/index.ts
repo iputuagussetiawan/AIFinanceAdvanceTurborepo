@@ -29,6 +29,8 @@ import languageRoutes from './modules/master/language/language.route'
 import sessionRoutes from './modules/session/session.route'
 import skillRoutes from './modules/master/skill/skill.route'
 import userRoutes from './modules/user/user.route'
+import roleRoutes from './modules/role/role.route'
+import permissionRoutes from './modules/permission/permission.route'
 
 const app = express()
 app.use(helmet())
@@ -90,6 +92,8 @@ app.use(`${BASE_PATH}/country`, passportAuthenticateJWT, countryRoutes)
 app.use(`${BASE_PATH}/state`, passportAuthenticateJWT, stateRoutes)
 app.use(`${BASE_PATH}/city`, passportAuthenticateJWT, cityRoutes)
 app.use(`${BASE_PATH}/company`, passportAuthenticateJWT, companyRoutes)
+app.use(`${BASE_PATH}/roles`, roleRoutes)
+app.use(`${BASE_PATH}/permissions`, permissionRoutes)
 
 app.use(errorHandler)
 

@@ -1,80 +1,72 @@
 export const Roles = {
-    // Full access to the entire company/tenant settings and billing
-    OWNER: 'OWNER',
-
-    // System administration, user management, and configuration
-    ADMIN: 'ADMIN',
-
-    // Chief Financial Officer / Manager: Can approve "POSTED" entries and close Fiscal Years
-    MANAGER: 'MANAGER',
-
-    // Accountant: Can create, edit, and delete "DRAFT" journal entries
+    OWNER:      'OWNER',
+    ADMIN:      'ADMIN',
+    MANAGER:    'MANAGER',
     ACCOUNTANT: 'ACCOUNTANT',
-
-    // Auditor: Read-only access to all reports and ledger entries for compliance checks
-    AUDITOR: 'AUDITOR',
-
-    // Standard employee: Can only view their own data or submit expense requests
-    MEMBER: 'MEMBER',
-
-    JOBSEEKER: 'JOBSEEKER',
-
-    // Company recruiter: Can post jobs and manage applications
-    COMPANY: 'COMPANY',
-
-    // External viewer (e.g., a bank or investor) with limited read-only permissions
-    GUEST: 'GUEST',
+    AUDITOR:    'AUDITOR',
+    MEMBER:     'MEMBER',
+    JOBSEEKER:  'JOBSEEKER',
+    COMPANY:    'COMPANY',
+    GUEST:      'GUEST',
 } as const
 
 export type RoleType = keyof typeof Roles
 
 export const Permissions = {
-    CREATE_CV: 'CREATE_CV',
-    DELETE_CV: 'DELETE_CV',
-    EDIT_CV: 'EDIT_CV',
-    MANAGE_CV: 'MANAGE_CV',
+    // CV
+    CREATE_CV:  'cv:create',
+    DELETE_CV:  'cv:delete',
+    EDIT_CV:    'cv:update',
+    MANAGE_CV:  'cv:manage',
 
-    CREATE_COMPANY: 'CREATE_COMPANY',
-    DELETE_COMPANY: 'DELETE_COMPANY',
-    EDIT_COMPANY: 'EDIT_COMPANY',
-    MANAGE_COMPANY_SETTINGS: 'MANAGE_COMPANY_SETTINGS',
+    // Company
+    CREATE_COMPANY:          'company:create',
+    DELETE_COMPANY:          'company:delete',
+    EDIT_COMPANY:            'company:update',
+    MANAGE_COMPANY_SETTINGS: 'company:manage-settings',
 
-    ADD_COMPANY_USER: 'ADD_COMPANY_USER',
-    CHANGE_COMPANY_USER_ROLE: 'CHANGE_COMPANY_USER_ROLE',
-    REMOVE_COMPANY_USER: 'REMOVE_COMPANY_USER',
-    MANAGE_COMPANY_USER: 'MANAGE_COMPANY_USER',
+    // Company users
+    ADD_COMPANY_USER:         'company-user:add',
+    CHANGE_COMPANY_USER_ROLE: 'company-user:change-role',
+    REMOVE_COMPANY_USER:      'company-user:remove',
+    MANAGE_COMPANY_USER:      'company-user:manage',
 
-    ADD_MEMBER: 'ADD_MEMBER',
-    CHANGE_MEMBER_ROLE: 'CHANGE_MEMBER_ROLE',
-    REMOVE_MEMBER: 'REMOVE_MEMBER',
+    // Members
+    ADD_MEMBER:         'member:add',
+    CHANGE_MEMBER_ROLE: 'member:change-role',
+    REMOVE_MEMBER:      'member:remove',
 
-    CREATE_FISCAL_YEAR: 'CREATE_FISCAL_YEAR',
-    DELETE_FISCAL_YEAR: 'DELETE_FISCAL_YEAR',
-    EDIT_FISCAL_YEAR: 'EDIT_FISCAL_YEAR',
-    MANAGE_FISCAL_YEAR: 'MANAGE_FISCAL_YEAR',
+    // Fiscal year
+    CREATE_FISCAL_YEAR: 'fiscal-year:create',
+    DELETE_FISCAL_YEAR: 'fiscal-year:delete',
+    EDIT_FISCAL_YEAR:   'fiscal-year:update',
+    MANAGE_FISCAL_YEAR: 'fiscal-year:manage',
 
-    CREATE_COA: 'CREATE_COA',
-    EDIT_COA: 'EDIT_COA',
-    DELETE_COA: 'DELETE_COA',
-    MANAGE_COA: 'MANAGE_COA',
+    // Chart of accounts
+    CREATE_COA: 'coa:create',
+    EDIT_COA:   'coa:update',
+    DELETE_COA: 'coa:delete',
+    MANAGE_COA: 'coa:manage',
 
-    CREATE_JOURNAL: 'CREATE_JOURNAL',
-    EDIT_JOURNAL: 'EDIT_JOURNAL',
-    DELETE_JOURNAL: 'DELETE_JOURNAL',
-    MANAGE_JOURNAL: 'MANAGE_JOURNAL',
-    APPROVE_JOURNAL: 'APPROVE_JOURNAL',
+    // Journal
+    CREATE_JOURNAL: 'journal:create',
+    EDIT_JOURNAL:   'journal:update',
+    DELETE_JOURNAL: 'journal:delete',
+    MANAGE_JOURNAL: 'journal:manage',
+    APPROVE_JOURNAL:'journal:approve',
 
-    VIEW_ONLY: 'VIEW_ONLY',
+    // General
+    VIEW_ONLY: 'view:only',
 
-    // Recruitment permissions
-    POST_JOB: 'POST_JOB',
-    EDIT_JOB: 'EDIT_JOB',
-    DELETE_JOB: 'DELETE_JOB',
-    MANAGE_JOBS: 'MANAGE_JOBS',
-    VIEW_APPLICATIONS: 'VIEW_APPLICATIONS',
-    MANAGE_APPLICATIONS: 'MANAGE_APPLICATIONS',
-    APPLY_JOB: 'APPLY_JOB',
-    VIEW_JOBS: 'VIEW_JOBS',
+    // Jobs
+    POST_JOB:            'job:create',
+    EDIT_JOB:            'job:update',
+    DELETE_JOB:          'job:delete',
+    MANAGE_JOBS:         'job:manage',
+    VIEW_APPLICATIONS:   'application:read',
+    MANAGE_APPLICATIONS: 'application:manage',
+    APPLY_JOB:           'job:apply',
+    VIEW_JOBS:           'job:read',
 } as const
 
-export type PermissionType = keyof typeof Permissions
+export type PermissionType = typeof Permissions[keyof typeof Permissions]
