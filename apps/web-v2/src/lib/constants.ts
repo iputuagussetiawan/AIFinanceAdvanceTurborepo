@@ -1,0 +1,13 @@
+export const AUTH_COOKIE_NAME = 'accessToken'
+export const REFRESH_COOKIE_NAME = 'refreshToken'
+export const CSRF_COOKIE_NAME = 'csrf-token'
+export const CSRF_HEADER_NAME = 'x-csrf-token'
+
+export const SIGNIN_URL = '/signin'
+export const SIGNUP_URL = '/signup'
+export const VERIFY_EMAIL_URL = '/verify-email'
+export const FORGOT_PASSWORD_URL = '/forgot-password'
+export const RESET_PASSWORD_URL = '/reset-password'
+export const DASHBOARD_URL = '/dashboard'
+export const PROFILE_URL = '/profile'
+export const SESSIONS_URL = '/sessions'

@@ -4,7 +4,10 @@
       "Bash(npx tsc *)",
       "Bash(node --input-type=module)",
       "Bash(npx jest *)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "PowerShell($body = '{\"email\":\"test@test.com\",\"password\":\"test123\"}'; try { $r = Invoke-WebRequest -Uri \"http://localhost:3001/api/auth/login\" -Method POST -Body $body -ContentType \"application/json\" -Headers @{\"x-csrf-token\"=\"test\"} -SessionVariable s -ErrorAction Stop; \"Status: $\\($r.StatusCode\\)\" } catch { \"Error: $\\($_.Exception.Message\\) Status: $\\($_.Exception.Response.StatusCode.value__\\)\" })",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3001/api/auth/login\" -Method GET -ErrorAction Stop; \"Status: $\\($r.StatusCode\\)\" } catch { \"Error: $\\($_.Exception.Message\\) Status: $\\($_.Exception.Response.StatusCode.value__\\)\" })",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3001/\" -Method GET -ErrorAction Stop; \"Status: $\\($r.StatusCode\\) Length: $\\($r.Content.Length\\)\" } catch { \"Error: $\\($_.Exception.Message\\) Status: $\\($_.Exception.Response.StatusCode.value__\\)\" })"
     ]
   }
 }
