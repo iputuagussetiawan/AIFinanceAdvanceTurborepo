@@ -16,7 +16,6 @@ import {
 } from '../../utils/appError'
 import { hashValue } from '../../utils/bcrypt'
 import { anHourFromNow, fortyFiveMinutesFromNow, threeMinutesAgo } from '../../utils/date-time'
-import MemberModel from '../member/member.model'
 import RoleModel from '../role/roles-permission.model'
 import AccountModel from './account.model'
 import UserModel from '../user/user.model'
@@ -80,7 +79,10 @@ export const AuthService = {
             const existingUser = await UserModel.findOne({ email }).session(session)
             if (existingUser) throw new BadRequestException('Email already exists')
 
-            const user = new UserModel({ email, firstName, lastName, password })
+            const guestRole = await RoleModel.findOne({ name: 'GUEST' }).session(session)
+            if (!guestRole) throw new NotFoundException('Guest role not found')
+
+            const user = new UserModel({ email, firstName, lastName, password, role: guestRole._id, joinedAt: new Date() })
             await user.save({ session })
 
             const account = new AccountModel({
@@ -89,12 +91,6 @@ export const AuthService = {
                 providerId: email,
             })
             await account.save({ session })
-
-            const guestRole = await RoleModel.findOne({ name: 'GUEST' }).session(session)
-            if (!guestRole) throw new NotFoundException('Guest role not found')
-
-            const member = new MemberModel({ userId: user._id, role: guestRole._id, joinedAt: new Date() })
-            await member.save({ session })
 
             const verification = await VerificationCodeModel.create({
                 userId: user._id,

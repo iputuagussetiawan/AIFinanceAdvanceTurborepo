@@ -17,6 +17,8 @@ export interface UserDocument extends Document {
     isActive: boolean
     lastLogin: Date | null
     currentCompany: mongoose.Types.ObjectId | null
+    role: mongoose.Types.ObjectId | null
+    joinedAt: Date | null
     onboardingComplete: boolean
     createdAt: Date
     updatedAt: Date
@@ -78,6 +80,15 @@ const userSchema = new Schema<UserDocument>(
         currentCompany: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Company',
+        },
+        role: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role',
+            default: null,
+        },
+        joinedAt: {
+            type: Date,
+            default: null,
         },
         isEmailVerified: {
             type: Boolean,

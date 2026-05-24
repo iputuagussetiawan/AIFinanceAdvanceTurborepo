@@ -4,7 +4,6 @@ import { BadRequestException, NotFoundException } from '../../utils/appError'
 import { CountryModel } from '../master/country/country.model'
 import { StateModel } from '../master/state/state.model'
 import { CityModel } from '../master/city/city.model'
-import MemberModel from '../member/member.model'
 import RoleModel from '../role/roles-permission.model'
 import UserModel from '../user/user.model'
 import JobseekerModel from './jobseeker.model'
@@ -55,11 +54,7 @@ export const JobseekerService = {
             const jobseekerRole = await RoleModel.findOne({ name: 'JOBSEEKER' }).session(session)
             if (!jobseekerRole) throw new NotFoundException('Jobseeker role not found')
 
-            await MemberModel.findOneAndUpdate(
-                { userId },
-                { role: jobseekerRole._id },
-                { session, new: true, upsert: true },
-            )
+            await UserModel.findByIdAndUpdate(userId, { role: jobseekerRole._id }, { session })
 
             await session.commitTransaction()
 

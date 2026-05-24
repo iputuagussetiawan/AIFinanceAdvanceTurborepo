@@ -1,5 +1,5 @@
 import { BadRequestException, NotFoundException } from '../../utils/appError'
-import MemberModel from '../member/member.model'
+import UserModel from '../user/user.model'
 import RoleModel from './roles-permission.model'
 
 export const RoleService = {
@@ -57,32 +57,24 @@ export const RoleService = {
     assignRoleToUser: async (userId: string, roleId: string) => {
         const role = await RoleModel.findById(roleId)
         if (!role) throw new NotFoundException('Role not found')
-
-        const existing = await MemberModel.findOne({ userId })
-        if (existing) {
-            existing.role = role as any
-            await existing.save()
-        } else {
-            await MemberModel.create({ userId, role: role._id, joinedAt: new Date() })
-        }
+        await UserModel.findByIdAndUpdate(userId, { role: role._id, joinedAt: new Date() })
         return { message: 'Role assigned to user' }
     },
 
     removeRoleFromUser: async (userId: string) => {
-        await MemberModel.findOneAndDelete({ userId })
+        await UserModel.findByIdAndUpdate(userId, { $unset: { role: '' }, joinedAt: null })
         return { message: 'Role removed from user' }
     },
 
     getUserRoles: async (userId: string) => {
-        const member = await MemberModel.findOne({ userId }).populate('role')
-        if (!member) return []
-        return [member.role]
+        const user = await UserModel.findById(userId).populate('role')
+        if (!user?.role) return []
+        return [user.role]
     },
 
     getUserPermissions: async (userId: string) => {
-        const member = await MemberModel.findOne({ userId }).populate('role')
-        if (!member) return []
-        const role = member.role as any
+        const user = await UserModel.findById(userId).populate('role')
+        const role = user?.role as any
         return role?.permissions ?? []
     },
 }

@@ -1,5 +1,4 @@
 import { NotFoundException } from '../../utils/appError'
-import MemberModel from '../member/member.model'
 import SessionModel from './session.model'
 
 export const SessionService = {
@@ -13,21 +12,20 @@ export const SessionService = {
     },
 
     getSessionById: async (sessionId: string, userId: string) => {
-        const [session, member] = await Promise.all([
-            SessionModel.findById(sessionId)
-                .populate({ path: 'userId', select: '-password -__v' })
-                .select('-expiresAt'),
-            MemberModel.findOne({ userId }).populate({ path: 'role', select: 'name permissions' }),
-        ])
+        const session = await SessionModel.findById(sessionId)
+            .populate({
+                path: 'userId',
+                select: '-password -__v',
+                populate: { path: 'role', select: 'name permissions' },
+            })
+            .select('-expiresAt')
 
         if (!session || !session.userId) {
             throw new NotFoundException('Session or User not found')
         }
 
         const user = session.toJSON().userId as any
-        const memberObj = member?.toJSON() || null
-
-        return { user: { ...user, role: memberObj?.role || null } }
+        return { user }
     },
 
     deleteSession: async (sessionId: string, userId: string) => {
