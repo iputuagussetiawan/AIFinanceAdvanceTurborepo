@@ -1,8 +1,8 @@
 import mongoose from 'mongoose'
 
 import { config } from '../../config/app.config'
-import { HTTPSTATUS } from '../../config/http.config'
 import { ProviderEnum } from '../../enums/account-provider.enum'
+import { HTTPSTATUS } from '../../config/http.config'
 import { ErrorCodeEnum } from '../../enums/error-code.enum'
 import { VerificationEnum } from '../../enums/verification-code.enum'
 import { sendEmail } from '../../mailers/mailer'
@@ -17,6 +17,7 @@ import {
 import { hashValue } from '../../utils/bcrypt'
 import { anHourFromNow, fortyFiveMinutesFromNow, threeMinutesAgo } from '../../utils/date-time'
 import RoleModel from '../role/roles-permission.model'
+import SessionModel from '../session/session.model'
 import AccountModel from './account.model'
 import UserModel from '../user/user.model'
 import VerificationCodeModel from './verification.model'
@@ -39,17 +40,22 @@ export const AuthService = {
             let user = await UserModel.findOne({ email }).session(session)
 
             if (!user) {
+                // fix #3: assign GUEST role to new OAuth users
+                const guestRole = await RoleModel.findOne({ name: 'GUEST' }).session(session)
+                if (!guestRole) throw new NotFoundException('Guest role not found')
+
                 user = new UserModel({
                     email,
-                    name: `${firstName} ${lastName}`.trim(),
                     firstName,
                     lastName,
                     profilePicture: picture || null,
                     isEmailVerified: true,
+                    role: guestRole._id,
+                    joinedAt: new Date(),
                 })
                 await user.save({ session })
 
-                const account = new AccountModel({ userId: user._id, provider, providerId })
+                const account = new AccountModel({ userId: user._id, provider: provider as any, providerId })
                 await account.save({ session })
             } else {
                 user.lastLogin = new Date()
@@ -57,12 +63,12 @@ export const AuthService = {
             }
 
             await session.commitTransaction()
-            session.endSession()
             return { user }
         } catch (error) {
             await session.abortTransaction()
             throw error
         } finally {
+            // fix #8: only endSession in finally
             session.endSession()
         }
     },
@@ -90,22 +96,26 @@ export const AuthService = {
             })
             await account.save({ session })
 
-            const verification = await VerificationCodeModel.create({
+            // fix #5: create verification code inside tx with session
+            const verification = new VerificationCodeModel({
                 userId: user._id,
                 type: VerificationEnum.EMAIL_VERIFICATION,
                 expiresAt: fortyFiveMinutesFromNow(),
             })
+            await verification.save({ session })
 
+            await session.commitTransaction()
+
+            // fix #5: send email AFTER commit so abort doesn't leave orphaned code
             const verificationUrl = `${config.FRONTEND_ORIGIN}/confirm-account?code=${verification.code}`
             await sendEmail({ to: user.email, ...verifyEmailTemplate(verificationUrl) })
 
-            await session.commitTransaction()
-            session.endSession()
             return { userId: user._id }
         } catch (error: any) {
             await session.abortTransaction()
             throw error
         } finally {
+            // fix #8: only endSession in finally
             session.endSession()
         }
     },
@@ -138,7 +148,7 @@ export const AuthService = {
         if (!account) throw new NotFoundException('Invalid email or password')
 
         const user = await UserModel.findById(account.userId).select('+password')
-        if (!user) throw new NotFoundException('User not found for the given account')
+        if (!user) throw new NotFoundException('Invalid email or password')
 
         const isMatch = await user.comparePassword(password)
         if (!isMatch) throw new UnauthorizedException('Invalid email or password')
@@ -153,7 +163,9 @@ export const AuthService = {
 
     forgotPassword: async (email: string) => {
         const user = await UserModel.findOne({ email })
-        if (!user) throw new NotFoundException('User not found')
+
+        // fix #6: anti-enumeration — silent return for unknown email
+        if (!user) return { url: null, emailId: null }
 
         const timeAgo = threeMinutesAgo()
         const maxAttempts = 2
@@ -196,10 +208,19 @@ export const AuthService = {
         if (!validCode) throw new NotFoundException('Invalid or expired verification code')
 
         const hashedPassword = await hashValue(password)
-        const updatedUser = await UserModel.findByIdAndUpdate(validCode.userId, { password: hashedPassword })
+        const updatedUser = await UserModel.findByIdAndUpdate(
+            validCode.userId,
+            { password: hashedPassword },
+            { new: true },
+        )
         if (!updatedUser) throw new BadRequestException('Failed to reset password!')
 
-        await validCode.deleteOne()
+        // fix #5: invalidate all sessions so stolen refresh tokens stop working
+        await Promise.all([
+            validCode.deleteOne(),
+            SessionModel.deleteMany({ userId: validCode.userId }),
+        ])
+
         return { user: updatedUser }
     },
 }

@@ -110,9 +110,9 @@ passport.use(
             // If you deleted the session via deleteSessionService, this will be null
             const activeSession = await SessionModel.findById(payload.sessionId)
 
-            if (!activeSession) {
-                // This triggers if the session was revoked/deleted
-                return done(null, false, { message: 'Session has been revoked' })
+            // fix #4: check both existence and expiry — TTL index has ~60s lag
+            if (!activeSession || activeSession.expiredAt < new Date()) {
+                return done(null, false, { message: 'Session expired or revoked' })
             }
             req.sessionId = payload.sessionId
             return done(null, user)
